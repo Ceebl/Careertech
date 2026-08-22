@@ -20,15 +20,16 @@ jobs:
         key: ${{ secrets.DEPLOY_KEY }}
         script: |
           cd /var/www
-          rm -rf careertech-temp
-          git clone https://github.com/Ceebl/Careertech.git careertech-temp
+          sudo rm -rf careertech-temp
+          sudo git clone https://github.com/Ceebl/Careertech.git careertech-temp
+          sudo chown -R mike:mike careertech-temp
           
           # Deploy Project1
           sudo rsync -av --delete /var/www/careertech-temp/Project1/ /var/www/project1/
           sudo chown -R www-data:www-data /var/www/project1
           
           # Deploy Project2
-          sudo rsync -av --delete /var/www/careertech-temp/Project2/ /var/www/project2
+          sudo rsync -av --delete /var/www/careertech-temp/Project2/ /var/www/project2/
           sudo chown -R www-data:www-data /var/www/project2
           
-          rm -rf /var/www/careertech-temp
+          sudo rm -rf /var/www/careertech-temp
