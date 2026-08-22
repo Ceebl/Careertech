@@ -1,0 +1,39 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy via SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
+          
+          ssh -i ~/.ssh/deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'ENDSSH'
+          sudo rm -rf /var/www/project1 /var/www/project2
+          sudo mkdir -p /var/www/project1 /var/www/project2
+          sudo chown -R $USER:$USER /var/www/project1 /var/www/project2
+          ENDSSH
+          
+          scp -i ~/.ssh/deploy_key -r project1/* $DEPLOY_USER@$DEPLOY_HOST:/var/www/project1/
+          scp -i ~/.ssh/deploy_key -r project2/* $DEPLOY_USER@$DEPLOY_HOST:/var/www/project2/
+          
+          ssh -i ~/.ssh/deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'ENDSSH'
+          sudo chown -R www-data:www-data /var/www/project1 /var/www/project2
+          sudo chmod -R 755 /var/www/project1 /var/www/project2
+          sudo systemctl reload nginx
+          ENDSSH
