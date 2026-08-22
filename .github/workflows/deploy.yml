@@ -8,32 +8,29 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy via SSH
-        env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H $DEPLOY_HOST >> ~/.ssh/known_hosts
+    - uses: actions/checkout@v4
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd /var/www
+          rm -rf careertech-temp
+          git clone https://github.com/Ceebl/Careertech.git careertech-temp
           
-          ssh -i ~/.ssh/deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'ENDSSH'
-          sudo rm -rf /var/www/project1 /var/www/project2
-          sudo mkdir -p /var/www/project1 /var/www/project2
-          sudo chown -R $USER:$USER /var/www/project1 /var/www/project2
-          ENDSSH
+          # Deploy Project1
+          sudo rm -rf /var/www/Project1
+          sudo cp -r /var/www/careertech-temp/Project1 /var/www/Project1
+          sudo chown -R www-data:www-data /var/www/Project1
           
-          scp -i ~/.ssh/deploy_key -r project1/* $DEPLOY_USER@$DEPLOY_HOST:/var/www/project1/
-          scp -i ~/.ssh/deploy_key -r project2/* $DEPLOY_USER@$DEPLOY_HOST:/var/www/project2/
+          # Deploy Project2
+          sudo rm -rf /var/www/Project2
+          sudo cp -r /var/www/careertech-temp/Project2 /var/www/Project2
+          sudo chown -R www-data:www-data /var/www/Project2
           
-          ssh -i ~/.ssh/deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'ENDSSH'
-          sudo chown -R www-data:www-data /var/www/project1 /var/www/project2
-          sudo chmod -R 755 /var/www/project1 /var/www/project2
-          sudo systemctl reload nginx
-          ENDSSH
+          rm -rf /var/www/careertech-temp
