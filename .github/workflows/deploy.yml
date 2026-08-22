@@ -24,12 +24,13 @@ jobs:
           sudo git clone https://github.com/Ceebl/Careertech.git careertech-temp
           sudo chown -R mike:mike careertech-temp
           
-          # Deploy Project1
-          sudo rsync -av --delete /var/www/careertech-temp/Project1/ /var/www/project1/
-          sudo chown -R www-data:www-data /var/www/project1
-          
-          # Deploy Project2
-          sudo rsync -av --delete /var/www/careertech-temp/Project2/ /var/www/project2/
-          sudo chown -R www-data:www-data /var/www/project2
+          # Deploy all folders except .github
+          for dir in /var/www/careertech-temp/*/; do
+            folder=$(basename "$dir")
+            if [[ "$folder" != ".github" ]]; then
+              sudo rsync -av --delete "$dir" /var/www/"$folder"/
+              sudo chown -R www-data:www-data /var/www/"$folder"
+            fi
+          done
           
           sudo rm -rf /var/www/careertech-temp
