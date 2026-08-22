@@ -24,13 +24,11 @@ jobs:
           git clone https://github.com/Ceebl/Careertech.git careertech-temp
           
           # Deploy Project1
-          sudo rm -rf /var/www/Project1
-          sudo cp -r /var/www/careertech-temp/Project1 /var/www/Project1
-          sudo chown -R www-data:www-data /var/www/Project1
+          sudo rsync -av --delete /var/www/careertech-temp/Project1/ /var/www/project1/
+          sudo chown -R www-data:www-data /var/www/project1
           
           # Deploy Project2
-          sudo rm -rf /var/www/Project2
-          sudo cp -r /var/www/careertech-temp/Project2 /var/www/Project2
-          sudo chown -R www-data:www-data /var/www/Project2
+          sudo rsync -av --delete /var/www/careertech-temp/Project2/ /var/www/project2
+          sudo chown -R www-data:www-data /var/www/project2
           
           rm -rf /var/www/careertech-temp
