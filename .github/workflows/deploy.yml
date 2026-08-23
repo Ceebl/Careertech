@@ -18,7 +18,11 @@ jobs:
     steps:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
+        env:
+          KB_READER_PASSWORD: ${{ secrets.KB_READER_PASSWORD }}
+          KB_ADMIN_PASSWORD: ${{ secrets.KB_ADMIN_PASSWORD }}
         with:
+          envs: KB_READER_PASSWORD,KB_ADMIN_PASSWORD
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
@@ -126,12 +130,23 @@ jobs:
 
               sudo docker build -t careertech-api:latest "$TMP/api"
 
+              # Secrets go in a root-only file rather than on the docker command
+              # line, where `ps` would expose them to any user on the box.
+              ENV_FILE=/srv/careertech/app.env
+              sudo touch "$ENV_FILE"
+              sudo chmod 600 "$ENV_FILE"
+              printf '%s\n' \
+                "KB_READER_PASSWORD=${KB_READER_PASSWORD:-}" \
+                "KB_ADMIN_PASSWORD=${KB_ADMIN_PASSWORD:-}" \
+                | sudo tee "$ENV_FILE" >/dev/null
+
               sudo docker rm -f careertech-api >/dev/null 2>&1 || true
               sudo docker run -d \
                 --name careertech-api \
                 --restart unless-stopped \
                 -p 127.0.0.1:3000:3000 \
                 -v "$DATA_DIR":/data \
+                --env-file "$ENV_FILE" \
                 -e NODE_ENV=production \
                 -e DATA_DIR=/data \
                 --memory 512m \
@@ -141,9 +156,12 @@ jobs:
               echo "::: waiting for api to become healthy"
               healthy=0
               for _ in $(seq 1 15); do
-                # Prefer curl, but fall back to asking the container itself,
-                # so the check does not depend on what is installed on the host.
-                if curl -fsS http://127.0.0.1:3000/api/health >/dev/null 2>&1                    || sudo docker exec careertech-api node -e                       "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"                       >/dev/null 2>&1; then
+                if curl -fsS http://127.0.0.1:3000/api/health >/dev/null 2>&1; then
+                  healthy=1; break
+                fi
+                # Fall back to asking the container itself, so the check does
+                # not depend on what is installed on the host.
+                if sudo docker exec careertech-api node -e "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))" >/dev/null 2>&1; then
                   healthy=1
                   break
                 fi

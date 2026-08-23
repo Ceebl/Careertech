@@ -117,6 +117,28 @@ its own container instead.
 
 `api`, `infra`, and `.github` are not published as static sites.
 
+## Knowledge base
+
+A private TargetConnect knowledge base at `/kb/`, behind two passwords:
+
+| | Read | Add / edit / delete |
+|---|---|---|
+| `KB_READER_PASSWORD` | yes | no |
+| `KB_ADMIN_PASSWORD` | yes | yes |
+
+Both are GitHub Secrets, written to a root-only file on the server at deploy
+time and passed to the container. Nothing in `/kb/` is visible without a login,
+including the pages themselves -- it renders its own HTML rather than letting
+nginx serve files, so there is no way to read content without a session.
+
+Entries belong to many categories and many tags. Deleting is soft, so a mis-tap
+is recoverable. HTML in entry bodies is allowed (iframes, tables, embeds) with
+`<script>` and inline event handlers stripped -- see `api/projects/kb/sanitize.js`.
+
+The database is the only thing on the server that GitHub has no copy of, so it
+snapshots itself daily to `/srv/careertech/data/kb-backups` (14 days kept), and
+an admin can download a copy from the footer link.
+
 ## Setting up a new server
 
 Everything the server needs is in one script. On a fresh Ubuntu box, logged in

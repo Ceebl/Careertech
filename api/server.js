@@ -49,9 +49,12 @@ if (existsSync(projectsDir)) {
     try {
       const mod = await import(pathToFileURL(routerPath).href);
       if (!mod.default) throw new Error('router.js has no default export');
-      app.use(`/api/${name}`, mod.default);
+      // A project can serve its own pages at a top-level path by exporting
+      // `mountPath`. Everything else lands under /api/ as a JSON endpoint.
+      const at = typeof mod.mountPath === 'string' ? mod.mountPath : `/api/${name}`;
+      app.use(at, mod.default);
       mounted.push(name);
-      console.log(`mounted /api/${name}`);
+      console.log(`mounted ${at}`);
     } catch (err) {
       console.error(`FAILED to mount /api/${name}:`, err.message);
     }
