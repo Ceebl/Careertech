@@ -22,7 +22,6 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
-          script_stops: true
           script: |
             set -euo pipefail
 
@@ -42,7 +41,8 @@ jobs:
             echo "::: fetching repo"
             sudo rm -rf "$TMP"
             sudo git clone --depth 1 "$REPO_URL" "$TMP"
-            sudo chown -R "$USER":"$USER" "$TMP"
+            ME=$(id -un)
+            sudo chown -R "$ME":"$ME" "$TMP"
 
             # ---------------------------------------------------------------
             # 1. Publish each project folder as a static site
@@ -68,7 +68,9 @@ jobs:
             # ---------------------------------------------------------------
             # Consider every name we have ever deployed, plus the current ones.
             CANDIDATES=$(mktemp)
-            [ -f "$MANIFEST" ] && cat "$MANIFEST" >> "$CANDIDATES"
+            if sudo test -f "$MANIFEST"; then
+              sudo cat "$MANIFEST" >> "$CANDIDATES"
+            fi
             cat "$NEW_LIST" >> "$CANDIDATES"
 
             sort -u "$CANDIDATES" | while IFS= read -r name; do
@@ -103,6 +105,7 @@ jobs:
             rm -f "$CANDIDATES"
 
             sudo cp "$NEW_LIST" "$MANIFEST"
+            sudo chmod 644 "$MANIFEST"
             rm -f "$NEW_LIST"
 
             # ---------------------------------------------------------------
@@ -131,7 +134,9 @@ jobs:
               echo "::: waiting for api to become healthy"
               healthy=0
               for _ in $(seq 1 15); do
-                if curl -fsS http://127.0.0.1:3000/api/health >/dev/null 2>&1; then
+                # Prefer curl, but fall back to asking the container itself,
+                # so the check does not depend on what is installed on the host.
+                if curl -fsS http://127.0.0.1:3000/api/health >/dev/null 2>&1                    || sudo docker exec careertech-api node -e                       "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"                       >/dev/null 2>&1; then
                   healthy=1
                   break
                 fi
