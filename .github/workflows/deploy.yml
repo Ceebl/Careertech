@@ -4,33 +4,154 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+
+# Never let two deploys touch the server at the same time.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script_stops: true
+          script: |
+            set -euo pipefail
 
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.DEPLOY_HOST }}
-        username: ${{ secrets.DEPLOY_USER }}
-        key: ${{ secrets.DEPLOY_KEY }}
-        script: |
-          cd /var/www
-          sudo rm -rf careertech-temp
-          sudo git clone https://github.com/Ceebl/Careertech.git careertech-temp
-          sudo chown -R mike:mike careertech-temp
-          
-          # Deploy all folders except .github
-          for dir in /var/www/careertech-temp/*/; do
-            folder=$(basename "$dir")
-            if [[ "$folder" != ".github" ]]; then
-              sudo rsync -av --delete "$dir" /var/www/"$folder"/
-              sudo chown -R www-data:www-data /var/www/"$folder"
+            REPO_URL=https://github.com/Ceebl/Careertech.git
+            TMP=/var/www/careertech-temp
+            MANIFEST=/var/www/.careertech-manifest
+            DATA_DIR=/srv/careertech/data
+            DOMAIN=emaitch.co.uk
+            # Folders that are not published as static sites.
+            EXCLUDE=".github api infra"
+
+            echo "::: fetching repo"
+            sudo rm -rf "$TMP"
+            sudo git clone --depth 1 "$REPO_URL" "$TMP"
+            sudo chown -R "$USER":"$USER" "$TMP"
+
+            # ---------------------------------------------------------------
+            # 1. Publish each project folder as a static site
+            # ---------------------------------------------------------------
+            echo "::: syncing static projects"
+            NEW_LIST=$(mktemp)
+
+            for dir in "$TMP"/*/; do
+              folder=$(basename "$dir")
+              case " $EXCLUDE " in *" $folder "*) continue ;; esac
+
+              sudo rsync -a --delete "$dir" "/var/www/$folder/"
+              sudo chown -R www-data:www-data "/var/www/$folder"
+              echo "$folder" >> "$NEW_LIST"
+              echo "  deployed /$folder"
+            done
+
+            # ---------------------------------------------------------------
+            # 2. Remove folders deleted from the repo
+            #
+            # Only folders this workflow deployed last time are considered, so
+            # anything else living in /var/www is never touched.
+            # ---------------------------------------------------------------
+            if [ -f "$MANIFEST" ]; then
+              while IFS= read -r old; do
+                [ -n "$old" ] || continue
+
+                # Refuse anything that is not a plain folder name.
+                case "$old" in
+                  *[!A-Za-z0-9._-]*|.|..) echo "  !! skipping unsafe name: $old"; continue ;;
+                esac
+
+                if grep -qxF "$old" "$NEW_LIST"; then continue; fi
+
+                target="/var/www/$old"
+                if [ -L "$target" ]; then
+                  echo "  !! skipping symlink: $target"
+                elif [ -d "$target" ]; then
+                  sudo rm -rf "$target"
+                  echo "  removed /$old (deleted from repo)"
+                fi
+              done < "$MANIFEST"
             fi
-          done
-          
-          sudo rm -rf /var/www/careertech-temp
+
+            sudo cp "$NEW_LIST" "$MANIFEST"
+            rm -f "$NEW_LIST"
+
+            # ---------------------------------------------------------------
+            # 3. Build and restart the shared backend
+            # ---------------------------------------------------------------
+            if [ -d "$TMP/api" ]; then
+              echo "::: building api image"
+              sudo mkdir -p "$DATA_DIR"
+              # The image runs as the unprivileged `node` user (uid 1000).
+              sudo chown -R 1000:1000 "$DATA_DIR"
+
+              sudo docker build -t careertech-api:latest "$TMP/api"
+
+              sudo docker rm -f careertech-api >/dev/null 2>&1 || true
+              sudo docker run -d \
+                --name careertech-api \
+                --restart unless-stopped \
+                -p 127.0.0.1:3000:3000 \
+                -v "$DATA_DIR":/data \
+                -e NODE_ENV=production \
+                -e DATA_DIR=/data \
+                --memory 512m \
+                --cpus 1 \
+                careertech-api:latest
+
+              echo "::: waiting for api to become healthy"
+              healthy=0
+              for _ in $(seq 1 15); do
+                if curl -fsS http://127.0.0.1:3000/api/health >/dev/null 2>&1; then
+                  healthy=1
+                  break
+                fi
+                sleep 2
+              done
+
+              if [ "$healthy" -ne 1 ]; then
+                echo "!! api did not come up -- last 50 log lines:"
+                sudo docker logs --tail 50 careertech-api || true
+                exit 1
+              fi
+              echo "  api healthy"
+
+              sudo docker image prune -f >/dev/null
+
+              # -------------------------------------------------------------
+              # 4. Point nginx at the backend (idempotent)
+              # -------------------------------------------------------------
+              echo "::: wiring nginx"
+              sudo mkdir -p /etc/nginx/snippets
+              sudo cp "$TMP/infra/careertech-api.conf" /etc/nginx/snippets/careertech-api.conf
+
+              WIRE_OUT=$(sudo python3 "$TMP/infra/wire_nginx.py" --domain "$DOMAIN")
+              echo "$WIRE_OUT"
+
+              if sudo nginx -t; then
+                sudo systemctl reload nginx
+                echo "  nginx reloaded"
+              else
+                BACKUP=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^backup: //p')
+                WIRED=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^wired: //p')
+                if [ -n "$BACKUP" ] && [ -n "$WIRED" ]; then
+                  sudo cp "$BACKUP" "$WIRED"
+                  echo "!! nginx test failed -- config rolled back"
+                else
+                  echo "!! nginx test failed -- no change to roll back"
+                fi
+                exit 1
+              fi
+            fi
+
+            sudo rm -rf "$TMP"
+            echo "::: deploy complete"
