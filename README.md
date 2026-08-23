@@ -11,7 +11,7 @@ independent project. Push to `master` and it deploys itself.
 Pushing to `master` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml),
 which SSHes into the server and:
 
-1. Copies every project folder to `/var/www/{folder}` — nginx serves these directly.
+1. Copies every project folder to `/var/www/html/{folder}` — nginx serves these directly.
 2. **Deletes** any folder that was deployed last time but is no longer in the repo.
 3. Rebuilds and restarts the shared backend container (`api/`), if present.
 4. Makes sure nginx is routing `/api/` to that container, then reloads it.
@@ -23,8 +23,13 @@ rolls the nginx change back, so a broken push cannot take the site down.
 
 The server keeps a list at `/var/www/.careertech-manifest` of the folders this
 workflow deployed. Only folders on that list are ever deleted — anything else in
-`/var/www` is left alone. So removing `Project3/` from the repo removes it from
-the server on the next push, but nothing you set up by hand gets touched.
+the web root is left alone, including nginx's own `index.html`. So removing
+`Project3/` from the repo removes it from the server on the next push, but nothing
+you set up by hand gets touched.
+
+Note the web root is `/var/www/html`, not `/var/www` — that is what nginx is
+configured to serve. The manifest and the temporary clone live in `/var/www` so
+they stay outside the web root and are not publicly reachable.
 
 ## Adding a project
 
@@ -53,11 +58,43 @@ api/projects/mything/router.js    ->  https://emaitch.co.uk/api/mything
 MyThing/index.html                ->  https://emaitch.co.uk/MyThing
 ```
 
-Copy [api/projects/hello](api/projects/hello/router.js) as a starting point — it
-shows a GET, a POST with input validation, and SQLite storage. `server.js` finds
-any folder containing a `router.js` on startup, so there is no list to update.
+`server.js` finds any folder containing a `router.js` on startup, so there is no
+list to register it in. The smallest useful version:
 
-The working example is deployed at https://emaitch.co.uk/hello.
+```js
+import { Router } from 'express';
+import { db } from '../../lib/db.js';
+
+const store = db('mything', `
+  CREATE TABLE IF NOT EXISTS items (
+    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    text TEXT NOT NULL
+  );
+`);
+
+const router = Router();
+
+router.get('/', (req, res) => {
+  res.json({ items: store.prepare('SELECT * FROM items').all() });
+});
+
+router.post('/', (req, res) => {
+  // Validate before it reaches the database.
+  const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+  if (!text || text.length > 280) {
+    return res.status(400).json({ error: 'text must be 1-280 characters' });
+  }
+  // Parameterised -- never build SQL by concatenation.
+  store.prepare('INSERT INTO items (text) VALUES (?)').run(text);
+  res.status(201).json({ ok: true });
+});
+
+export default router;
+```
+
+**Anything added here is reachable by the whole internet.** There is no auth yet,
+so a write endpoint is a write endpoint for everyone. Add a shared secret, or make
+the URLs unguessable, before storing anything worth protecting.
 
 ## Rules worth keeping
 
@@ -91,11 +128,11 @@ Then http://localhost:3000/api/health.
 ## Layout
 
 ```
-Project1/ Project2/ hello/   static sites -> /{name}
+Project1/ Project2/          static sites -> /{name}
 api/                         shared backend -> /api/{name}
   server.js                  mounts every projects/*/router.js
   lib/db.js                  per-project SQLite
   lib/ratelimit.js           120 requests/min per IP
-  projects/hello/router.js   template
+  projects/                  one folder per backend
 infra/                       nginx snippet + the script that installs it
 ```
