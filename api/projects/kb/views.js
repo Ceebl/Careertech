@@ -175,6 +175,26 @@ textarea.rte-source { border:0; border-radius:0; min-height:22rem; }
 .rte-status { padding:0 1.1rem .6rem; font-size:.8rem; color:var(--muted); min-height:1.2rem; }
 .rte-status.error { color:#dc2626; }
 
+.cat-list { display:grid; gap:1.1rem; }
+.cat {
+  border:1px solid var(--line); border-radius:var(--radius);
+  background:var(--surface); padding:.8rem .9rem;
+}
+.cat-row { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+.cat-row input[type=text] { flex:1 1 9rem; min-width:0; }
+.cat-row input.cat-emoji { flex:0 0 3.4rem; text-align:center; }
+.cat-row input.cat-colour {
+  flex:0 0 2.6rem; height:2.4rem; padding:.15rem;
+  border:1px solid var(--line); border-radius:9px; background:var(--surface);
+}
+.cat-tools {
+  display:flex; flex-wrap:wrap; gap:.4rem; align-items:center;
+  margin-top:.6rem; padding-top:.6rem; border-top:1px solid var(--line);
+}
+.cat-tools .hint { margin-right:auto; }
+.cat-tools .btn { padding:.3rem .6rem; font-size:.8rem; }
+.cat-tools .btn[disabled] { opacity:.35; cursor:default; }
+
 .login-wrap { max-width:22rem; margin:12vh auto; padding:0 1.1rem; }
 footer.foot {
   border-top:1px solid var(--line); margin-top:3rem; padding:1.2rem 0;
@@ -186,6 +206,7 @@ export function layout({ title, body, kb, search = '' }) {
   const nav = kb?.isReader
     ? `<nav class="top-links">
          <a href="/kb/tags">Tags</a>
+         ${kb.isAdmin ? '<a href="/kb/admin/categories">Categories</a>' : ''}
          ${kb.isAdmin ? '<a href="/kb/new">+ New</a>' : ''}
          <a href="/kb/logout">Log out</a>
        </nav>`
@@ -203,7 +224,11 @@ export function layout({ title, body, kb, search = '' }) {
 
   const footer = kb?.isReader
     ? `<footer class="foot"><div class="wrap">Signed in as ${esc(kb.role)}${
-        kb.isAdmin ? ' &middot; <a href="/kb/backup">Download backup</a>' : ''
+        kb.isAdmin
+          ? ' &middot; <a href="/kb/admin/deleted">Recently deleted</a>'
+            + ' &middot; <a href="/kb/admin/export">Export as Markdown</a>'
+            + ' &middot; <a href="/kb/backup">Download backup</a>'
+          : ''
       }</div></footer>`
     : '';
 

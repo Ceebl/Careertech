@@ -168,3 +168,87 @@ export function softDeleteEntry(id) {
     `UPDATE entries SET deleted_at = datetime('now') WHERE id = ?`
   ).run(id);
 }
+
+/* --------------------------------------------------- category management */
+
+/** Turn a name into a URL-safe slug, kept unique. */
+export function makeSlug(name) {
+  var base = String(name).toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'category';
+  let slug = base;
+  let n = 2;
+  while (store.prepare('SELECT 1 FROM categories WHERE slug = ?').get(slug)) {
+    slug = `${base}-${n++}`;
+  }
+  return slug;
+}
+
+export function getCategory(id) {
+  return store.prepare('SELECT * FROM categories WHERE id = ?').get(id);
+}
+
+export function createCategory({ name, emoji, colour, description }) {
+  const position = store.prepare(
+    'SELECT COALESCE(MAX(position), -1) + 1 AS next FROM categories'
+  ).get().next;
+  return store.prepare(
+    `INSERT INTO categories (slug, name, emoji, colour, description, position)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(makeSlug(name), name, emoji, colour, description, position).lastInsertRowid;
+}
+
+/**
+ * Rename and restyle a category.
+ *
+ * The slug deliberately does not change: it is in every link and bookmark
+ * pointing at this category, and silently breaking those would be worse than
+ * a slug that no longer matches the name.
+ */
+export function updateCategory(id, { name, emoji, colour, description }) {
+  store.prepare(
+    `UPDATE categories SET name = ?, emoji = ?, colour = ?, description = ?
+     WHERE id = ?`
+  ).run(name, emoji, colour, description, id);
+}
+
+/** Swap position with the neighbour above or below. */
+export function moveCategory(id, direction) {
+  const all = store.prepare('SELECT id, position FROM categories ORDER BY position, name').all();
+  const index = all.findIndex((c) => c.id === Number(id));
+  const target = direction === 'up' ? index - 1 : index + 1;
+  if (index < 0 || target < 0 || target >= all.length) return;
+
+  // Rewrite every position so a stale or duplicated ordering cannot wedge it.
+  const reordered = all.slice();
+  const [moved] = reordered.splice(index, 1);
+  reordered.splice(target, 0, moved);
+
+  const set = store.prepare('UPDATE categories SET position = ? WHERE id = ?');
+  reordered.forEach((cat, i) => set.run(i, cat.id));
+}
+
+export function deleteCategory(id) {
+  store.prepare('DELETE FROM categories WHERE id = ?').run(id);
+}
+
+/* ------------------------------------------------------------ recycle bin */
+
+export function deletedEntries() {
+  return decorate(store.prepare(
+    `SELECT * FROM entries WHERE deleted_at IS NOT NULL
+     ORDER BY deleted_at DESC LIMIT 100`
+  ).all());
+}
+
+export function restoreEntry(id) {
+  store.prepare(
+    `UPDATE entries SET deleted_at = NULL, updated_at = datetime('now') WHERE id = ?`
+  ).run(id);
+}
+
+/** Permanent removal. Only reachable from the recycle bin, with a confirm. */
+export function purgeEntry(id) {
+  store.prepare('DELETE FROM entries WHERE id = ? AND deleted_at IS NOT NULL').run(id);
+}

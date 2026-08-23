@@ -1,0 +1,3 @@
+# Local test data. Never commit -- top-level folders get published to the web root.
+data/
+node_modules/

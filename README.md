@@ -146,6 +146,20 @@ upload -- a phone screenshot drops from roughly 3MB to under 100KB, which matter
 most on mobile data. GIFs are exempt, since redrawing one through a canvas would
 flatten it to a single frame.
 
+Admins get `/kb/admin/categories` to add, rename, recolour and reorder categories.
+Renaming keeps the original slug so existing links stay valid. Deleting a category
+is refused when it is the only category on some entry -- entries that also sit in
+another category are fine, since they still have somewhere to live.
+
+`/kb/admin/deleted` is the recycle bin: deleted entries stay there until restored
+or removed for good.
+
+`/kb/admin/export` produces a Markdown copy: `index.md`, one file per entry with
+YAML front matter, and the images, with image links rewritten to relative paths
+so they still work outside the site. Imports cleanly into Obsidian or Notion.
+HTML the converter does not recognise (tables, iframes) is left as raw HTML,
+which Markdown allows, so nothing is lost.
+
 The database and uploads are the only things on the server that GitHub has no
 copy of, so the database snapshots itself daily to `/srv/careertech/data/kb-backups`
 (14 days kept), and the footer link downloads entries and images together as one

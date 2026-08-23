@@ -18,6 +18,7 @@ import {
 } from './queries.js';
 import { makeBackup, startBackups, streamArchive } from './backup.js';
 import { saveUpload, findUpload, MAX_BYTES } from './uploads.js';
+import adminRouter from './admin.js';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -341,6 +342,8 @@ router.post('/entry/:id/delete', requireAdmin, (req, res) => {
   softDeleteEntry(Number(req.params.id));
   res.redirect('/kb/');
 });
+
+router.use('/admin', requireAdmin, adminRouter);
 
 /* -------------------------------------------------------------------- backup */
 
