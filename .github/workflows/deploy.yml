@@ -27,6 +27,11 @@ jobs:
             set -euo pipefail
 
             REPO_URL=https://github.com/Ceebl/Careertech.git
+            # nginx's root for emaitch.co.uk is /var/www/html, so static sites
+            # must land there. Deploy scaffolding stays in /var/www, outside the
+            # web root, so it is never publicly reachable.
+            WEB_ROOT=/var/www/html
+            LEGACY_ROOT=/var/www
             TMP=/var/www/careertech-temp
             MANIFEST=/var/www/.careertech-manifest
             DATA_DIR=/srv/careertech/data
@@ -49,8 +54,8 @@ jobs:
               folder=$(basename "$dir")
               case " $EXCLUDE " in *" $folder "*) continue ;; esac
 
-              sudo rsync -a --delete "$dir" "/var/www/$folder/"
-              sudo chown -R www-data:www-data "/var/www/$folder"
+              sudo rsync -a --delete "$dir" "$WEB_ROOT/$folder/"
+              sudo chown -R www-data:www-data "$WEB_ROOT/$folder"
               echo "$folder" >> "$NEW_LIST"
               echo "  deployed /$folder"
             done
@@ -61,26 +66,41 @@ jobs:
             # Only folders this workflow deployed last time are considered, so
             # anything else living in /var/www is never touched.
             # ---------------------------------------------------------------
-            if [ -f "$MANIFEST" ]; then
-              while IFS= read -r old; do
-                [ -n "$old" ] || continue
+            # Consider every name we have ever deployed, plus the current ones.
+            CANDIDATES=$(mktemp)
+            [ -f "$MANIFEST" ] && cat "$MANIFEST" >> "$CANDIDATES"
+            cat "$NEW_LIST" >> "$CANDIDATES"
 
-                # Refuse anything that is not a plain folder name.
-                case "$old" in
-                  *[!A-Za-z0-9._-]*|.|..) echo "  !! skipping unsafe name: $old"; continue ;;
-                esac
+            sort -u "$CANDIDATES" | while IFS= read -r name; do
+              [ -n "$name" ] || continue
 
-                if grep -qxF "$old" "$NEW_LIST"; then continue; fi
+              # Refuse anything that is not a plain folder name, and never
+              # touch the web root directory itself.
+              case "$name" in
+                *[!A-Za-z0-9._-]*|.|..|html)
+                  echo "  !! skipping unsafe name: $name"; continue ;;
+              esac
 
-                target="/var/www/$old"
-                if [ -L "$target" ]; then
-                  echo "  !! skipping symlink: $target"
-                elif [ -d "$target" ]; then
-                  sudo rm -rf "$target"
-                  echo "  removed /$old (deleted from repo)"
-                fi
-              done < "$MANIFEST"
-            fi
+              # Older deploys wrote to /var/www/<name>, which nginx never served.
+              # Clear those out; the live copy is in $WEB_ROOT now.
+              stale="$LEGACY_ROOT/$name"
+              if [ ! -L "$stale" ] && [ -d "$stale" ]; then
+                sudo rm -rf "$stale"
+                echo "  cleaned stale copy at $stale"
+              fi
+
+              # Still in the repo? Then it stays.
+              if grep -qxF "$name" "$NEW_LIST"; then continue; fi
+
+              target="$WEB_ROOT/$name"
+              if [ -L "$target" ]; then
+                echo "  !! skipping symlink: $target"
+              elif [ -d "$target" ]; then
+                sudo rm -rf "$target"
+                echo "  removed /$name (deleted from repo)"
+              fi
+            done
+            rm -f "$CANDIDATES"
 
             sudo cp "$NEW_LIST" "$MANIFEST"
             rm -f "$NEW_LIST"
