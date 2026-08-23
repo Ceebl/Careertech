@@ -4,7 +4,7 @@ A sandbox repo for small projects on my own server. Each top-level folder is an
 independent project. Push to `master` and it deploys itself.
 
 - **Live at:** https://emaitch.co.uk/{foldername}
-- **Server:** DigitalOcean droplet, Ubuntu 24.04, 2 vCPU / 2GB RAM
+- **Server:** Ubuntu 26.04, 4 vCPU / 8GB RAM / 200GB
 
 ## How a deploy works
 
@@ -117,6 +117,23 @@ its own container instead.
 
 `api`, `infra`, and `.github` are not published as static sites.
 
+## Setting up a new server
+
+Everything the server needs is in one script. On a fresh Ubuntu box, logged in
+as your normal user (not root):
+
+```bash
+git clone https://github.com/Ceebl/Careertech.git /tmp/ct && bash /tmp/ct/infra/setup-server.sh
+```
+
+It installs nginx, Docker and the rest, sets up the firewall, creates a login key
+for the deploy robot, and gets an HTTPS certificate if the domain already points
+at the box. Safe to run more than once. It prints what to do next when it finishes.
+
+**Order matters:** the domain has to point at the server, and HTTPS has to be
+working, *before* the first deploy. The deploy adds a line to the secure-site
+settings, so those settings have to exist first.
+
 ## Running the backend locally
 
 ```bash
@@ -134,5 +151,5 @@ api/                         shared backend -> /api/{name}
   lib/db.js                  per-project SQLite
   lib/ratelimit.js           120 requests/min per IP
   projects/                  one folder per backend
-infra/                       nginx snippet + the script that installs it
+infra/                       server setup script + nginx config
 ```
