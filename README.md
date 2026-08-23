@@ -141,6 +141,11 @@ and are served back through the login, so a direct link is useless without a
 session. Files are identified by their first bytes rather than the type the
 browser claims, and capped at 15MB.
 
+Stills over 2000px are downscaled and re-encoded to WebP in the browser before
+upload -- a phone screenshot drops from roughly 3MB to under 100KB, which matters
+most on mobile data. GIFs are exempt, since redrawing one through a canvas would
+flatten it to a single frame.
+
 The database and uploads are the only things on the server that GitHub has no
 copy of, so the database snapshots itself daily to `/srv/careertech/data/kb-backups`
 (14 days kept), and the footer link downloads entries and images together as one

@@ -114,8 +114,10 @@
     status.className = 'rte-status' + (isError ? ' error' : '');
   }
 
-  function insertImage(url, alt) {
-    var img = '<img src="' + url + '" alt="' + (alt || '').replace(/"/g, '') + '">';
+  function insertImage(url, alt, w, h) {
+    var size = (w && h) ? ' width="' + w + '" height="' + h + '"' : '';
+    var img = '<img src="' + url + '" alt="' + (alt || '').replace(/"/g, '') + '"'
+      + size + ' loading="lazy" decoding="async">';
     canvas.focus();
     try {
       document.execCommand('insertHTML', false, img);
@@ -125,30 +127,97 @@
     sync();
   }
 
-  function upload(file) {
-    if (!file || file.size === 0) return;
-    if (file.size > 15 * 1024 * 1024) {
-      say('That file is over the 15MB limit.', true);
-      return;
-    }
-    say('Uploading ' + (file.name || 'image') + '...');
+  var MAX_EDGE = 2000;          // plenty for a screenshot on any monitor
+  var ALWAYS_FINE = 300 * 1024; // below this, resizing is not worth the loss
 
-    fetch('/kb/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': file.type || 'application/octet-stream' },
-      body: file,
-    })
-      .then(function (res) {
-        return res.json().then(function (data) {
-          if (!res.ok) throw new Error(data.error || 'Upload failed');
-          return data;
+  function readable(bytes) {
+    return bytes > 1048576
+      ? (bytes / 1048576).toFixed(1) + 'MB'
+      : Math.round(bytes / 1024) + 'KB';
+  }
+
+  /*
+   * Shrink oversized images before they leave the device.
+   *
+   * A phone screenshot or photo is several megabytes, which is slow to upload
+   * on mobile data and slow to load afterwards. GIFs are left alone -- redrawing
+   * one through a canvas would flatten it to a single still frame.
+   */
+  function shrink(file) {
+    return new Promise(function (resolve) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+
+      // If the image cannot be read, send it untouched rather than failing.
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        resolve({ file: file });
+      };
+
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
+
+        // Animated, or already small enough -- keep it, but record its size so
+        // the page can reserve the right space while it loads.
+        if (file.type === 'image/gif' || (scale === 1 && file.size <= ALWAYS_FINE)) {
+          return resolve({ file: file, width: img.width, height: img.height });
+        }
+
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function (blob) {
+          // Keep the original if re-encoding did not actually help.
+          if (!blob || blob.size >= file.size) {
+            return resolve({ file: file, width: img.width, height: img.height });
+          }
+          var name = (file.name || 'image').replace(/\.[^.]+$/, '') + '.webp';
+          resolve({
+            file: new File([blob], name, { type: 'image/webp' }),
+            width: canvas.width,
+            height: canvas.height,
+            shrunkFrom: file.size,
+          });
+        }, 'image/webp', 0.85);
+      };
+
+      img.src = url;
+    });
+  }
+
+  function upload(original) {
+    if (!original || original.size === 0) return;
+    say('Preparing ' + (original.name || 'image') + '...');
+
+    shrink(original).then(function (result) {
+      var file = result.file;
+      if (file.size > 15 * 1024 * 1024) {
+        say('That file is ' + readable(file.size) + ', over the 15MB limit.', true);
+        return;
+      }
+      say('Uploading ' + readable(file.size)
+        + (result.shrunkFrom ? ' (reduced from ' + readable(result.shrunkFrom) + ')' : '')
+        + '...');
+
+      return fetch('/kb/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      })
+        .then(function (res) {
+          return res.json().then(function (data) {
+            if (!res.ok) throw new Error(data.error || 'Upload failed');
+            return data;
+          });
+        })
+        .then(function (data) {
+          insertImage(data.url, original.name, result.width, result.height);
+          say('');
         });
-      })
-      .then(function (data) {
-        insertImage(data.url, file.name);
-        say('');
-      })
-      .catch(function (err) { say(err.message, true); });
+    }).catch(function (err) { say(err.message, true); });
   }
 
   function pickFile() {
