@@ -5,7 +5,8 @@
 // database is in use, which a plain file copy cannot promise.
 
 import { readdirSync, mkdirSync, statSync, unlinkSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
+import { spawn } from 'node:child_process';
 import { store } from './schema.js';
 
 const DATA_DIR = process.env.DATA_DIR || process.cwd();
@@ -43,4 +44,38 @@ export function startBackups() {
   makeBackup();
   const timer = setInterval(makeBackup, EVERY_MS);
   timer.unref();
+}
+
+/**
+ * Stream today's entries and every uploaded image as one .tar.gz.
+ *
+ * Both together, because a database of entries whose images are missing is
+ * only half a backup.
+ */
+export function streamArchive(res, onError) {
+  const snapshot = makeBackup();
+  if (!snapshot) return onError(new Error('could not snapshot the database'));
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const name = basename(snapshot);
+
+  res.setHeader('Content-Type', 'application/gzip');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="knowledge-base-${stamp}.tar.gz"`
+  );
+
+  // Paths are relative to DATA_DIR so the archive unpacks somewhere sensible.
+  // Written with forward slashes because that is what tar expects, whatever
+  // the host platform uses.
+  const tar = spawn('tar', [
+    '-czf', '-', '-C', DATA_DIR, `kb-backups/${name}`, 'kb-uploads',
+  ]);
+
+  tar.stdout.pipe(res);
+  tar.stderr.on('data', (chunk) => console.error('kb: tar:', String(chunk).trim()));
+  tar.on('error', onError);
+  tar.on('close', (code) => {
+    if (code !== 0 && !res.headersSent) onError(new Error(`tar exited with ${code}`));
+  });
 }

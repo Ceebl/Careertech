@@ -96,8 +96,11 @@ export function logIn(req, res, password) {
 
   const exp = Date.now() + MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
   res.cookie(COOKIE, sign({ role, exp }), {
-    httpOnly: true,      // JavaScript cannot read it, so pasted HTML cannot steal it
-    secure: req.secure,  // only sent over HTTPS in production
+    // JavaScript cannot read it, so pasted HTML cannot steal it.
+    httpOnly: true,
+    // Forced in production rather than trusting the proxy header to be read
+    // correctly -- a misconfigured proxy would otherwise silently drop this.
+    secure: process.env.NODE_ENV === 'production' || req.secure,
     sameSite: 'lax',
     path: '/kb',
     maxAge: MAX_AGE_DAYS * 24 * 60 * 60 * 1000,

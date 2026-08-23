@@ -16,12 +16,23 @@ import {
   entriesInCategory, searchEntries, listTags, entriesWithTag,
   normaliseTags, createEntry, updateEntry, softDeleteEntry,
 } from './queries.js';
-import { makeBackup, startBackups } from './backup.js';
+import { makeBackup, startBackups, streamArchive } from './backup.js';
+import { saveUpload, findUpload, MAX_BYTES } from './uploads.js';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const mountPath = '/kb';
 
+const HERE = dirname(fileURLToPath(import.meta.url));
+const EDITOR_JS = readFileSync(join(HERE, 'editor.client.js'), 'utf8');
+
 const router = Router();
-router.use(express.urlencoded({ extended: false, limit: '2mb' }));
+router.use('/upload', express.raw({
+  type: () => true,     // the browser sends the image's own content type
+  limit: MAX_BYTES,
+}));
+router.use(express.urlencoded({ extended: false, limit: '4mb' }));
 router.use(session);
 
 startBackups();
@@ -78,6 +89,28 @@ router.get('/logout', (req, res) => {
 /* ------------------------------------------------------------------ browsing */
 
 router.use(requireReader);
+
+router.get('/editor.js', (req, res) => {
+  res.type('application/javascript').send(EDITOR_JS);
+});
+
+// Images sit behind the login too, so a direct link is useless without a session.
+router.get('/file/:name', (req, res) => {
+  const file = findUpload(req.params.name);
+  if (!file) return res.status(404).end();
+  res.type(file.mime);
+  res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+  res.sendFile(file.path);
+});
+
+router.post('/upload', requireAdmin, (req, res) => {
+  try {
+    const saved = saveUpload(req.body);
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
 
 router.get('/', (req, res) => {
   const categories = listCategories();
@@ -223,7 +256,7 @@ function entryForm(req, { entry = null, error = '' } = {}) {
         </div>
 
         <label class="field">Content
-          <span class="hint">HTML is allowed, including iframes. Script tags are removed.</span>
+          <span class="hint">Paste or drag images and GIFs straight in. Use the HTML button for iframes.</span>
           <textarea name="body">${esc(entry?.body ?? '')}</textarea>
         </label>
 
@@ -249,7 +282,8 @@ function entryForm(req, { entry = null, error = '' } = {}) {
           <button class="btn primary" type="submit">${entry ? 'Save changes' : 'Create entry'}</button>
           <a class="btn" href="${entry ? `/kb/entry/${entry.id}` : '/kb/'}">Cancel</a>
         </div>
-      </form>`,
+      </form>
+      <script src="/kb/editor.js" defer></script>`,
   });
 }
 
@@ -310,10 +344,12 @@ router.post('/entry/:id/delete', requireAdmin, (req, res) => {
 
 /* -------------------------------------------------------------------- backup */
 
+// Entries and uploaded images together, since one is useless without the other.
 router.get('/backup', requireAdmin, (req, res) => {
-  const file = makeBackup();
-  if (!file) return res.status(500).send('Backup failed. Check the server logs.');
-  res.download(file, `knowledge-base-${new Date().toISOString().slice(0, 10)}.db`);
+  if (!makeBackup()) return res.status(500).send('Backup failed. Check the server logs.');
+  streamArchive(res, (err) => {
+    if (!res.headersSent) res.status(500).send(`Backup failed: ${err.message}`);
+  });
 });
 
 /* --------------------------------------------------------------------- misc */

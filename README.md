@@ -135,9 +135,16 @@ Entries belong to many categories and many tags. Deleting is soft, so a mis-tap
 is recoverable. HTML in entry bodies is allowed (iframes, tables, embeds) with
 `<script>` and inline event handlers stripped -- see `api/projects/kb/sanitize.js`.
 
-The database is the only thing on the server that GitHub has no copy of, so it
-snapshots itself daily to `/srv/careertech/data/kb-backups` (14 days kept), and
-an admin can download a copy from the footer link.
+The editor has a formatting toolbar and an HTML source toggle. Images and GIFs
+can be pasted or dragged straight in: they upload to `/srv/careertech/data/kb-uploads`
+and are served back through the login, so a direct link is useless without a
+session. Files are identified by their first bytes rather than the type the
+browser claims, and capped at 15MB.
+
+The database and uploads are the only things on the server that GitHub has no
+copy of, so the database snapshots itself daily to `/srv/careertech/data/kb-backups`
+(14 days kept), and the footer link downloads entries and images together as one
+`.tar.gz` -- a database whose images are missing is only half a backup.
 
 ## Setting up a new server
 
