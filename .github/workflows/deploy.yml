@@ -106,6 +106,13 @@ jobs:
 
             sudo cp "$NEW_LIST" "$MANIFEST"
             sudo chmod 644 "$MANIFEST"
+
+            # Homepage is generated from the list above, so it always matches
+            # what is actually deployed.
+            echo "::: writing homepage"
+            sudo python3 "$TMP/infra/make_homepage.py"               --list "$NEW_LIST" --out "$WEB_ROOT/index.html"
+            sudo chown www-data:www-data "$WEB_ROOT/index.html"
+
             rm -f "$NEW_LIST"
 
             # ---------------------------------------------------------------

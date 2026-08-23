@@ -151,5 +151,5 @@ api/                         shared backend -> /api/{name}
   lib/db.js                  per-project SQLite
   lib/ratelimit.js           120 requests/min per IP
   projects/                  one folder per backend
-infra/                       server setup script + nginx config
+infra/                       server setup, nginx config, homepage generator
 ```
