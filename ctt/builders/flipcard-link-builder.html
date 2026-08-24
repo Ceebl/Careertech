@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flip Card Link Builder</title>
+<meta name="description" content="Build a flip card activity and get a link you can embed anywhere. Nothing to host.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #preview-frame { width: 100%; min-height: 620px; border: 0; background: #fff;
+                   border-radius: var(--ct-radius-lg); }
+  .fb-item {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+  .fb-meter { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">FC</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Flip Card Link Builder</h1>
+      <p class="ct-toolbar__sub">Build the cards, get a link. Nothing to host.</p>
+    </div>
+    <span class="ct-badge ct-badge--accent">Hosted edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How this works
+        </button>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-field">
+          <label class="ct-label" for="deck-title">Activity name</label>
+          <input class="ct-input" id="deck-title" type="text" value="Interview question flip cards">
+          <span class="ct-hint">Only used as the page title. Students do not see it inside the card.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="card-mode">Card style</label>
+          <select class="ct-select" id="card-mode">
+            <option value="star">STAR(R) breakdown on the back</option>
+            <option value="simple">Plain question and answer</option>
+          </select>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Brand colours</span>
+          <span class="ct-hint">The topic tag is worked out from the main colour and darkened until it stays readable.</span>
+          <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+            <div class="ct-colour">
+              <input type="color" id="color-primary" value="#496DDB">
+              <label class="ct-colour__label" for="color-primary">Main colour &mdash; answer edge, focus rings, topic tag</label>
+            </div>
+            <div class="ct-colour">
+              <input type="color" id="color-edge" value="#AE8799">
+              <label class="ct-colour__label" for="color-edge">Question edge &mdash; the strip along the bottom of the front</label>
+            </div>
+            <div class="ct-colour">
+              <input type="color" id="color-card" value="#ffffff">
+              <label class="ct-colour__label" for="color-card">Card background</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-check" for="transparent-bg">
+            <input type="checkbox" id="transparent-bg" checked>
+            Let the host page&rsquo;s own background show through
+          </label>
+          <div class="ct-colour ct-colour--off" id="page-bg-wrap" style="margin-top: var(--ct-sp-2);">
+            <input type="color" id="color-page" value="#F7F6F8" disabled>
+            <label class="ct-colour__label" for="color-page">Background behind the card</label>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="card-height">Card height</label>
+          <input class="ct-range" id="card-height" type="range" min="320" max="760" step="20" value="480">
+          <span class="ct-hint" id="height-readout">480 pixels. Make it taller if your answers are long.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="flip-hint">Prompt on the front of the card</label>
+          <input class="ct-input" id="flip-hint" type="text" value="Tap to reveal the answer">
+        </div>
+
+        <hr class="ct-divider">
+
+        <div id="content-builder">
+          <div class="ct-row" style="justify-content: space-between;">
+            <h3 class="ct-card__title">Cards</h3>
+            <button class="ct-btn ct-btn--sm" type="button" id="add-item-btn">Add card</button>
+          </div>
+          <div id="items-container"></div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="import-link">Editing a link you made earlier?</label>
+          <textarea class="ct-textarea ct-input--mono" id="import-link" rows="3"
+                    placeholder="Paste the full link here and press Load"></textarea>
+          <div class="ct-row" style="margin-top: var(--ct-sp-2);">
+            <button class="ct-btn ct-btn--sm" type="button" id="import-btn">Load these cards</button>
+          </div>
+          <span class="ct-hint">The cards live inside the link itself, so pasting one back in brings all its content with it.</span>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#embed-output" data-ct-copy-label="Embed code copied">
+          Copy embed code
+        </button>
+      </div>
+
+      <iframe id="preview-frame" title="Preview of the flip cards"></iframe>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="embed-output">Embed code &mdash; paste this into TargetConnect or SharePoint</label>
+        <textarea class="ct-codebox" id="embed-output" readonly spellcheck="false" rows="4"></textarea>
+      </div>
+
+      <div class="ct-field">
+        <div class="ct-row" style="justify-content: space-between; align-items: baseline;">
+          <label class="ct-label" for="link-output">Or just the link, to share directly</label>
+          <button class="ct-btn ct-btn--quiet ct-btn--sm" type="button"
+                  data-ct-copy="#link-output" data-ct-copy-label="Link copied">Copy link</button>
+        </div>
+        <textarea class="ct-codebox" id="link-output" readonly spellcheck="false" rows="4"></textarea>
+        <span class="ct-hint fb-meter" id="length-readout"></span>
+      </div>
+
+      <div class="ct-note" id="length-warning" hidden>
+        <span class="ct-note__icon" aria-hidden="true">!</span>
+        <div id="length-warning-text"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How this works</h2>
+
+    <p>The usual problem with these widgets is that they need a file hosted somewhere,
+    and plenty of universities will not let their careers teams host files. This one
+    removes that step entirely.</p>
+
+    <p>The flip card page itself is hosted once, here. Your cards are not stored anywhere
+    &mdash; they are squashed down and packed into the link. When someone opens it,
+    their browser unpacks the cards and shows them. That is why the link is so long,
+    and why there is nothing for you to upload.</p>
+
+    <h3>Using it</h3>
+    <ol style="padding-left: 1.2rem; line-height: 1.8;">
+      <li>Write your cards on the left.</li>
+      <li>Click <b>Copy embed code</b>.</li>
+      <li>Paste it into TargetConnect, SharePoint, Moodle or your CMS, anywhere that
+      accepts an embed or iframe.</li>
+    </ol>
+
+    <h3>Worth knowing</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>Nothing is stored.</b> The part of the link after the <span class="ct-mono">#</span>
+      never leaves the browser, so your card content is never sent to this server and never
+      appears in any log here.</li>
+      <li><b>To change a card later</b>, paste your link back into the box at the bottom
+      left, edit it, and swap the link over.</li>
+      <li><b>Keep the whole link.</b> If it gets cut short in an email or a text box, it
+      will not open. The page will say so rather than showing half a deck.</li>
+      <li><b>It needs this site to be up.</b> The page is served from here, so if this
+      server is down the embed shows an empty box.</li>
+      <li><b>Do not put personal information in the cards.</b> Anyone with the link can
+      read everything in it.</li>
+    </ul>
+
+    <h3>Making it fit the page</h3>
+    <p>An embedded frame cannot grow to fit its contents on its own, so the embed code
+    sets a fixed height based on your card height. If your web team can add a small script
+    to the host page, the widget sends its real height as a message
+    (<span class="ct-mono">flipcards:height</span>) that they can listen for.</p>
+  </div>
+</div>
+
+<script>
+    /* ====================================================================
+       Where the hosted flip card page lives. Change this if it moves.
+    ==================================================================== */
+    const PUBLIC_BASE = 'https://emaitch.co.uk/ctt/w/flipcards/';
+    const PREVIEW_BASE = '../w/flipcards/';
+
+    const STAR_FIELDS = [
+        { key: 's',  label: 'Situation (S)' },
+        { key: 't',  label: 'Task (T)' },
+        { key: 'a',  label: 'Action (A)' },
+        { key: 'r',  label: 'Result (R)' },
+        { key: 'r2', label: 'Reflection (R)' }
+    ];
+
+    let currentMode = 'star';
+    let itemCount = 0;
+    let previewTimeout;
+
+    /* --- Packing the deck into a link -------------------------------- */
+
+    function bytesToBase64url(bytes) {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) { binary += String.fromCharCode(bytes[i]); }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function bytesFromBase64url(s) {
+        s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) { s += '='; }
+        const binary = atob(s);
+        const out = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) { out[i] = binary.charCodeAt(i); }
+        return out;
+    }
+
+    async function encodePayload(payload) {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        if (typeof CompressionStream === 'undefined') {
+            return 'j=' + bytesToBase64url(bytes);
+        }
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        const packed = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+        return 'd=' + bytesToBase64url(packed);
+    }
+
+    async function decodeFragment(fragment) {
+        const params = new URLSearchParams(fragment);
+        if (params.has('j')) {
+            return JSON.parse(new TextDecoder().decode(bytesFromBase64url(params.get('j'))));
+        }
+        if (!params.has('d')) { throw new Error('nothing-to-read'); }
+        const ds = new DecompressionStream('deflate-raw');
+        const writer = ds.writable.getWriter();
+        writer.write(bytesFromBase64url(params.get('d')));
+        writer.close();
+        const bytes = new Uint8Array(await new Response(ds.readable).arrayBuffer());
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    /* --- The card editors -------------------------------------------- */
+
+    function escapeAttr(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escapeText(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function addItem(preset) {
+        preset = preset || {};
+        itemCount++;
+        const id = itemCount;
+        const card = document.createElement('div');
+        // item-card is what gatherCards looks for; fields are found by data-field.
+        card.className = 'item-card fb-item';
+        card.id = 'item-' + id;
+
+        let html =
+            '<div class="ct-row" style="justify-content: space-between;">' +
+              '<span class="ct-section-label">Card ' + id + '</span>' +
+              '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-remove="' + id + '">Remove</button>' +
+            '</div>' +
+            '<div class="ct-field"><label class="ct-label" for="f' + id + '-tag">Topic tag</label>' +
+              '<input id="f' + id + '-tag" type="text" class="ct-input" data-field="tag" ' +
+              'value="' + escapeAttr(preset.tag) + '" placeholder="e.g. Teamwork"></div>' +
+            '<div class="ct-field"><label class="ct-label" for="f' + id + '-q">Front of the card</label>' +
+              '<textarea id="f' + id + '-q" class="ct-textarea" data-field="question" ' +
+              'placeholder="The question students see first">' + escapeText(preset.question) + '</textarea></div>';
+
+        if (currentMode === 'star') {
+            STAR_FIELDS.forEach(function (field) {
+                html +=
+                    '<div class="ct-field"><label class="ct-label" for="f' + id + '-' + field.key + '">' + field.label + '</label>' +
+                    '<textarea id="f' + id + '-' + field.key + '" class="ct-textarea" data-field="' + field.key + '">' +
+                    escapeText(preset[field.key]) + '</textarea></div>';
+            });
+        } else {
+            html +=
+                '<div class="ct-field"><label class="ct-label" for="f' + id + '-bt">Heading on the back</label>' +
+                  '<input id="f' + id + '-bt" type="text" class="ct-input" data-field="backTitle" ' +
+                  'value="' + escapeAttr(preset.backTitle) + '" placeholder="Answer"></div>' +
+                '<div class="ct-field"><label class="ct-label" for="f' + id + '-back">Back of the card</label>' +
+                  '<textarea id="f' + id + '-back" class="ct-textarea" rows="5" data-field="back" ' +
+                  'placeholder="The answer. Leave a blank line between paragraphs.">' +
+                  escapeText(preset.back) + '</textarea></div>';
+        }
+
+        card.innerHTML = html;
+        document.getElementById('items-container').appendChild(card);
+    }
+
+    function gatherCards() {
+        const cards = [];
+        document.querySelectorAll('.item-card').forEach(function (card) {
+            const out = {};
+            card.querySelectorAll('[data-field]').forEach(function (input) {
+                const value = input.value.trim();
+                if (value) { out[input.getAttribute('data-field')] = value; }
+            });
+            if (out.question || out.back) { cards.push(out); }
+        });
+        return cards;
+    }
+
+    function buildPayload() {
+        const transparent = document.getElementById('transparent-bg').checked;
+        return {
+            v: 1,
+            mode: currentMode,
+            title: document.getElementById('deck-title').value.trim(),
+            hint: document.getElementById('flip-hint').value,
+            theme: {
+                primary:   document.getElementById('color-primary').value,
+                frontEdge: document.getElementById('color-edge').value,
+                cardBg:    document.getElementById('color-card').value,
+                pageBg:    transparent ? 'transparent' : document.getElementById('color-page').value,
+                height:    parseInt(document.getElementById('card-height').value, 10)
+            },
+            cards: gatherCards()
+        };
+    }
+
+    /* --- Output ------------------------------------------------------- */
+
+    function describeLength(length) {
+        const readout = document.getElementById('length-readout');
+        const warning = document.getElementById('length-warning');
+        const warningText = document.getElementById('length-warning-text');
+
+        readout.textContent = length.toLocaleString() + ' characters long.';
+
+        if (length > 8000) {
+            warning.hidden = false;
+            warning.className = 'ct-note ct-note--warning';
+            warningText.textContent =
+                'This link is very long. Most systems cope, but some text boxes trim long links, ' +
+                'and a trimmed link will not open. Test it where you plan to use it, or split the ' +
+                'deck into two shorter ones.';
+        } else if (length > 4000) {
+            warning.hidden = false;
+            warning.className = 'ct-note';
+            warningText.textContent =
+                'This link is getting long. It should be fine, but it is worth pasting it into ' +
+                'your site and checking it opens before you rely on it.';
+        } else {
+            warning.hidden = true;
+        }
+    }
+
+    async function updateOutput() {
+        const payload = buildPayload();
+        const embedOutput = document.getElementById('embed-output');
+        const linkOutput = document.getElementById('link-output');
+
+        if (!payload.cards.length) {
+            linkOutput.value = '';
+            embedOutput.value = '';
+            document.getElementById('length-readout').textContent = 'Add a card to get a link.';
+            document.getElementById('length-warning').hidden = true;
+            return;
+        }
+
+        const fragment = await encodePayload(payload);
+        const link = PUBLIC_BASE + '#' + fragment;
+        const frameHeight = payload.theme.height + 110;
+        const title = payload.title || 'Flip cards';
+
+        linkOutput.value = link;
+        embedOutput.value =
+            '<iframe src="' + escapeAttr(link) + '"\n' +
+            '        title="' + escapeAttr(title) + '"\n' +
+            '        width="100%" height="' + frameHeight + '"\n' +
+            '        style="border:0; max-width:680px;" loading="lazy"></iframe>';
+
+        describeLength(link.length);
+
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(function () {
+            // A hash change alone will not reload a frame, so nudge the query too.
+            document.getElementById('preview-frame').src =
+                PREVIEW_BASE + '?r=' + Date.now() + '#' + fragment;
+        }, 350);
+    }
+
+    /* --- Loading an existing link back in ----------------------------- */
+
+    async function importLink() {
+        const raw = document.getElementById('import-link').value.trim();
+        if (!raw) { return; }
+
+        const hashAt = raw.indexOf('#');
+        const fragment = hashAt >= 0 ? raw.slice(hashAt + 1)
+                                     : raw.replace(/^[^?]*\??/, '');
+
+        let payload;
+        try {
+            payload = await decodeFragment(fragment);
+        } catch (error) {
+            alert('That link could not be read. Make sure you have pasted the whole thing, ' +
+                  'including everything after the # sign.');
+            return;
+        }
+
+        currentMode = payload.mode === 'simple' ? 'simple' : 'star';
+        document.getElementById('card-mode').value = currentMode;
+        document.getElementById('deck-title').value = payload.title || '';
+        if (payload.hint !== undefined) { document.getElementById('flip-hint').value = payload.hint; }
+
+        const theme = payload.theme || {};
+        if (theme.primary)   { document.getElementById('color-primary').value = theme.primary; }
+        if (theme.frontEdge) { document.getElementById('color-edge').value = theme.frontEdge; }
+        if (theme.cardBg)    { document.getElementById('color-card').value = theme.cardBg; }
+        if (theme.height)    { document.getElementById('card-height').value = theme.height; }
+
+        const transparent = theme.pageBg === 'transparent' || !theme.pageBg;
+        document.getElementById('transparent-bg').checked = transparent;
+        if (!transparent) { document.getElementById('color-page').value = theme.pageBg; }
+        syncPageBg();
+        syncHeightReadout();
+
+        document.getElementById('items-container').innerHTML = '';
+        itemCount = 0;
+        (payload.cards || []).forEach(function (card) { addItem(card); });
+        if (!itemCount) { addItem(); }
+
+        document.getElementById('import-link').value = '';
+        updateOutput();
+    }
+
+    /* --- Wiring ------------------------------------------------------- */
+
+    function syncPageBg() {
+        const transparent = document.getElementById('transparent-bg').checked;
+        document.getElementById('color-page').disabled = transparent;
+        document.getElementById('page-bg-wrap').classList.toggle('ct-colour--off', transparent);
+    }
+
+    function syncHeightReadout() {
+        const value = document.getElementById('card-height').value;
+        document.getElementById('height-readout').textContent =
+            value + ' pixels. Make it taller if your answers are long.';
+    }
+
+    function switchMode() {
+        currentMode = document.getElementById('card-mode').value;
+        document.getElementById('items-container').innerHTML = '';
+        itemCount = 0;
+        loadSampleCards();
+        updateOutput();
+    }
+
+    function loadSampleCards() {
+        if (currentMode === 'star') {
+            addItem({
+                tag: 'Leadership',
+                question: "Tell us about a time you've demonstrated effective leadership.",
+                s: 'During a group project at university, team morale was low and we were falling behind schedule.',
+                t: 'I needed to get the group back on track so we could deliver a high-quality presentation on time.',
+                a: 'I organised a brief, informal meeting to listen to everyone’s concerns, then suggested we reassign tasks based on individual strengths and set up a shared tracker.',
+                r: 'The team became much more engaged, and we finished the presentation two days early with a first-class grade.',
+                r2: 'I learned that leadership is less about giving orders and more about listening and providing structure.'
+            });
+            addItem({
+                tag: 'Resilience',
+                question: 'Can you give an example of when you failed at something, and how you dealt with it?',
+                s: 'In my first year I took on too many extracurricular activities alongside my studies.',
+                t: 'I had a major essay to submit and had badly mismanaged my time before the deadline.',
+                a: 'I rushed it and got a poor grade. I owned the mistake, met my tutor for feedback, and started blocking out time in a calendar.',
+                r: 'My grades improved significantly the following semester.',
+                r2: 'Failing taught me that protecting my core priorities sometimes means saying no.'
+            });
+        } else {
+            addItem({
+                tag: 'Applications',
+                question: 'How long should a graduate CV be?',
+                backTitle: 'The short answer',
+                back: 'Two pages at most, and one is often stronger.\n\nRecruiters spend seconds on a first pass, so the things that win an interview need to be near the top. Anything you would not be happy to be asked about in an interview does not need to be there at all.'
+            });
+        }
+    }
+
+    document.getElementById('card-mode').addEventListener('change', switchMode);
+    document.getElementById('add-item-btn').addEventListener('click', function () {
+        addItem();
+        updateOutput();
+    });
+    document.getElementById('import-btn').addEventListener('click', importLink);
+    document.getElementById('transparent-bg').addEventListener('change', function () {
+        syncPageBg();
+        updateOutput();
+    });
+    document.getElementById('card-height').addEventListener('input', function () {
+        syncHeightReadout();
+        updateOutput();
+    });
+
+    document.getElementById('items-container').addEventListener('click', function (event) {
+        const button = event.target.closest('[data-remove]');
+        if (!button) { return; }
+        document.getElementById('item-' + button.getAttribute('data-remove')).remove();
+        updateOutput();
+    });
+    document.getElementById('items-container').addEventListener('input', updateOutput);
+
+    ['deck-title', 'flip-hint', 'color-primary', 'color-edge', 'color-card', 'color-page']
+        .forEach(function (id) {
+            document.getElementById(id).addEventListener('input', updateOutput);
+        });
+
+    syncPageBg();
+    syncHeightReadout();
+    loadSampleCards();
+    updateOutput();
+</script>
+</body>
+</html>

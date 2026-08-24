@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip cards</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Interactive flip cards. The card content travels in the link, so nothing is stored on the server.">
+<style>
+    /* ---------------------------------------------------------------
+       Self-contained on purpose. This page is embedded in other
+       people's sites, so it links to no shared stylesheet and uses no
+       ct- classes. Colours arrive from the link and are written onto
+       :root by the script below.
+    --------------------------------------------------------------- */
+    :root {
+        --primary:        #496DDB;
+        --front-edge:     #AE8799;
+        --highlight:      #EAEFFC;
+        --highlight-text: #2A46A0;
+        --card-bg:        #ffffff;
+        --page-bg:        transparent;
+        --text-main:      #1C1A22;
+        --text-muted:     #635C6E;
+        --border-color:   #E6E3EA;
+        --scene-h:        480px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--page-bg);
+        margin: 0;
+        padding: 10px;
+        color: var(--text-main);
+    }
+
+    .flashcard-wrapper { width: 100%; max-width: 650px; margin: 0 auto; }
+
+    /* --- 3D card engine --- */
+    .scene {
+        width: 100%; height: var(--scene-h); perspective: 1000px;
+        margin-bottom: 25px; cursor: pointer; border-radius: 16px;
+    }
+    .scene:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
+
+    .card {
+        width: 100%; height: 100%; position: relative;
+        transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        transform-style: preserve-3d;
+    }
+    .card.is-flipped { transform: rotateY(180deg); }
+
+    .card-face {
+        position: absolute; width: 100%; height: 100%;
+        backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        display: flex; flex-direction: column;
+        padding: 40px 30px;
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        transition: border-color 0.3s ease;
+    }
+
+    .scene:hover .card-face--front,
+    .scene:focus-visible .card-face--front { border-color: var(--text-main); }
+
+    .card-face--front {
+        align-items: center; justify-content: center; text-align: center;
+        border-bottom: 8px solid var(--front-edge);
+    }
+
+    .question-tag {
+        background: var(--highlight); color: var(--highlight-text);
+        padding: 8px 16px; border-radius: 30px;
+        font-size: 0.85rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1px;
+        position: absolute; top: 30px; max-width: calc(100% - 60px);
+    }
+    .question-tag:empty { display: none; }
+
+    .question-text { font-size: 1.6rem; font-weight: 800; line-height: 1.4; margin: 0; color: var(--text-main); }
+
+    .flip-hint {
+        position: absolute; bottom: 30px;
+        font-size: 0.9rem; font-weight: 600; color: var(--text-muted);
+        display: flex; align-items: center; gap: 8px;
+        background: #F0EEF2; padding: 8px 16px; border-radius: 8px;
+    }
+
+    .card-face--back {
+        transform: rotateY(180deg); text-align: left; overflow-y: auto;
+        border-bottom: 8px solid var(--primary);
+    }
+
+    .back-title {
+        color: var(--text-muted); font-size: 0.9rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin: 0 0 20px; padding-bottom: 15px;
+        border-bottom: 2px dashed var(--border-color); text-align: center;
+    }
+
+    .star-breakdown { display: flex; flex-direction: column; gap: 15px; }
+    .star-item { display: flex; gap: 15px; align-items: flex-start; }
+
+    .star-letter {
+        font-weight: 900; font-size: 1.2rem;
+        width: 38px; height: 38px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 8px; flex-shrink: 0;
+    }
+    .star-s  { color: #496DDB; background: rgba(73, 109, 219, 0.15); }
+    .star-t  { color: #B4610F; background: #FDF1E4; }
+    .star-a  { color: #B04A50; background: #FBEDEE; }
+    .star-r1 { color: #6B6A21; background: #F7F7E4; }
+    .star-r2 { color: #8E6478; background: #F6F0F3; }
+
+    .star-content { font-size: 0.95rem; line-height: 1.5; margin-top: 4px; color: var(--text-main); }
+    .star-content strong {
+        display: block; font-size: 0.8rem; text-transform: uppercase;
+        color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.5px;
+    }
+
+    .plain-back p { font-size: 1rem; line-height: 1.6; margin: 0 0 14px; }
+    .plain-back p:last-child { margin-bottom: 0; }
+
+    .card-face--back::-webkit-scrollbar { width: 6px; }
+    .card-face--back::-webkit-scrollbar-track { background: transparent; }
+    .card-face--back::-webkit-scrollbar-thumb { background: #DAD5E0; border-radius: 10px; }
+
+    /* --- Controls --- */
+    .controls { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 10px; }
+    .counter { font-weight: 800; color: var(--text-muted); font-size: 1rem; }
+
+    .btn-outline {
+        background: var(--card-bg); border: 2px solid var(--border-color);
+        color: var(--text-main); padding: 10px 20px; border-radius: 8px;
+        font-family: inherit; font-weight: 700; font-size: 0.9rem;
+        cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn-outline:hover:not(:disabled) { border-color: var(--text-main); transform: translateY(-2px); }
+    .btn-outline:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn-outline:disabled { opacity: 0.4; cursor: not-allowed; background: transparent; }
+
+    /* --- Message shown when a link will not open --- */
+    .notice {
+        max-width: 650px; margin: 0 auto; padding: 30px;
+        background: var(--card-bg); border: 2px solid var(--border-color);
+        border-radius: 16px; line-height: 1.6;
+    }
+    .notice h1 { font-size: 1.2rem; margin: 0 0 10px; }
+    .notice p { margin: 0 0 10px; color: var(--text-muted); }
+    .notice p:last-child { margin-bottom: 0; }
+
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 520px) {
+        .card-face { padding: 30px 20px; }
+        .question-text { font-size: 1.3rem; }
+        .btn-outline { padding: 10px 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .card { transition: none; }
+        .btn-outline { transition: none; }
+        .btn-outline:hover:not(:disabled) { transform: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="flashcard-wrapper" id="widget" hidden>
+    <div class="scene" id="scene" role="button" tabindex="0" aria-pressed="false">
+        <div class="card" id="flashcard">
+            <div class="card-face card-face--front">
+                <div class="question-tag" id="card-tag"></div>
+                <p class="question-text" id="card-question"></p>
+                <div class="flip-hint" id="flip-hint">Tap to reveal the answer</div>
+            </div>
+            <div class="card-face card-face--back">
+                <div class="back-title" id="back-title">Answer</div>
+                <div id="back-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-outline" id="btn-prev" type="button">&larr; Previous</button>
+        <div class="counter" id="card-counter" aria-hidden="true">1 / 1</div>
+        <button class="btn-outline" id="btn-next" type="button">Next &rarr;</button>
+    </div>
+
+    <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+</div>
+
+<div class="notice" id="notice" hidden>
+    <h1 id="notice-title">Nothing to show</h1>
+    <p id="notice-body"></p>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ====================================================================
+       Reading the deck out of the link.
+
+       Everything the widget shows travels in the address, after the "#".
+       A "#" fragment never leaves the browser, so card content is never
+       sent to this server and never appears in any log here.
+
+         #d=...   deck as JSON, deflate-compressed, then base64url
+         #j=...   deck as JSON, base64url only (uncompressed fallback)
+
+       The same names are accepted in the query string, for content
+       systems that strip fragments out of a URL.
+    ==================================================================== */
+
+    var STAR_ROWS = [
+        { key: 's',  letter: 'S', label: 'Situation',  cls: 'star-s'  },
+        { key: 't',  letter: 'T', label: 'Task',       cls: 'star-t'  },
+        { key: 'a',  letter: 'A', label: 'Action',     cls: 'star-a'  },
+        { key: 'r',  letter: 'R', label: 'Result',     cls: 'star-r1' },
+        { key: 'r2', letter: 'R', label: 'Reflection', cls: 'star-r2' }
+    ];
+
+    var MAX_CARDS = 200;
+    var MAX_FIELD = 4000;
+
+    var deck = [];
+    var mode = 'star';
+    var currentIndex = 0;
+
+    var scene   = document.getElementById('scene');
+    var cardEl  = document.getElementById('flashcard');
+    var prevBtn = document.getElementById('btn-prev');
+    var nextBtn = document.getElementById('btn-next');
+    var liveEl  = document.getElementById('live');
+
+    function bytesFromBase64url(s) {
+        s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) { s += '='; }
+        var binary = atob(s);
+        var out = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) { out[i] = binary.charCodeAt(i); }
+        return out;
+    }
+
+    function inflate(bytes) {
+        if (typeof DecompressionStream === 'undefined') {
+            return Promise.reject(new Error('no-decompression'));
+        }
+        var ds = new DecompressionStream('deflate-raw');
+        var writer = ds.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        return new Response(ds.readable).arrayBuffer().then(function (buf) {
+            return new Uint8Array(buf);
+        });
+    }
+
+    function paramsFromLocation() {
+        var fromHash = new URLSearchParams(location.hash.replace(/^#/, ''));
+        if (fromHash.has('d') || fromHash.has('j')) { return fromHash; }
+        return new URLSearchParams(location.search);
+    }
+
+    function decodeJson(bytes) {
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function readPayload() {
+        var params = paramsFromLocation();
+        if (params.has('d')) {
+            return inflate(bytesFromBase64url(params.get('d'))).then(decodeJson);
+        }
+        if (params.has('j')) {
+            return Promise.resolve(decodeJson(bytesFromBase64url(params.get('j'))));
+        }
+        return Promise.resolve(null);
+    }
+
+    /* --- Tidying up whatever the link contained ---------------------- */
+
+    function text(value) {
+        if (value === null || value === undefined) { return ''; }
+        return String(value).slice(0, MAX_FIELD);
+    }
+
+    function isHexColour(value) {
+        return typeof value === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value);
+    }
+
+    function hexToRgb(hex) {
+        var h = hex.replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        if (h.length < 6) { return null; }
+        return {
+            r: parseInt(h.substr(0, 2), 16),
+            g: parseInt(h.substr(2, 2), 16),
+            b: parseInt(h.substr(4, 2), 16)
+        };
+    }
+
+    function rgbToCss(c) {
+        return 'rgb(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ')';
+    }
+
+    function blend(fg, bg, alpha) {
+        return {
+            r: fg.r * alpha + bg.r * (1 - alpha),
+            g: fg.g * alpha + bg.g * (1 - alpha),
+            b: fg.b * alpha + bg.b * (1 - alpha)
+        };
+    }
+
+    function luminance(c) {
+        var channel = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    }
+
+    function contrast(a, b) {
+        var la = luminance(a), lb = luminance(b);
+        var light = Math.max(la, lb), dark = Math.min(la, lb);
+        return (light + 0.05) / (dark + 0.05);
+    }
+
+    function readableOn(fg, bg) {
+        var candidate = fg;
+        for (var step = 0; step < 20 && contrast(candidate, bg) < 4.5; step++) {
+            candidate = blend(candidate, { r: 0, g: 0, b: 0 }, 0.85);
+        }
+        return contrast(candidate, bg) >= 4.5 ? candidate : { r: 0, g: 0, b: 0 };
+    }
+
+    function applyTheme(theme) {
+        if (!theme || typeof theme !== 'object') { theme = {}; }
+        var root = document.documentElement.style;
+        var map = {
+            primary:   '--primary',
+            frontEdge: '--front-edge',
+            cardBg:    '--card-bg',
+            pageBg:    '--page-bg',
+            textMain:  '--text-main',
+            textMuted: '--text-muted',
+            border:    '--border-color'
+        };
+        Object.keys(map).forEach(function (key) {
+            if (isHexColour(theme[key])) { root.setProperty(map[key], theme[key]); }
+        });
+        if (theme.pageBg === 'transparent') { root.setProperty('--page-bg', 'transparent'); }
+
+        var height = parseInt(theme.height, 10);
+        if (height >= 240 && height <= 1200) { root.setProperty('--scene-h', height + 'px'); }
+
+        // The topic tag is a tint of the primary colour, with its text
+        // darkened until it stays readable whatever colour was chosen.
+        if (isHexColour(theme.primary)) {
+            var rgb = hexToRgb(theme.primary);
+            if (rgb) {
+                var tint = blend(rgb, { r: 255, g: 255, b: 255 }, 0.13);
+                root.setProperty('--highlight', rgbToCss(tint));
+                root.setProperty('--highlight-text', rgbToCss(readableOn(rgb, tint)));
+            }
+        }
+    }
+
+    function cleanDeck(raw) {
+        if (!Array.isArray(raw)) { return []; }
+        return raw.slice(0, MAX_CARDS).map(function (card) {
+            if (!card || typeof card !== 'object') { card = {}; }
+            var out = {
+                tag:       text(card.tag),
+                question:  text(card.question),
+                back:      text(card.back),
+                backTitle: text(card.backTitle)
+            };
+            STAR_ROWS.forEach(function (row) { out[row.key] = text(card[row.key]); });
+            return out;
+        }).filter(function (card) {
+            return card.question || card.back;
+        });
+    }
+
+    /* --- Drawing a card ---------------------------------------------- */
+
+    function paragraphs(into, value) {
+        into.textContent = '';
+        String(value).split(/\n+/).forEach(function (line) {
+            if (!line.trim()) { return; }
+            var p = document.createElement('p');
+            p.textContent = line;              // textContent, never innerHTML
+            into.appendChild(p);
+        });
+    }
+
+    function announce(message) {
+        liveEl.textContent = message;
+    }
+
+    function loadCard(index) {
+        var card = deck[index];
+        document.getElementById('card-tag').textContent = card.tag;
+        document.getElementById('card-question').textContent = card.question;
+
+        var backTitle = document.getElementById('back-title');
+        var backBody  = document.getElementById('back-body');
+        backBody.textContent = '';
+
+        if (mode === 'star') {
+            backTitle.textContent = card.backTitle || 'STAR(R) structure example';
+            backBody.className = 'star-breakdown';
+            STAR_ROWS.forEach(function (row) {
+                if (!card[row.key]) { return; }
+                var item = document.createElement('div');
+                item.className = 'star-item';
+
+                var letter = document.createElement('div');
+                letter.className = 'star-letter ' + row.cls;
+                letter.textContent = row.letter;
+                letter.setAttribute('aria-hidden', 'true');
+
+                var content = document.createElement('div');
+                content.className = 'star-content';
+                var label = document.createElement('strong');
+                label.textContent = row.label;
+                var span = document.createElement('span');
+                span.textContent = card[row.key];
+                content.appendChild(label);
+                content.appendChild(span);
+
+                item.appendChild(letter);
+                item.appendChild(content);
+                backBody.appendChild(item);
+            });
+        } else {
+            backTitle.textContent = card.backTitle || 'Answer';
+            backBody.className = 'plain-back';
+            paragraphs(backBody, card.back);
+        }
+
+        document.getElementById('card-counter').textContent = (index + 1) + ' / ' + deck.length;
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === deck.length - 1;
+
+        scene.setAttribute('aria-label',
+            'Card ' + (index + 1) + ' of ' + deck.length + '. ' + card.question +
+            ' Activate to reveal the answer.');
+        announce('Card ' + (index + 1) + ' of ' + deck.length + '. ' + card.question);
+        reportHeight();
+    }
+
+    function isFlipped() {
+        return cardEl.classList.contains('is-flipped');
+    }
+
+    function flipCard() {
+        var nowFlipped = !isFlipped();
+        cardEl.classList.toggle('is-flipped', nowFlipped);
+        scene.setAttribute('aria-pressed', nowFlipped ? 'true' : 'false');
+        announce(nowFlipped ? document.getElementById('back-body').textContent
+                            : deck[currentIndex].question);
+    }
+
+    function changeCard(direction) {
+        var next = currentIndex + direction;
+        if (next < 0 || next >= deck.length) { return; }
+        if (isFlipped()) {
+            cardEl.classList.remove('is-flipped');
+            scene.setAttribute('aria-pressed', 'false');
+            setTimeout(function () {
+                currentIndex = next;
+                loadCard(currentIndex);
+            }, 300);
+        } else {
+            currentIndex = next;
+            loadCard(currentIndex);
+        }
+    }
+
+    /* --- Telling the host page how tall we are ----------------------- */
+
+    function reportHeight() {
+        if (window.parent === window) { return; }
+        var height = Math.ceil(document.documentElement.scrollHeight);
+        try {
+            window.parent.postMessage({ type: 'flipcards:height', height: height }, '*');
+        } catch (e) { /* host page may not accept messages; nothing to do */ }
+    }
+
+    /* --- Showing a message instead of cards -------------------------- */
+
+    function showNotice(title, body) {
+        document.getElementById('widget').hidden = true;
+        document.getElementById('notice-title').textContent = title;
+        document.getElementById('notice-body').textContent = body;
+        document.getElementById('notice').hidden = false;
+        reportHeight();
+    }
+
+    /* --- Start ------------------------------------------------------- */
+
+    scene.addEventListener('click', flipCard);
+    scene.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+            event.preventDefault();
+            flipCard();
+        }
+    });
+    prevBtn.addEventListener('click', function () { changeCard(-1); });
+    nextBtn.addEventListener('click', function () { changeCard(1); });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowLeft')  { changeCard(-1); }
+        if (event.key === 'ArrowRight') { changeCard(1); }
+    });
+    window.addEventListener('resize', reportHeight);
+
+    readPayload().then(function (payload) {
+        if (!payload) {
+            showNotice('No cards in this link',
+                'This page shows flip cards that are built into the link that opens it. ' +
+                'The link that brought you here does not contain any cards. Whoever shared ' +
+                'it can rebuild it with the flip card link builder.');
+            return;
+        }
+
+        mode = payload.mode === 'simple' ? 'simple' : 'star';
+        deck = cleanDeck(payload.cards);
+
+        if (!deck.length) {
+            showNotice('No cards in this link',
+                'The link opened correctly but did not contain any cards.');
+            return;
+        }
+
+        applyTheme(payload.theme);
+        if (payload.title) { document.title = text(payload.title); }
+        if (payload.hint !== undefined) {
+            document.getElementById('flip-hint').textContent = text(payload.hint);
+        }
+
+        document.getElementById('widget').hidden = false;
+        loadCard(0);
+    }).catch(function (error) {
+        if (error && error.message === 'no-decompression') {
+            showNotice('This browser is too old for this link',
+                'The cards are packed into the link in a way this browser cannot unpack. ' +
+                'Opening the page in an up-to-date browser will fix it.');
+            return;
+        }
+        showNotice('This link is damaged',
+            'The card content in the link could not be read. It was most likely cut short ' +
+            'when it was copied or pasted. Ask whoever shared it to send the full link again.');
+    });
+})();
+</script>
+</body>
+</html>
