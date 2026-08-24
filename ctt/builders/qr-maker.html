@@ -1,174 +1,356 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>TeeSea QR Code Maker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
-        
-        /* --- Tool Header --- */
-        .tool-header { 
-            background-color: #0069fa; 
-            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); 
-            background-position: right center; 
-            background-repeat: no-repeat; 
-            background-size: contain; 
-            color: #ffffff; 
-            padding: 20px 40px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        }
-        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
-        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-
-        /* --- Layout --- */
-        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
-        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
-        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.2; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; }
-        
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; width: 100%; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
-        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        
-        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
-        
-        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.9rem; }
-        
-        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 15px; font-weight: 600; color: #334155; }
-        .checkbox-wrapper input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-
-        .copy-btn { background: #0069fa; color: white; border: none; padding: 14px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 30px; font-size: 1.05rem; transition: background 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;}
-        .copy-btn:hover { background: #0056cc; }
-
-        /* --- Preview Area --- */
-        .qr-container {
-            margin-top: 20px;
-            padding: 40px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Checkerboard pattern to show transparency clearly */
-            background-color: #f0f0f0;
-            background-image: 
-                linear-gradient(45deg, #d1d5db 25%, transparent 25%), 
-                linear-gradient(-45deg, #d1d5db 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #d1d5db 75%), 
-                linear-gradient(-45deg, transparent 75%, #d1d5db 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        canvas {
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Code Maker</title>
+<meta name="description" content="Generate branded, high-resolution QR codes for posters, slides and printed handouts. Runs entirely in your browser.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  .qr-stage {
+    display: grid;
+    place-items: center;
+    padding: var(--ct-sp-6);
+    border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius-lg);
+    min-height: 300px;
+  }
+  .qr-stage canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--ct-radius-sm);
+    box-shadow: var(--ct-shadow-md);
+  }
+  .qr-stage canvas[hidden] { display: none; }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <header class="tool-header">
-        <div class="hero-content">
-            <h1>QR Code Maker</h1>
-            <div class="header-divider"></div>
-            <p>Instantly generate branded, high-resolution QR codes for your posters and presentations.</p>
-            <span class="badge">Universal Edition 1.0</span>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div class="panel-left">
-            <h2>⚙️ Data & Styling</h2>
-            
-            <div class="instructions">
-                <b>💡 Pro Tip:</b> 
-                You can link these directly to a specific event or vacancy on your portal. Just paste the public URL below!
-            </div>
-
-            <label>1. URL / Link Destination</label>
-            <input type="text" id="qr-url" placeholder="https://example.com/" oninput="updateQR()">
-
-            <label>2. QR Code Color (Foreground)</label>
-            <div class="color-picker-wrapper">
-                <input type="color" id="qr-color" value="#000000" oninput="updateQR()">
-                <span>Main Pattern Color</span>
-            </div>
-
-            <label>3. Background Color</label>
-            <div class="color-picker-wrapper" id="bg-picker-wrapper">
-                <input type="color" id="qr-bg" value="#ffffff" oninput="updateQR()">
-                <span>Background Box Color</span>
-            </div>
-
-            <div class="checkbox-wrapper">
-                <input type="checkbox" id="qr-transparent" onchange="toggleTransparency()">
-                <label for="qr-transparent" style="margin: 0;">Make Background Transparent</label>
-            </div>
-            
-            <button class="copy-btn" onclick="downloadQR()">📥 Download as PNG</button>
-        </div>
-
-        <div class="panel-right">
-            <h2>👀 Live Visual Preview</h2>
-            <div class="qr-container">
-                <canvas id="qr-canvas"></canvas>
-            </div>
-            <p style="color: #64748b; font-size: 0.85rem; margin-top: 20px; text-align: center;">Scan with your phone camera to test it!</p>
-        </div>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">QR</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">QR Code Maker</h1>
+      <p class="ct-toolbar__sub">Branded, print-resolution QR codes. Nothing is uploaded or stored.</p>
     </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
 
-    <script>
-        let qr; 
+<main class="ct-shell">
+  <div class="ct-workspace">
 
-        function updateQR() {
-            const url = document.getElementById('qr-url').value || 'https://example.com/';
-            const color = document.getElementById('qr-color').value;
-            const bgColor = document.getElementById('qr-bg').value;
-            const isTransparent = document.getElementById('qr-transparent').checked;
+    <!-- ---------- Controls ---------- -->
+    <section class="ct-card">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Data and styling</h2>
+      </div>
 
-            qr = new QRious({
-                element: document.getElementById('qr-canvas'),
-                value: url,
-                background: isTransparent ? '#ffffff' : bgColor,
-                backgroundAlpha: isTransparent ? 0 : 1, 
-                foreground: color,
-                size: 350, 
-                padding: 15
-            });
-        }
+      <div class="ct-stack">
 
-        function toggleTransparency() {
-            const isTransparent = document.getElementById('qr-transparent').checked;
-            const bgPicker = document.getElementById('qr-bg');
-            const bgWrapper = document.getElementById('bg-picker-wrapper');
-            
-            if (isTransparent) {
-                bgPicker.disabled = true;
-                bgWrapper.style.opacity = '0.5';
-            } else {
-                bgPicker.disabled = false;
-                bgWrapper.style.opacity = '1';
-            }
-            updateQR();
-        }
+        <div class="ct-note" id="js-libnote" hidden>
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+          </svg>
+          <div><b>Can't load the QR library.</b> The tool needs
+          <span class="ct-mono">cdnjs.cloudflare.com</span> to be reachable. If you're on a
+          restricted network, try a different connection.</div>
+        </div>
 
-        function downloadQR() {
-            const canvas = document.getElementById('qr-canvas');
-            
-            const link = document.createElement('a');
-            link.download = 'TeeSea-QRCode.png';
-            link.href = canvas.toDataURL('image/png'); 
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+        <div class="ct-note">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+          <div><b>Tip:</b> link these straight to a specific event or vacancy on your portal —
+          just paste the public URL below.</div>
+        </div>
 
-        window.onload = function() {
-            updateQR();
-        };
-    </script>
+        <div class="ct-field">
+          <label class="ct-label" for="qr-url">Link destination</label>
+          <input class="ct-input" type="url" id="qr-url" inputmode="url"
+                 placeholder="https://example.com/" value="https://example.com/">
+          <span class="ct-hint" id="qr-url-hint">The address someone lands on after scanning.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="qr-color">Code colour</label>
+          <div class="ct-colour">
+            <input type="color" id="qr-color" value="#1C1A22">
+            <span class="ct-colour__label">The pattern itself</span>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="qr-bg">Background colour</label>
+          <div class="ct-colour" id="bg-picker-wrapper">
+            <input type="color" id="qr-bg" value="#FFFFFF">
+            <span class="ct-colour__label">The box behind it</span>
+          </div>
+        </div>
+
+        <label class="ct-check" for="qr-transparent">
+          <input type="checkbox" id="qr-transparent">
+          <span>Transparent background<br>
+            <span class="ct-hint">For placing on a coloured poster or slide.</span>
+          </span>
+        </label>
+
+        <div id="qr-contrast" hidden></div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="qr-size">Download size</label>
+          <select class="ct-select" id="qr-size">
+            <option value="512">512px — web and email</option>
+            <option value="1024" selected>1024px — slides and A4 handouts</option>
+            <option value="2048">2048px — posters and large print</option>
+            <option value="4096">4096px — banners and roller displays</option>
+          </select>
+          <span class="ct-hint" id="qr-size-hint"></span>
+        </div>
+
+        <button class="ct-btn ct-btn--primary ct-btn--block ct-btn--lg" id="qr-download" type="button">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 3v8.2l3-3 1.3 1.3L10 14 5.7 9.5 7 8.2l3 3V3h0zM4 15.5h12V17H4z"/>
+          </svg>
+          Download PNG
+        </button>
+      </div>
+    </section>
+
+    <!-- ---------- Preview ---------- -->
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <span class="ct-section-label" id="qr-dims"></span>
+      </div>
+
+      <div class="qr-stage" id="qr-stage">
+        <canvas id="qr-canvas" role="img" aria-label="Preview of the generated QR code"></canvas>
+      </div>
+
+      <p class="ct-small ct-muted" style="text-align:center; margin-top: var(--ct-sp-4);">
+        Point your phone camera at it to check it scans before you print.
+      </p>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-toast" id="qr-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var PREVIEW_SIZE = 320;
+  var PADDING_RATIO = 15 / 350;   // keeps the quiet zone proportional at every size
+
+  var el = {
+    url:         document.getElementById('qr-url'),
+    colour:      document.getElementById('qr-color'),
+    bg:          document.getElementById('qr-bg'),
+    bgWrap:      document.getElementById('bg-picker-wrapper'),
+    transparent: document.getElementById('qr-transparent'),
+    size:        document.getElementById('qr-size'),
+    sizeHint:    document.getElementById('qr-size-hint'),
+    canvas:      document.getElementById('qr-canvas'),
+    stage:       document.getElementById('qr-stage'),
+    dims:        document.getElementById('qr-dims'),
+    contrast:    document.getElementById('qr-contrast'),
+    download:    document.getElementById('qr-download'),
+    libNote:     document.getElementById('js-libnote'),
+    toast:       document.getElementById('qr-toast')
+  };
+
+  /* ---------- contrast, so nobody prints a code that cannot be scanned ---------- */
+
+  function luminance(hex) {
+    var v = hex.replace('#', '');
+    var rgb = [0, 2, 4].map(function (i) {
+      var c = parseInt(v.substr(i, 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  }
+
+  function ratio(a, b) {
+    var la = luminance(a), lb = luminance(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  }
+
+  function note(kind, title, body) {
+    return '<div class="ct-note ct-note--' + kind + '">' +
+      '<svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">' +
+      '<path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/></svg>' +
+      '<div><b>' + title + '</b> ' + body + '</div></div>';
+  }
+
+  function checkContrast() {
+    var fg = el.colour.value;
+    var bg = el.transparent.checked ? '#FFFFFF' : el.bg.value;
+    var r = ratio(fg, bg);
+    var inverted = luminance(fg) > luminance(bg);
+    var html = '';
+
+    if (r < 3) {
+      html = note('danger', 'This probably will not scan.',
+        'The code and its background are too close in tone (' + r.toFixed(1) + ':1). ' +
+        'Aim for at least 5:1 — dark pattern, light background.');
+    } else if (r < 5) {
+      html = note('warning', 'Scannable, but only just.',
+        'Contrast is ' + r.toFixed(1) + ':1. It may fail in dim light or on matt paper. ' +
+        'Darkening the pattern is the safest fix.');
+    } else if (inverted) {
+      html = note('warning', 'Light pattern on a dark background.',
+        'Some phone cameras refuse to read inverted codes. Test it on more than one handset.');
+    } else if (el.transparent.checked) {
+      html = note('warning', 'Transparent background.',
+        'Contrast was measured against white. Check it again once it is sitting on your ' +
+        'actual poster or slide colour.');
+    }
+
+    el.contrast.innerHTML = html;
+    el.contrast.hidden = !html;
+  }
+
+  /* ---------- drawing ---------- */
+
+  function draw(canvas, size) {
+    return new QRious({
+      element: canvas,
+      value: el.url.value.trim() || 'https://example.com/',
+      size: size,
+      padding: Math.round(size * PADDING_RATIO),
+      foreground: el.colour.value,
+      background: el.transparent.checked ? '#ffffff' : el.bg.value,
+      backgroundAlpha: el.transparent.checked ? 0 : 1
+    });
+  }
+
+  function refresh() {
+    if (typeof QRious === 'undefined') return;
+    draw(el.canvas, PREVIEW_SIZE);
+    el.dims.textContent = el.size.value + ' × ' + el.size.value + ' px';
+    el.sizeHint.textContent = sizeAdvice(parseInt(el.size.value, 10));
+    checkContrast();
+  }
+
+  // Roughly how big the code can be printed before it goes soft, at 300dpi.
+  function sizeAdvice(px) {
+    var cm = (px / 300) * 2.54;
+    return 'Stays crisp printed up to about ' + cm.toFixed(0) + 'cm across.';
+  }
+
+  function toggleTransparency() {
+    var off = el.transparent.checked;
+    el.bg.disabled = off;
+    el.bgWrap.classList.toggle('ct-colour--off', off);
+    el.stage.classList.toggle('ct-checkerboard', off);
+    refresh();
+  }
+
+  /* ---------- download ---------- */
+
+  // Two-part endings have to be listed out: there is no way to tell .co.uk
+  // from a real subdomain by shape alone, so leeds.ac.uk would otherwise come
+  // out as "ac" rather than "leeds".
+  var COMPOUND_ENDINGS = [
+    'co.uk', 'ac.uk', 'org.uk', 'gov.uk', 'net.uk', 'sch.uk', 'nhs.uk', 'me.uk',
+    'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au',
+    'co.nz', 'net.nz', 'org.nz', 'ac.nz', 'govt.nz',
+    'co.za', 'org.za', 'co.in', 'ac.in', 'gov.in',
+    'co.jp', 'ac.jp', 'or.jp', 'com.br', 'com.cn', 'edu.cn'
+  ];
+
+  function tidy(part) {
+    return part.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  // google.com -> google, www.leeds.ac.uk -> leeds, jobs.google.com -> google
+  function domainName(host) {
+    host = host.toLowerCase().replace(/^www\./, '');
+    if (!host || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;   // bare IP
+
+    var parts = host.split('.');
+    if (parts.length < 2) return tidy(parts[0]) || null;
+
+    var drop = COMPOUND_ENDINGS.indexOf(parts.slice(-2).join('.')) !== -1 ? 3 : 2;
+
+    // If dropping the ending runs off the front, the host is the ending
+    // itself - gov.uk is a real site, not just a suffix. Use its first label.
+    var name = parts[parts.length - drop] || parts[0];
+    return tidy(name) || null;
+  }
+
+  function filename() {
+    var host;
+    try {
+      host = new URL(el.url.value.trim()).hostname;
+    } catch (e) {
+      return 'qr-code.png';
+    }
+    var name = domainName(host);
+    return name ? name + '-qr.png' : 'qr-code.png';
+  }
+
+  function showToast(msg) {
+    el.toast.textContent = msg;
+    el.toast.classList.add('is-visible');
+    setTimeout(function () { el.toast.classList.remove('is-visible'); }, 2600);
+  }
+
+  function download() {
+    if (typeof QRious === 'undefined') return;
+    // Render fresh at full size rather than upscaling the preview, so the
+    // exported file is genuinely sharp instead of a blown-up 320px image.
+    var off = document.createElement('canvas');
+    draw(off, parseInt(el.size.value, 10));
+
+    off.toBlob(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename();
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      showToast('Downloaded ' + filename());
+    }, 'image/png');
+  }
+
+  /* ---------- wiring ---------- */
+
+  ['input', 'change'].forEach(function (evt) {
+    el.url.addEventListener(evt, refresh);
+    el.colour.addEventListener(evt, refresh);
+    el.bg.addEventListener(evt, refresh);
+  });
+  el.size.addEventListener('change', refresh);
+  el.transparent.addEventListener('change', toggleTransparency);
+  el.download.addEventListener('click', download);
+
+  if (typeof QRious === 'undefined') {
+    el.libNote.hidden = false;
+    el.download.disabled = true;
+    el.stage.innerHTML = '<p class="ct-empty">Preview unavailable</p>';
+  } else {
+    refresh();
+  }
+})();
+</script>
 </body>
 </html>

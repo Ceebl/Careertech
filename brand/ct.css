@@ -1,0 +1,907 @@
+/* ==========================================================================
+   CareerTech house style
+   --------------------------------------------------------------------------
+   Everything is prefixed ct- so it can never collide with a host page.
+
+   Two ways to use it:
+     <body class="ct-page">   full-page tool  - styles bare elements too
+     <div class="ct-root">    embedded block  - nothing leaks outside the div
+
+   Colours live in three layers. Components only ever read layer 2, so
+   changing one line there changes every tool, in both light and dark.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Font
+   -------------------------------------------------------------------------- */
+
+/* DM Sans and DM Mono, hosted here rather than loaded from Google, so the
+   tools keep working on networks that block it and no visitor data leaves
+   the server. Both are SIL Open Font License - see fonts/OFL.txt.
+
+   One variable file covers every weight from 100 to 1000. The latin-ext
+   file is only fetched if a page actually uses accented characters. */
+
+@font-face {
+  font-family: 'DM Sans';
+  src: url('fonts/dm-sans-latin.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  src: url('fonts/dm-sans-latin-ext.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+                 U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+                 U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('fonts/dm-mono-latin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'DM Mono';
+  src: url('fonts/dm-mono-latin-ext.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+                 U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+                 U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --------------------------------------------------------------------------
+   2. Layer 1 - raw ingredients. Never used directly by a component.
+   -------------------------------------------------------------------------- */
+
+:root,
+.ct-root {
+  /* Brand palette */
+  --ct-blue:       #496DDB;
+  --ct-periwinkle: #717EC3;
+  --ct-mauve:      #AE8799;
+  --ct-rose:       #C95D63;
+  --ct-orange:     #EE8434;
+  --ct-citron:     #C0BF47;
+
+  /* Darkened steps - for solid fills that carry white text */
+  --ct-blue-deep:   #3355C4;
+  --ct-rose-deep:   #B04A50;
+  --ct-citron-deep: #6B6A21;
+
+  /* Lightened steps - for dark mode, where mid-tones sink into the page */
+  --ct-blue-lift:   #7B96E8;
+  --ct-peri-lift:   #9AA5DC;
+  --ct-mauve-lift:  #C7A6B5;
+  --ct-rose-lift:   #E8878C;
+  --ct-orange-lift: #F0AC6B;
+  --ct-citron-lift: #D3D26A;
+
+  /* Neutrals - a faint purple cast so they sit with the palette */
+  --ct-n0:   #FFFFFF;
+  --ct-n25:  #FAF9FB;
+  --ct-n50:  #F7F6F8;
+  --ct-n100: #F0EEF2;
+  --ct-n200: #E6E3EA;
+  --ct-n300: #DAD5E0;
+  --ct-n400: #B5AEC0;
+  --ct-n500: #8B8399;
+  --ct-n600: #635C6E;
+  --ct-n700: #4A4454;
+  --ct-n800: #302C38;
+  --ct-n850: #252230;
+  --ct-n900: #1C1A22;
+  --ct-n950: #121016;
+}
+
+/* --------------------------------------------------------------------------
+   3. Layer 2 - jobs. This is the layer that flips for dark mode.
+   -------------------------------------------------------------------------- */
+
+:root,
+.ct-root {
+  --ct-page:      var(--ct-n50);
+  --ct-surface:   var(--ct-n0);
+  --ct-surface-2: var(--ct-n100);
+  --ct-sunken:    var(--ct-n100);
+
+  --ct-text:         var(--ct-n900);
+  --ct-text-soft:    var(--ct-n600);
+  --ct-text-faint:   var(--ct-n500);
+  --ct-text-on-fill: #FFFFFF;
+
+  --ct-line:        var(--ct-n200);
+  --ct-line-strong: var(--ct-n300);
+
+  --ct-accent:       var(--ct-blue);
+  --ct-accent-hover: var(--ct-blue-deep);
+  --ct-accent-text:  #2A46A0;
+  --ct-accent-tint:  #EAEFFC;
+  --ct-accent-line:  #C9D5F5;
+
+  --ct-info:      var(--ct-periwinkle);
+  --ct-info-text: #3D4785;
+  --ct-info-tint: #EEF0F9;
+  --ct-info-line: #CDD3EC;
+
+  --ct-danger:      var(--ct-rose);
+  --ct-danger-fill: var(--ct-rose-deep);
+  --ct-danger-text: #8E2F34;
+  --ct-danger-tint: #FBEDEE;
+  --ct-danger-line: #F0CDCF;
+  --ct-on-danger:   #FFFFFF;
+
+  --ct-warning:      var(--ct-orange);
+  --ct-warning-fill: var(--ct-orange);
+  --ct-warning-text: #7A4409;
+  --ct-warning-tint: #FDF1E4;
+  --ct-warning-line: #F6D6B4;
+  --ct-on-warning:   #4A2405;
+
+  --ct-success:      var(--ct-citron);
+  --ct-success-fill: var(--ct-citron-deep);
+  --ct-success-text: #5A5915;
+  --ct-success-tint: #F7F7E4;
+  --ct-success-line: #E4E3AE;
+
+  --ct-decor:      var(--ct-mauve);
+  --ct-decor-text: #6E4E5E;
+  --ct-decor-tint: #F6F0F3;
+  --ct-decor-line: #E5D5DD;
+
+  --ct-focus: color-mix(in srgb, var(--ct-accent) 35%, transparent);
+
+  --ct-shadow-sm: 0 1px 2px rgba(28,26,34,.05), 0 1px 3px rgba(28,26,34,.07);
+  --ct-shadow-md: 0 2px 4px rgba(28,26,34,.05), 0 4px 12px rgba(28,26,34,.07);
+  --ct-shadow-lg: 0 4px 8px rgba(28,26,34,.06), 0 12px 28px rgba(28,26,34,.10);
+
+  /* Type */
+  --ct-font:      'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ct-font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --ct-size-xs:  0.8125rem;  /* 13 */
+  --ct-size-sm:  0.875rem;   /* 14 */
+  --ct-size-md:  1rem;       /* 16 - body */
+  --ct-size-lg:  1.25rem;    /* 20 */
+  --ct-size-xl:  1.625rem;   /* 26 */
+  --ct-size-2xl: 2rem;       /* 32 */
+  --ct-size-3xl: 2.5rem;     /* 40 */
+
+  /* Shape. Small controls are barely rounded; only large containers get a
+     generous corner. No pills - the full radius is reserved for genuine tag
+     chips, where a pill is the established convention. */
+  --ct-radius-sm:   4px;
+  --ct-radius:      8px;
+  --ct-radius-lg:  14px;
+  --ct-radius-xl:  20px;
+  --ct-radius-full: 999px;
+
+  /* Spacing */
+  --ct-sp-1:   4px;
+  --ct-sp-2:   8px;
+  --ct-sp-3:  12px;
+  --ct-sp-4:  16px;
+  --ct-sp-5:  20px;
+  --ct-sp-6:  24px;
+  --ct-sp-8:  32px;
+  --ct-sp-10: 40px;
+  --ct-sp-12: 48px;
+
+  --ct-control-h: 44px;
+  --ct-ease: cubic-bezier(.2, .6, .3, 1);
+
+  /* Tells the browser which way to render scrollbars and native controls. */
+  color-scheme: light;
+}
+
+/* Dark mode. Only layer 2 is redefined - layer 1 and every component stay put.
+
+   Dark is opt-in, never automatic: these pages default to light and the
+   toggle in the toolbar switches them. ct.js remembers the choice and applies
+   it before first paint, so a saved dark setting does not flash light. */
+
+
+[data-ct-theme="dark"] {
+  --ct-page:      #17161B;
+  --ct-surface:   #201F26;
+  --ct-surface-2: #2A2833;
+  --ct-sunken:    #121016;
+
+  --ct-text:         #F3F1F6;
+  --ct-text-soft:    #A9A2B5;
+  --ct-text-faint:   #7E7789;
+  --ct-text-on-fill: #101A33;
+
+  --ct-line:        #302E38;
+  --ct-line-strong: #3B3844;
+
+  --ct-accent:       var(--ct-blue-lift);
+  --ct-accent-hover: #94ABEE;
+  --ct-accent-text:  #A8BCF0;
+  --ct-accent-tint:  #1B2440;
+  --ct-accent-line:  #2E3C68;
+
+  --ct-info:      var(--ct-peri-lift);
+  --ct-info-text: #B3BBE6;
+  --ct-info-tint: #1E2136;
+  --ct-info-line: #333856;
+
+  --ct-danger:      var(--ct-rose-lift);
+  --ct-danger-fill: var(--ct-rose-lift);
+  --ct-danger-text: #F0A7AB;
+  --ct-danger-tint: #2E1A1C;
+  --ct-danger-line: #4A2B2E;
+  --ct-on-danger:   #33161A;
+
+  --ct-warning:      var(--ct-orange-lift);
+  --ct-warning-fill: var(--ct-orange-lift);
+  --ct-warning-text: #F0AC6B;
+  --ct-warning-tint: #2E2113;
+  --ct-warning-line: #4A3520;
+
+  --ct-success:      var(--ct-citron-lift);
+  --ct-success-fill: var(--ct-citron-lift);
+  --ct-success-text: #D3D26A;
+  --ct-success-tint: #262612;
+  --ct-success-line: #3E3D1E;
+
+  --ct-decor:      var(--ct-mauve-lift);
+  --ct-decor-text: #C7A6B5;
+  --ct-decor-tint: #2A2226;
+  --ct-decor-line: #3F343A;
+
+  --ct-shadow-sm: 0 1px 2px rgba(0,0,0,.30), 0 1px 3px rgba(0,0,0,.24);
+  --ct-shadow-md: 0 2px 4px rgba(0,0,0,.30), 0 4px 12px rgba(0,0,0,.28);
+  --ct-shadow-lg: 0 4px 8px rgba(0,0,0,.34), 0 12px 28px rgba(0,0,0,.40);
+
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------------------------
+   4. Base. Bare elements are only styled inside .ct-page, so an embedded
+      .ct-root block can never restyle its host.
+   -------------------------------------------------------------------------- */
+
+.ct-page,
+.ct-root {
+  font-family: var(--ct-font);
+  font-size: var(--ct-size-md);
+  line-height: 1.6;
+  color: var(--ct-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* DM Sans carries an optical-size axis - let it adjust with the text size */
+  font-optical-sizing: auto;
+}
+
+.ct-page {
+  margin: 0;
+  background: var(--ct-page);
+  min-height: 100vh;
+}
+
+.ct-page *,
+.ct-page *::before,
+.ct-page *::after,
+.ct-root *,
+.ct-root *::before,
+.ct-root *::after { box-sizing: border-box; }
+
+/* Components that set their own display (flex, grid) would otherwise beat the
+   browser's built-in rule for the hidden attribute, and never actually hide. */
+.ct-page [hidden],
+.ct-root [hidden] { display: none !important; }
+
+.ct-page h1, .ct-page h2, .ct-page h3, .ct-page h4 {
+  margin: 0 0 var(--ct-sp-3);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ct-text);
+}
+
+.ct-page h1 { font-size: var(--ct-size-2xl); letter-spacing: -0.03em; }
+.ct-page h2 { font-size: var(--ct-size-xl); letter-spacing: -0.025em; }
+.ct-page h3 { font-size: var(--ct-size-lg); }
+.ct-page h4 { font-size: var(--ct-size-md); }
+
+/* Hero heading. Heavy, tight, and set close - the weight does the work,
+   so it needs less size than you would expect.
+
+   Scoped with the parent class on purpose: a bare .ct-display would lose to
+   the .ct-page h2 rule above, and silently render at normal heading size. */
+.ct-page .ct-display,
+.ct-root .ct-display {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin: 0 0 var(--ct-sp-4);
+  color: var(--ct-text);
+}
+
+/* One word of a heading picked out in colour. */
+.ct-hl { color: var(--ct-accent); }
+.ct-hl--decor { color: var(--ct-decor); }
+.ct-hl--warm  { color: var(--ct-warning); }
+
+.ct-page p { margin: 0 0 var(--ct-sp-4); }
+.ct-page p:last-child { margin-bottom: 0; }
+
+.ct-page a,
+.ct-root a { color: var(--ct-accent-text); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.ct-page a:hover,
+.ct-root a:hover { color: var(--ct-accent); }
+
+.ct-page code, .ct-root code,
+.ct-page pre,  .ct-root pre { font-family: var(--ct-font-mono); font-size: 0.9em; }
+
+/* One focus style everywhere, and it is always visible. */
+.ct-page :focus-visible,
+.ct-root :focus-visible {
+  outline: 2px solid var(--ct-accent);
+  outline-offset: 2px;
+  border-radius: var(--ct-radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-page *, .ct-root * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Layout
+   -------------------------------------------------------------------------- */
+
+.ct-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--ct-sp-6) var(--ct-sp-5) var(--ct-sp-12);
+}
+.ct-shell--narrow { max-width: 760px; }
+
+/* The builder layout: controls on the left, preview on the right.
+   Stacks below 900px instead of squashing. */
+.ct-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: var(--ct-sp-6);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ct-workspace { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Sticky preview, but height is never forced - it grows with its content
+   and only scrolls internally if it genuinely runs out of screen. */
+.ct-workspace__preview {
+  position: sticky;
+  top: var(--ct-sp-5);
+  max-height: calc(100vh - var(--ct-sp-10));
+  overflow: auto;
+}
+
+@media (max-width: 900px) {
+  .ct-workspace__preview { position: static; max-height: none; overflow: visible; }
+}
+
+.ct-stack   { display: flex; flex-direction: column; gap: var(--ct-sp-4); }
+.ct-stack-2 { display: flex; flex-direction: column; gap: var(--ct-sp-2); }
+.ct-row     { display: flex; align-items: center; gap: var(--ct-sp-3); flex-wrap: wrap; }
+.ct-row--end { justify-content: flex-end; }
+.ct-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--ct-sp-4);
+}
+
+/* --------------------------------------------------------------------------
+   6. Toolbar - replaces the old blue banner. No external images.
+   -------------------------------------------------------------------------- */
+
+.ct-toolbar {
+  background: var(--ct-surface);
+  border-bottom: 1px solid var(--ct-line);
+  padding: var(--ct-sp-5) var(--ct-sp-5);
+}
+
+.ct-toolbar__inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--ct-sp-4);
+  flex-wrap: wrap;
+}
+
+.ct-toolbar__mark {
+  width: 38px; height: 38px; flex: none;
+  border-radius: var(--ct-radius);
+  background: var(--ct-accent);
+  color: var(--ct-text-on-fill);
+  display: grid; place-items: center;
+  font-weight: 700; font-size: var(--ct-size-md);
+  letter-spacing: -0.03em;
+}
+
+.ct-toolbar__titles { flex: 1 1 260px; min-width: 0; }
+.ct-toolbar__title {
+  margin: 0;
+  font-size: var(--ct-size-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ct-toolbar__sub {
+  margin: 2px 0 0;
+  font-size: var(--ct-size-sm);
+  color: var(--ct-text-soft);
+}
+
+/* --------------------------------------------------------------------------
+   7. Surfaces
+   -------------------------------------------------------------------------- */
+
+.ct-card {
+  background: var(--ct-surface);
+  border: 1px solid var(--ct-line);
+  border-radius: var(--ct-radius-lg);
+  box-shadow: var(--ct-shadow-sm);
+  padding: var(--ct-sp-5);
+}
+.ct-card--flush { padding: 0; overflow: hidden; }
+.ct-card--raised { box-shadow: var(--ct-shadow-md); }
+
+.ct-card__head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--ct-sp-3);
+  margin: 0 0 var(--ct-sp-4);
+  padding-bottom: var(--ct-sp-3);
+  border-bottom: 1px solid var(--ct-line);
+}
+.ct-card__title {
+  margin: 0;
+  font-size: var(--ct-size-md);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.ct-section-label {
+  font-size: var(--ct-size-xs);
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ct-text-faint);
+}
+
+.ct-divider { height: 1px; background: var(--ct-line); border: 0; margin: var(--ct-sp-5) 0; }
+
+/* --------------------------------------------------------------------------
+   8. Forms
+   -------------------------------------------------------------------------- */
+
+.ct-field { display: flex; flex-direction: column; gap: var(--ct-sp-2); }
+
+.ct-label {
+  font-size: var(--ct-size-sm);
+  font-weight: 500;
+  color: var(--ct-text);
+}
+.ct-hint { font-size: var(--ct-size-xs); color: var(--ct-text-soft); }
+
+.ct-input,
+.ct-select,
+.ct-textarea {
+  width: 100%;
+  min-height: var(--ct-control-h);
+  padding: 0 var(--ct-sp-3);
+  font-family: inherit;
+  font-size: var(--ct-size-md);
+  color: var(--ct-text);
+  background: var(--ct-surface);
+  border: 1px solid var(--ct-line-strong);
+  border-radius: var(--ct-radius);
+  transition: border-color .15s var(--ct-ease), box-shadow .15s var(--ct-ease);
+}
+
+.ct-textarea { padding: var(--ct-sp-3); min-height: 96px; resize: vertical; line-height: 1.5; }
+
+.ct-input::placeholder,
+.ct-textarea::placeholder { color: var(--ct-text-faint); }
+
+.ct-input:hover,
+.ct-select:hover,
+.ct-textarea:hover { border-color: var(--ct-n400); }
+
+.ct-input:focus,
+.ct-select:focus,
+.ct-textarea:focus {
+  outline: none;
+  border-color: var(--ct-accent);
+  box-shadow: 0 0 0 3px var(--ct-focus);
+}
+
+.ct-input:disabled,
+.ct-select:disabled,
+.ct-textarea:disabled {
+  background: var(--ct-surface-2);
+  color: var(--ct-text-faint);
+  cursor: not-allowed;
+}
+
+.ct-select {
+  appearance: none;
+  padding-right: var(--ct-sp-8);
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+                    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 18px) 55%, calc(100% - 13px) 55%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+
+.ct-input--mono { font-family: var(--ct-font-mono); font-size: var(--ct-size-sm); }
+
+/* Checkbox and radio */
+.ct-check {
+  display: flex; align-items: flex-start; gap: var(--ct-sp-3);
+  cursor: pointer;
+  font-size: var(--ct-size-md);
+}
+.ct-check input {
+  width: 18px; height: 18px; flex: none; margin: 1px 0 0;
+  accent-color: var(--ct-accent);
+  cursor: pointer;
+}
+.ct-check--disabled { opacity: .55; cursor: not-allowed; }
+
+/* Colour picker row */
+.ct-colour {
+  display: flex; align-items: center; gap: var(--ct-sp-3);
+  padding: var(--ct-sp-2);
+  background: var(--ct-surface-2);
+  border: 1px solid var(--ct-line);
+  border-radius: var(--ct-radius);
+  transition: opacity .15s var(--ct-ease);
+}
+.ct-colour input[type="color"] {
+  width: 40px; height: 32px; flex: none; padding: 0;
+  border: 1px solid var(--ct-line-strong);
+  border-radius: var(--ct-radius-sm);
+  background: none;
+  cursor: pointer;
+}
+.ct-colour input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.ct-colour input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 3px; }
+.ct-colour__label { font-size: var(--ct-size-sm); color: var(--ct-text-soft); }
+.ct-colour--off { opacity: .5; pointer-events: none; }
+
+/* Range */
+.ct-range { width: 100%; accent-color: var(--ct-accent); }
+
+/* --------------------------------------------------------------------------
+   9. Buttons
+   -------------------------------------------------------------------------- */
+
+.ct-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--ct-sp-2);
+  min-height: var(--ct-control-h);
+  padding: 0 var(--ct-sp-4);
+  font-family: inherit;
+  font-size: var(--ct-size-md);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ct-text);
+  background: var(--ct-surface);
+  border: 1px solid var(--ct-line-strong);
+  border-radius: var(--ct-radius);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s var(--ct-ease), border-color .15s var(--ct-ease), transform .06s var(--ct-ease);
+}
+.ct-btn:hover { background: var(--ct-surface-2); border-color: var(--ct-n400); }
+.ct-btn:active { transform: translateY(1px); }
+.ct-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.ct-btn--primary {
+  background: var(--ct-accent);
+  border-color: var(--ct-accent);
+  color: var(--ct-text-on-fill);
+  box-shadow: var(--ct-shadow-sm);
+}
+.ct-btn--primary:hover { background: var(--ct-accent-hover); border-color: var(--ct-accent-hover); }
+
+.ct-btn--danger {
+  background: var(--ct-danger-fill);
+  border-color: var(--ct-danger-fill);
+  color: var(--ct-on-danger);
+}
+.ct-btn--danger:hover { filter: brightness(.94); }
+
+/* Outlined. The usual partner to a solid primary - same weight of presence,
+   none of the fill. */
+.ct-btn--outline {
+  background: transparent;
+  border-color: var(--ct-accent);
+  border-width: 1.5px;
+  color: var(--ct-accent-text);
+  font-weight: 700;
+}
+.ct-btn--outline:hover { background: var(--ct-accent-tint); border-color: var(--ct-accent); }
+
+.ct-btn--quiet {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ct-text-soft);
+}
+.ct-btn--quiet:hover { background: var(--ct-surface-2); color: var(--ct-text); border-color: transparent; }
+
+/* Square icon-only button, for toolbar controls. */
+.ct-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--ct-control-h); height: var(--ct-control-h);
+  flex: none; padding: 0;
+  color: var(--ct-text-soft);
+  background: var(--ct-surface);
+  border: 1px solid var(--ct-line-strong);
+  border-radius: var(--ct-radius);
+  cursor: pointer;
+  transition: background .15s var(--ct-ease), border-color .15s var(--ct-ease), color .15s var(--ct-ease);
+}
+.ct-icon-btn:hover { background: var(--ct-surface-2); border-color: var(--ct-n400); color: var(--ct-text); }
+.ct-icon-btn svg { width: 20px; height: 20px; }
+
+/* Show the moon in light mode (click for dark) and the sun in dark mode.
+   Both icons ship in the markup and CSS picks one, so there is no flicker
+   while JavaScript works out which to draw. */
+.ct-themetoggle .ct-icon-sun { display: none; }
+[data-ct-theme="dark"] .ct-themetoggle .ct-icon-sun { display: block; }
+[data-ct-theme="dark"] .ct-themetoggle .ct-icon-moon { display: none; }
+
+.ct-btn--block { width: 100%; }
+.ct-btn--sm { min-height: 32px; padding: 0 var(--ct-sp-3); font-size: var(--ct-size-sm); }
+.ct-btn--lg { min-height: 48px; padding: 0 var(--ct-sp-6); font-size: var(--ct-size-lg); }
+
+/* --------------------------------------------------------------------------
+   10. Notes - the info / warning / error / success boxes.
+       Colour is never the only signal: each one carries an icon and a word.
+   -------------------------------------------------------------------------- */
+
+.ct-note {
+  display: flex; gap: var(--ct-sp-3);
+  padding: var(--ct-sp-3) var(--ct-sp-4);
+  border: 1px solid var(--ct-info-line);
+  background: var(--ct-info-tint);
+  color: var(--ct-info-text);
+  border-radius: var(--ct-radius);
+  font-size: var(--ct-size-sm);
+  line-height: 1.5;
+}
+.ct-note__icon { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+.ct-note b { font-weight: 700; }
+
+.ct-note--warning { background: var(--ct-warning-tint); border-color: var(--ct-warning-line); color: var(--ct-warning-text); }
+.ct-note--danger  { background: var(--ct-danger-tint);  border-color: var(--ct-danger-line);  color: var(--ct-danger-text); }
+.ct-note--success { background: var(--ct-success-tint); border-color: var(--ct-success-line); color: var(--ct-success-text); }
+
+/* --------------------------------------------------------------------------
+   11. Badges and tags
+   -------------------------------------------------------------------------- */
+
+/* Rectangular, not a pill. */
+.ct-badge {
+  display: inline-flex; align-items: center; gap: var(--ct-sp-1);
+  padding: 3px var(--ct-sp-2);
+  font-size: var(--ct-size-xs);
+  font-weight: 500;
+  border-radius: var(--ct-radius-sm);
+  background: var(--ct-surface-2);
+  color: var(--ct-text-soft);
+  border: 1px solid var(--ct-line);
+}
+
+/* The one place a pill is right: a chip in a list of tags, where the shape
+   is the established convention for "this is one of several labels". */
+.ct-tag {
+  display: inline-flex; align-items: center; gap: var(--ct-sp-1);
+  padding: 3px var(--ct-sp-3);
+  font-size: var(--ct-size-xs);
+  font-weight: 500;
+  border-radius: var(--ct-radius-full);
+  background: var(--ct-decor-tint);
+  color: var(--ct-decor-text);
+  border: 1px solid var(--ct-decor-line);
+}
+.ct-badge--accent  { background: var(--ct-accent-tint);  color: var(--ct-accent-text);  border-color: var(--ct-accent-line); }
+.ct-badge--decor   { background: var(--ct-decor-tint);   color: var(--ct-decor-text);   border-color: var(--ct-decor-line); }
+.ct-badge--warning { background: var(--ct-warning-tint); color: var(--ct-warning-text); border-color: var(--ct-warning-line); }
+.ct-badge--danger  { background: var(--ct-danger-tint);  color: var(--ct-danger-text);  border-color: var(--ct-danger-line); }
+.ct-badge--success { background: var(--ct-success-tint); color: var(--ct-success-text); border-color: var(--ct-success-line); }
+
+/* --------------------------------------------------------------------------
+   12. Stats - a big coloured number over a small quiet label
+   -------------------------------------------------------------------------- */
+
+.ct-stats { display: flex; flex-wrap: wrap; gap: var(--ct-sp-8); }
+
+.ct-stat__value {
+  display: block;
+  font-size: var(--ct-size-xl);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ct-accent);
+  font-variant-numeric: tabular-nums;
+}
+.ct-stat__label {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--ct-size-sm);
+  color: var(--ct-text-soft);
+}
+
+/* --------------------------------------------------------------------------
+   13. Table
+   -------------------------------------------------------------------------- */
+
+.ct-table-wrap { overflow-x: auto; border: 1px solid var(--ct-line); border-radius: var(--ct-radius-lg); }
+.ct-table { width: 100%; border-collapse: collapse; font-size: var(--ct-size-sm); }
+.ct-table th, .ct-table td { padding: var(--ct-sp-3) var(--ct-sp-4); text-align: left; }
+.ct-table th {
+  background: var(--ct-surface-2);
+  font-weight: 500;
+  color: var(--ct-text-soft);
+  font-size: var(--ct-size-xs);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ct-table tbody tr + tr td { border-top: 1px solid var(--ct-line); }
+
+/* --------------------------------------------------------------------------
+   13b. Builder parts - the preview area and the generated-code box that
+        every widget builder needs
+   -------------------------------------------------------------------------- */
+
+.ct-stage {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 200px;
+  padding: var(--ct-sp-6);
+  background: var(--ct-surface-2);
+  border: 1px dashed var(--ct-line-strong);
+  border-radius: var(--ct-radius-lg);
+  overflow: auto;
+}
+
+/* Deliberately dark in both themes: it holds code, and reading it against a
+   dark ground is what people expect from an editor. */
+.ct-codebox {
+  width: 100%;
+  min-height: 220px;
+  padding: var(--ct-sp-3) var(--ct-sp-4);
+  font-family: var(--ct-font-mono);
+  font-size: var(--ct-size-xs);
+  line-height: 1.6;
+  color: #E6E3EA;
+  background: #1C1A22;
+  border: 1px solid var(--ct-line-strong);
+  border-radius: var(--ct-radius);
+  resize: vertical;
+  white-space: pre;
+}
+.ct-codebox:focus { outline: none; border-color: var(--ct-accent); box-shadow: 0 0 0 3px var(--ct-focus); }
+
+/* --------------------------------------------------------------------------
+   13c. Modal - the "how do I use this" panel several builders carry
+   -------------------------------------------------------------------------- */
+
+.ct-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ct-sp-5);
+  background: rgba(28, 26, 34, .55);
+}
+.ct-modal.is-open { display: flex; }
+
+.ct-modal__box {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: var(--ct-sp-6);
+  background: var(--ct-surface);
+  border: 1px solid var(--ct-line);
+  border-radius: var(--ct-radius-lg);
+  box-shadow: var(--ct-shadow-lg);
+}
+.ct-modal__close { position: absolute; top: var(--ct-sp-3); right: var(--ct-sp-3); }
+.ct-modal__figure {
+  display: block;
+  max-width: 100%;
+  margin: var(--ct-sp-3) 0 var(--ct-sp-5);
+  border: 1px solid var(--ct-line);
+  border-radius: var(--ct-radius);
+}
+
+/* --------------------------------------------------------------------------
+   14. Toast - the "copied" confirmation
+   -------------------------------------------------------------------------- */
+
+.ct-toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--ct-sp-6);
+  transform: translate(-50%, 12px);
+  display: flex; align-items: center; gap: var(--ct-sp-2);
+  padding: var(--ct-sp-3) var(--ct-sp-5);
+  background: var(--ct-n900);
+  color: var(--ct-n0);
+  border-radius: var(--ct-radius);
+  box-shadow: var(--ct-shadow-lg);
+  font-size: var(--ct-size-sm);
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s var(--ct-ease), transform .2s var(--ct-ease);
+  z-index: 60;
+}
+.ct-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* The toast inverts against the page, so it flips the other way in dark mode. */
+[data-ct-theme="dark"] .ct-toast { background: var(--ct-n0); color: var(--ct-n900); }
+
+/* --------------------------------------------------------------------------
+   15. Bits and pieces
+   -------------------------------------------------------------------------- */
+
+.ct-muted { color: var(--ct-text-soft); }
+.ct-small { font-size: var(--ct-size-sm); }
+.ct-mono  { font-family: var(--ct-font-mono); }
+
+.ct-empty {
+  text-align: center;
+  padding: var(--ct-sp-10) var(--ct-sp-5);
+  color: var(--ct-text-soft);
+  font-size: var(--ct-size-sm);
+}
+
+.ct-sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Checkerboard, for previewing anything with transparency */
+.ct-checkerboard {
+  background-color: var(--ct-surface-2);
+  background-image:
+    linear-gradient(45deg, var(--ct-line-strong) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--ct-line-strong) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--ct-line-strong) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--ct-line-strong) 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 0 9px, 9px -9px, -9px 0;
+}

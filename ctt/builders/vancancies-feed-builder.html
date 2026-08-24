@@ -1,220 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Vacancies List Widget Maker</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
-        .tool-header { background-color: #0069fa; background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); background-position: right center; background-repeat: no-repeat; background-size: contain; color: #ffffff; padding: 20px 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
-        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        
-        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
-        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
-        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.5; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; overflow-y: auto; }
-        
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        h3 { color: #0f172a; font-size: 1.1rem; margin-top: 25px; margin-bottom: 10px; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        
-        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
-        
-        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.9rem; }
-        .instructions b { color: #b45309; display: block; margin-bottom: 10px; font-size: 1rem; }
-        .instructions ul { margin: 0; padding-left: 20px; }
-        .instructions li { margin-bottom: 5px; font-weight: 500; }
-
-        .note-box { background: #f1f5f9; border-left: 4px solid #0069fa; padding: 15px; margin-top: 15px; font-size: 0.85rem; color: #334155; border-radius: 0 6px 6px 0; }
-        .note-box a { color: #0069fa; font-weight: bold; cursor: pointer; text-decoration: underline; }
-
-        .checkbox-label { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #0f172a; margin-top: 15px; cursor: pointer; text-transform: none; font-size: 1rem;}
-        .checkbox-label input { width: 18px; height: 18px; cursor: pointer;}
-        
-        .hidden-block { display: none; background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 10px; }
-        
-        .tab-builder-card { background: #ffffff; border: 1px solid #cbd5e1; padding: 15px; border-radius: 8px; margin-bottom: 15px; position: relative; }
-        .remove-btn { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #991b1b; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-        .add-btn { background: #e2e8f0; color: #0f172a; border: 2px dashed #cbd5e1; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; transition: all 0.2s; width: 100%; margin-top: 10px;}
-        .add-btn:hover { background: #cbd5e1; }
-
-        .hosting-guide { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 35px; font-size: 0.85rem; color: #475569; }
-        .hosting-guide h3 { margin-top: 0; font-size: 1rem; color: #1e293b; margin-bottom: 10px; }
-        .hosting-guide code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #0f172a; font-family: monospace; }
-        
-        #code-output { margin-top: 10px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 120px; font-size: 0.8rem; border: none; resize: none; width: 100%; box-sizing: border-box;}
-        .copy-btn { background: #0069fa; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
-        .copy-btn:hover { background: #0056cc; }
-        
-        #preview-container { margin-top: 20px; flex-grow: 1; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f1f5f9; min-height: 550px; overflow: hidden; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; background: white; }
-
-        /* --- Modal Styles --- */
-        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
-        .modal-content { background-color: #ffffff; padding: 40px 30px; border-radius: 12px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; color: #94a3b8; transition: color 0.2s;}
-        .close-modal:hover { color: #0f172a; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vacancies List Widget Maker</title>
+<meta name="description" content="Build a responsive job board widget from your TargetConnect vacancies feed.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #preview-container { padding: 0; overflow: hidden; min-height: 520px; align-items: stretch; }
+  #preview-iframe { width: 100%; min-height: 520px; border: 0; background: #fff; border-radius: var(--ct-radius-lg); }
+  .vf-tab {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <header class="tool-header">
-        <div class="hero-content">
-            <h1>Vacancies List Widget Maker</h1>
-            <div class="header-divider"></div>
-            <p>Design a beautiful, responsive job board widget using your TargetConnect Vacancies RSS feed.</p>
-            <span class="badge">Universal Edition 2.0</span>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div class="panel-left">
-            <h2>⚙️ Data & Integration</h2>
-            
-            <div class="instructions">
-                <b>🚨 Required TargetConnect Setup:</b>
-                In your TargetConnect Vacancies RSS settings, ensure 'Show field name' is checked for:
-                <ul>
-                    <li>Type of Opportunity</li>
-                    <li>Employer Name</li>
-                    <li>Details</li>
-                    <li>Expiry Date</li>
-                </ul>
-            </div>
-
-            <label>1. TargetConnect RSS Link</label>
-            <input type="text" id="rss-url" placeholder="https://yourlink.targetconnect.net/rss/vacancies/..." oninput="updateAll()">
-
-            <div class="note-box">
-                <b>Feed Limits:</b> By default, standard RSS widgets will only display a maximum of 10 items. <a onclick="openModal()">See how to list up to 100 items.</a>
-            </div>
-
-            <label class="checkbox-label">
-                <input type="checkbox" id="use-api-toggle" onchange="toggleApiBlock()"> Use an API Key to bypass the 10-item limit
-            </label>
-            
-            <div id="api-block" class="hidden-block">
-                <label>RSS2JSON API Key</label>
-                <input type="text" id="api-key" placeholder="Paste your free API key here" oninput="updateAll()">
-                <div style="display: flex; gap: 15px;">
-                    <div style="flex: 1;">
-                        <label>Maximum Items to Load</label>
-                        <input type="number" id="api-count" value="50" min="1" max="100" oninput="updateAll()">
-                    </div>
-                </div>
-            </div>
-
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-            
-            <h2>🎨 Styling & Layout</h2>
-            <label>Primary Accent Color</label>
-            <div class="color-picker-wrapper">
-                <input type="color" id="accent-color" value="#0069fa" oninput="updateAll()">
-                <span>Controls the card border and employer icon</span>
-            </div>
-
-            <label>Layout Style</label>
-            <select id="layout-style" onchange="updateAll()">
-                <option value="vertical">Vertical List (Stacked)</option>
-                <option value="carousel">Horizontal Carousel (Scrollable)</option>
-                <option value="grid">Responsive Grid</option>
-            </select>
-
-            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-
-            <h2>📑 Category Tabs</h2>
-            
-            <label class="checkbox-label">
-                <input type="checkbox" id="use-tabs-toggle" onchange="toggleTabsBlock()"> Organize feed into clickable tabs
-            </label>
-
-            <div id="tabs-block" class="hidden-block">
-                <div class="note-box" style="margin-top: 0; margin-bottom: 15px; border-left-color: #8b5cf6;">
-                    <b>Finding your exact Opportunity Types:</b><br>
-                    Tabs are sorted based on Opportunity Types you define. To find your exact terminology, go to TargetConnect: <br>
-                    <code>Maintenance > Manage Lists > Job Related Lists > Opportunity types</code> and view the 'Description' column. (This is case-insensitive).
-                </div>
-
-                <label>Default Tab Name (The catch-all)</label>
-                <input type="text" id="default-tab-name" value="Jobs" oninput="updateAll()">
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: 5px;">Any vacancy that doesn't match a custom tab below will go into this default tab.</p>
-
-                <div id="custom-tabs-container"></div>
-                
-                <button class="add-btn" onclick="addTab()">➕ Add a Custom Tab</button>
-            </div>
-
-            <div class="hosting-guide">
-                <h3>💾 Hosting & Embedding Guide</h3>
-                <p>1. Copy the code below and save it as <b>vacancies-widget.html</b>.</p>
-                <p>2. Host the file securely (HTTPS) on your web server or GitHub Pages.</p>
-                <p>3. Embed it anywhere using an iframe:<br><br>
-                <code>&lt;iframe src="YOUR_HOSTED_URL" width="100%" height="550" frameborder="0"&gt;&lt;/iframe&gt;</code></p>
-                <p style="margin-top:10px;"><b>Heads up:</b> a browser cannot read another site's RSS feed directly, so this widget fetches yours through the free public relay <b>rss2json.com</b>. That relay rate-limits and occasionally goes offline. For a widget people depend on, run your own small feed proxy instead.</p>
-            </div>
-            
-            <h2 style="margin-top: 30px;">💾 Export Widget Code</h2>
-            <textarea id="code-output" readonly></textarea>
-            <button class="copy-btn" onclick="copyCode()">📋 Copy Widget HTML Code</button>
-        </div>
-
-        <div class="panel-right">
-            <h2>👀 Live Visual Preview</h2>
-            <div id="preview-container">
-                <iframe id="preview-iframe"></iframe>
-            </div>
-        </div>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">VAC</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Vacancies List Widget Maker</h1>
+      <p class="ct-toolbar__sub">A job board built from your vacancies feed.</p>
     </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
 
-    <div id="api-modal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">✖</span>
-            <h2 style="margin-top: 0; color: #0f172a;">How to bypass the 10-item limit</h2>
-            <p style="color: #475569; line-height: 1.6;">
-                This widget uses a free service called RSS2JSON to translate the messy TargetConnect feed into clean data. By default, they limit anonymous feeds to 10 items to save bandwidth.
-            </p>
-            <ol style="color: #334155; padding-left: 20px; line-height: 1.6;">
-                <li>Go to <a href="https://rss2json.com/" target="_blank" style="color:#0069fa; font-weight:bold;">rss2json.com</a> and sign up for a free account.</li>
-                <li>Once logged in, click on "My Account" and navigate to your API Key.</li>
-                <li>Copy that long string of text.</li>
-                <li>Check the "Use an API Key" box in this builder and paste it in!</li>
-            </ol>
-            <p style="color: #475569; font-size: 0.9rem; margin-top: 20px;">
-                <i>Note: You can secure your key on the RSS2JSON site by restricting it to only work on your specific GitHub Pages and TargetConnect URLs.</i>
-            </p>
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Data and integration</h2>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-note ct-note--warning">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+          </svg>
+          <div><b>Required TargetConnect setup.</b> In your Vacancies RSS settings, tick
+          <i>Show field name</i> for Type of Opportunity, Employer Name, Details and
+          Expiry Date.</div>
         </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="rss-url">TargetConnect RSS link</label>
+          <input class="ct-input" type="url" id="rss-url"
+                 placeholder="https://yourlink.targetconnect.net/rss/vacancies/...">
+        </div>
+
+        <div class="ct-note">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+          <div><b>Feed limits.</b> Without a key the feed shows at most 10 items.
+          <button class="ct-btn ct-btn--quiet ct-btn--sm" type="button"
+                  data-ct-modal-open="#api-modal" style="margin-left:4px">How to raise it</button></div>
+        </div>
+
+        <label class="ct-check" for="use-api-toggle">
+          <input type="checkbox" id="use-api-toggle">
+          <span>Use an API key to go past the 10-item limit</span>
+        </label>
+
+        <div id="api-block" hidden>
+          <div class="ct-stack">
+            <div class="ct-field">
+              <label class="ct-label" for="api-key">RSS2JSON API key</label>
+              <input class="ct-input" type="text" id="api-key" placeholder="Paste your free API key here">
+            </div>
+            <div class="ct-field">
+              <label class="ct-label" for="api-count">Maximum items to load</label>
+              <input class="ct-input" type="number" id="api-count" value="50" min="1" max="100">
+            </div>
+          </div>
+        </div>
+
+        <hr class="ct-divider">
+        <h3>Styling and layout</h3>
+
+        <div class="ct-field">
+          <label class="ct-label" for="accent-color">Accent colour</label>
+          <div class="ct-colour">
+            <input type="color" id="accent-color" value="#496DDB">
+            <span class="ct-colour__label">Card border and employer icon</span>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="layout-style">Layout</label>
+          <select class="ct-select" id="layout-style">
+            <option value="vertical">Vertical list &mdash; stacked</option>
+            <option value="carousel">Horizontal carousel &mdash; scrollable</option>
+            <option value="grid">Responsive grid</option>
+          </select>
+        </div>
+
+        <hr class="ct-divider">
+        <h3>Category tabs</h3>
+
+        <label class="ct-check" for="use-tabs-toggle">
+          <input type="checkbox" id="use-tabs-toggle">
+          <span>Organise the feed into clickable tabs</span>
+        </label>
+
+        <div id="tabs-block" hidden>
+          <div class="ct-stack">
+            <div class="ct-note">
+              <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+              <div><b>Finding your opportunity types.</b> Tabs match on the Opportunity
+              Types you define. In TargetConnect go to <span class="ct-mono">Maintenance
+              &rsaquo; Manage Lists &rsaquo; Job Related Lists &rsaquo; Opportunity types</span>
+              and read the Description column. Matching ignores capitalisation.</div>
+            </div>
+
+            <div class="ct-field">
+              <label class="ct-label" for="default-tab-name">Default tab name</label>
+              <input class="ct-input" type="text" id="default-tab-name" value="Jobs">
+              <span class="ct-hint">Anything not matching a custom tab lands here.</span>
+            </div>
+
+            <div id="custom-tabs-container"></div>
+
+            <button class="ct-btn ct-btn--sm" type="button" onclick="addTab()">Add a custom tab</button>
+          </div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <h3>Hosting and embedding</h3>
+        <ol class="ct-small ct-muted" style="padding-left: 1.2rem; line-height: 1.7;">
+          <li>Copy the code below and save it as <span class="ct-mono">vacancies-widget.html</span>.</li>
+          <li>Host it over HTTPS on your web server or GitHub Pages.</li>
+          <li>Embed it anywhere with an iframe.</li>
+        </ol>
+        <pre class="ct-codebox" style="min-height:0; padding: var(--ct-sp-3); white-space: pre-wrap;">&lt;iframe src="YOUR_HOSTED_URL" width="100%" height="550" frameborder="0"&gt;&lt;/iframe&gt;</pre>
+
+        <div class="ct-note ct-note--warning">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+          </svg>
+          <div><b>About the feed relay.</b> A browser cannot read another site&rsquo;s RSS
+          feed directly, so this widget goes through the free public relay
+          <span class="ct-mono">rss2json.com</span>. It rate-limits and occasionally goes
+          offline. Fine for a screen in a foyer; run your own feed proxy for anything
+          people depend on.</div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <div class="ct-row" style="justify-content: space-between;">
+            <label class="ct-label" for="code-output">Widget HTML</label>
+            <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                    data-ct-copy="#code-output" data-ct-copy-label="Widget code copied">
+              Copy widget HTML
+            </button>
+          </div>
+          <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+      </div>
+      <div class="ct-stage" id="preview-container">
+        <iframe id="preview-iframe" title="Preview of the generated vacancies widget"></iframe>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="api-modal" role="dialog" aria-modal="true" aria-labelledby="api-modal-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="api-modal-title">Going past the 10-item limit</h2>
+    <p>This widget uses a free service called RSS2JSON to turn the TargetConnect feed
+    into clean data. Anonymous requests are capped at 10 items to save their bandwidth.</p>
+    <ol style="padding-left: 1.2rem; line-height: 1.8;">
+      <li>Sign up for a free account at <a href="https://rss2json.com/" target="_blank" rel="noopener">rss2json.com</a>.</li>
+      <li>Open My Account and find your API key.</li>
+      <li>Copy it.</li>
+      <li>Tick <i>Use an API key</i> in this builder and paste it in.</li>
+    </ol>
+    <div class="ct-note">
+      <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+      <div>You can restrict the key on the RSS2JSON site so it only works on your own
+      GitHub Pages and TargetConnect addresses.</div>
     </div>
+  </div>
+</div>
 
     <script>
         // --- UI Interactions ---
         function toggleApiBlock() {
-            const block = document.getElementById('api-block');
-            block.style.display = document.getElementById('use-api-toggle').checked ? 'block' : 'none';
+            document.getElementById('api-block').hidden = !document.getElementById('use-api-toggle').checked;
             updateAll();
         }
 
         function toggleTabsBlock() {
-            const block = document.getElementById('tabs-block');
-            block.style.display = document.getElementById('use-tabs-toggle').checked ? 'block' : 'none';
-            if(document.getElementById('use-tabs-toggle').checked && tabCount === 0) addTab(); // Add one by default
+            const on = document.getElementById('use-tabs-toggle').checked;
+            document.getElementById('tabs-block').hidden = !on;
+            if (on && tabCount === 0) addTab();   // start them off with one
             updateAll();
         }
 
-        function openModal() { document.getElementById('api-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('api-modal').style.display = 'none'; }
-        window.onclick = function(event) { if (event.target == document.getElementById('api-modal')) closeModal(); }
+        // The help modal is handled by ct.js via data-ct-modal-open / -close.
 
         let tabCount = 0;
         function addTab() {
             tabCount++;
             const id = tabCount;
+            // No oninput here - the #controls listener picks these up by bubbling.
+            // tab-builder-card must stay: generateWidgetHTML finds tabs by that class.
             const html = `
-                <div class="tab-builder-card" id="tab-build-${id}">
-                    <button class="remove-btn" onclick="removeTab(${id})">Remove</button>
-                    <label>Tab Label (What students see)</label>
-                    <input type="text" id="tab-label-${id}" placeholder="e.g., Volunteering" oninput="updateAll()">
-                    <label>Opportunity Types (Comma separated)</label>
-                    <input type="text" id="tab-keywords-${id}" placeholder="e.g., Volunteering, Unpaid Volunteer" oninput="updateAll()">
+                <div class="vf-tab tab-builder-card" id="tab-build-${id}">
+                    <div class="ct-row" style="justify-content: space-between;">
+                        <span class="ct-section-label">Tab ${id}</span>
+                        <button class="ct-btn ct-btn--quiet ct-btn--sm" type="button" onclick="removeTab(${id})">Remove</button>
+                    </div>
+                    <div class="ct-field">
+                        <label class="ct-label" for="tab-label-${id}">Tab label</label>
+                        <input class="ct-input" type="text" id="tab-label-${id}" placeholder="Volunteering">
+                        <span class="ct-hint">What students see.</span>
+                    </div>
+                    <div class="ct-field">
+                        <label class="ct-label" for="tab-keywords-${id}">Opportunity types</label>
+                        <input class="ct-input" type="text" id="tab-keywords-${id}" placeholder="Volunteering, Unpaid Volunteer">
+                        <span class="ct-hint">Comma separated.</span>
+                    </div>
                 </div>
             `;
             document.getElementById('custom-tabs-container').insertAdjacentHTML('beforeend', html);
@@ -477,13 +514,12 @@ ${layoutCSS}${tabsCSS}
             iframe.srcdoc = html;
         }
 
-        function copyCode() {
-            const copyText = document.getElementById("code-output");
-            copyText.select();
-            document.execCommand("copy");
-            alert("Code copied! Ready to be saved as an HTML file.");
-        }
-        
+        // Redraw whenever any control changes, including tab fields added later.
+        var controls = document.getElementById('controls');
+        controls.addEventListener('input', updateAll);
+        controls.addEventListener('change', updateAll);
+        document.getElementById('use-api-toggle').addEventListener('change', toggleApiBlock);
+        document.getElementById('use-tabs-toggle').addEventListener('change', toggleTabsBlock);
         updateAll();
     </script>
 </body>

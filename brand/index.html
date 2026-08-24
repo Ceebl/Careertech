@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareerTech house style</title>
+<meta name="description" content="The shared look and feel for CareerTech tools: colour, type, and components.">
+<link rel="stylesheet" href="ct.css">
+<script src="ct.js"></script>
+<style>
+  /* Style-guide chrome only. Nothing here belongs in a tool. */
+  .sg-swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ct-sp-4); }
+  .sg-chip { height: 64px; border-radius: var(--ct-radius); border: 1px solid var(--ct-line); }
+  .sg-spec { display: flex; align-items: baseline; gap: var(--ct-sp-4); padding: var(--ct-sp-3) 0; border-bottom: 1px solid var(--ct-line); }
+  .sg-spec:last-child { border-bottom: 0; }
+  .sg-spec__meta { flex: none; width: 108px; font-size: var(--ct-size-xs); color: var(--ct-text-faint); font-family: var(--ct-font-mono); }
+  .sg-demo { display: flex; flex-wrap: wrap; gap: var(--ct-sp-3); align-items: center; }
+  .sg-section { margin-top: var(--ct-sp-12); }
+  .sg-code {
+    margin: var(--ct-sp-3) 0 0;
+    padding: var(--ct-sp-3) var(--ct-sp-4);
+    background: var(--ct-sunken);
+    border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius);
+    font-family: var(--ct-font-mono);
+    font-size: var(--ct-size-xs);
+    line-height: 1.6;
+    overflow-x: auto;
+    color: var(--ct-text-soft);
+  }
+  .sg-rules { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--ct-sp-3); }
+  .sg-rules li { display: flex; gap: var(--ct-sp-3); font-size: var(--ct-size-sm); }
+  .sg-rules b { display: block; color: var(--ct-text); font-size: var(--ct-size-md); }
+  .sg-mark { flex: none; width: 22px; height: 22px; margin-top: 2px; }
+  .sg-shapes { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 300px; }
+  .sg-shapes div { aspect-ratio: 1; }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">CT</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">House style</h1>
+      <p class="ct-toolbar__sub">The shared look for every CareerTech tool.</p>
+    </div>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+
+  <!-- ================= Hero ================= -->
+  <section style="max-width: 44rem; margin-bottom: var(--ct-sp-10);">
+    <h2 class="ct-display">One stylesheet for every <span class="ct-hl">tool</span> you build</h2>
+    <p class="ct-muted" style="font-size: var(--ct-size-lg); max-width: 34rem;">
+      Link one file and a tool inherits the colour, type and components below.
+      Change something here and every tool changes with it.
+    </p>
+
+    <div class="ct-stats" style="margin-top: var(--ct-sp-8);">
+      <div>
+        <span class="ct-stat__value">1</span>
+        <span class="ct-stat__label">File to link</span>
+      </div>
+      <div>
+        <span class="ct-stat__value">2</span>
+        <span class="ct-stat__label">Themes, one toggle</span>
+      </div>
+      <div>
+        <span class="ct-stat__value">0</span>
+        <span class="ct-stat__label">External requests</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Using it ================= -->
+  <section class="sg-section">
+    <h2>Using it</h2>
+    <p class="ct-muted">Two lines. The class on <span class="ct-mono">body</span> is what opts a page in.</p>
+    <pre class="sg-code">&lt;link rel="stylesheet" href="/brand/ct.css"&gt;
+
+&lt;body class="ct-page"&gt;</pre>
+
+    <p class="ct-muted" style="margin-top: var(--ct-sp-5);">
+      Add the script too if the page wants the light/dark toggle. It goes in
+      <span class="ct-mono">&lt;head&gt;</span> without
+      <span class="ct-mono">defer</span>, so a saved dark setting is applied
+      before anything is drawn.
+    </p>
+    <pre class="sg-code">&lt;script src="/brand/ct.js"&gt;&lt;/script&gt;</pre>
+
+    <p class="ct-muted" style="margin-top: var(--ct-sp-5);">
+      For a block that lives inside someone else's page, use
+      <span class="ct-mono">ct-root</span> instead. It carries the same styling but
+      touches nothing outside itself.
+    </p>
+    <pre class="sg-code">&lt;div class="ct-root"&gt; … &lt;/div&gt;</pre>
+
+    <div class="ct-note ct-note--warning" style="margin-top: var(--ct-sp-5);">
+      <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+      </svg>
+      <div><b>Code produced by a builder does not use this file.</b>
+      Anything a tool generates for pasting elsewhere carries its own styles, so it
+      can never break when this stylesheet changes or the server is unreachable.</div>
+    </div>
+  </section>
+
+  <!-- ================= Colour ================= -->
+  <section class="sg-section">
+    <h2>Colour</h2>
+    <p class="ct-muted" style="max-width: 40rem;">
+      Five brand colours, each with one job. They are all mid-tones, so none of them
+      is used for body text or page backgrounds — that is what the neutrals are for.
+    </p>
+
+    <div class="sg-swatches" style="margin-top: var(--ct-sp-6);">
+      <div>
+        <div class="sg-chip" style="background:#496DDB"></div>
+        <p class="ct-label" style="margin-top: var(--ct-sp-2);">Primary</p>
+        <p class="ct-hint ct-mono">#496DDB</p>
+        <p class="ct-hint">Buttons, links, focus rings.</p>
+      </div>
+      <div>
+        <div class="sg-chip" style="background:#717EC3"></div>
+        <p class="ct-label" style="margin-top: var(--ct-sp-2);">Information</p>
+        <p class="ct-hint ct-mono">#717EC3</p>
+        <p class="ct-hint">Tips and neutral notes.</p>
+      </div>
+      <div>
+        <div class="sg-chip" style="background:#AE8799"></div>
+        <p class="ct-label" style="margin-top: var(--ct-sp-2);">Decorative</p>
+        <p class="ct-hint ct-mono">#AE8799</p>
+        <p class="ct-hint">Tags, shapes, chart series.</p>
+      </div>
+      <div>
+        <div class="sg-chip" style="background:#C95D63"></div>
+        <p class="ct-label" style="margin-top: var(--ct-sp-2);">Danger</p>
+        <p class="ct-hint ct-mono">#C95D63</p>
+        <p class="ct-hint">Errors and destructive actions.</p>
+      </div>
+      <div>
+        <div class="sg-chip" style="background:#EE8434"></div>
+        <p class="ct-label" style="margin-top: var(--ct-sp-2);">Warning</p>
+        <p class="ct-hint ct-mono">#EE8434</p>
+        <p class="ct-hint">Cautions. Always dark text on it.</p>
+      </div>
+      <div>
+        <div class="sg-chip" style="background:#C0BF47"></div>
+        <p class="ct-label" style="margin-top: var(--ct-sp-2);">Success</p>
+        <p class="ct-hint ct-mono">#C0BF47</p>
+        <p class="ct-hint">Confirmations. Tints only.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: var(--ct-sp-8);">Neutrals</h3>
+    <p class="ct-muted">A faint purple cast, so greys sit with the palette instead of fighting it.</p>
+    <div style="display:flex; margin-top: var(--ct-sp-4); border-radius: var(--ct-radius); overflow:hidden; border:1px solid var(--ct-line);">
+      <div style="flex:1; height:48px; background:#FAF9FB"></div>
+      <div style="flex:1; height:48px; background:#F0EEF2"></div>
+      <div style="flex:1; height:48px; background:#E6E3EA"></div>
+      <div style="flex:1; height:48px; background:#DAD5E0"></div>
+      <div style="flex:1; height:48px; background:#B5AEC0"></div>
+      <div style="flex:1; height:48px; background:#8B8399"></div>
+      <div style="flex:1; height:48px; background:#635C6E"></div>
+      <div style="flex:1; height:48px; background:#4A4454"></div>
+      <div style="flex:1; height:48px; background:#302C38"></div>
+      <div style="flex:1; height:48px; background:#1C1A22"></div>
+    </div>
+  </section>
+
+  <!-- ================= Type ================= -->
+  <section class="sg-section">
+    <h2>Type</h2>
+    <p class="ct-muted">DM Sans throughout, served from this server. DM Mono for anything you copy or paste.</p>
+
+    <div class="ct-card" style="margin-top: var(--ct-sp-5);">
+      <div class="sg-spec">
+        <span class="sg-spec__meta">display / 800</span>
+        <span class="ct-display" style="margin:0;">Unleash your creativity</span>
+      </div>
+      <div class="sg-spec">
+        <span class="sg-spec__meta">h1 / 700</span>
+        <h1 style="margin:0;">Page heading</h1>
+      </div>
+      <div class="sg-spec">
+        <span class="sg-spec__meta">h2 / 700</span>
+        <h2 style="margin:0;">Section heading</h2>
+      </div>
+      <div class="sg-spec">
+        <span class="sg-spec__meta">h3 / 700</span>
+        <h3 style="margin:0;">Card title</h3>
+      </div>
+      <div class="sg-spec">
+        <span class="sg-spec__meta">body / 400</span>
+        <span>The quick brown fox jumps over the lazy dog.</span>
+      </div>
+      <div class="sg-spec">
+        <span class="sg-spec__meta">small / 400</span>
+        <span class="ct-small ct-muted">Supporting text and hints sit at this size.</span>
+      </div>
+      <div class="sg-spec">
+        <span class="sg-spec__meta">mono / 400</span>
+        <span class="ct-mono ct-small">https://emaitch.co.uk/ctt</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Buttons ================= -->
+  <section class="sg-section">
+    <h2>Buttons</h2>
+    <p class="ct-muted">One solid primary per screen. Everything else is outlined, plain or quiet.</p>
+    <div class="ct-card" style="margin-top: var(--ct-sp-5);">
+      <div class="sg-demo">
+        <button class="ct-btn ct-btn--primary">Primary action</button>
+        <button class="ct-btn ct-btn--outline">Outlined</button>
+        <button class="ct-btn">Secondary</button>
+        <button class="ct-btn ct-btn--quiet">Quiet</button>
+        <button class="ct-btn ct-btn--danger">Delete</button>
+        <button class="ct-btn" disabled>Disabled</button>
+      </div>
+      <hr class="ct-divider">
+      <div class="sg-demo">
+        <button class="ct-btn ct-btn--primary ct-btn--sm">Small</button>
+        <button class="ct-btn ct-btn--primary">Default</button>
+        <button class="ct-btn ct-btn--primary ct-btn--lg">Large</button>
+      </div>
+      <pre class="sg-code">&lt;button class="ct-btn ct-btn--primary"&gt;Primary action&lt;/button&gt;
+&lt;button class="ct-btn ct-btn--outline"&gt;Outlined&lt;/button&gt;</pre>
+    </div>
+  </section>
+
+  <!-- ================= Forms ================= -->
+  <section class="sg-section">
+    <h2>Forms</h2>
+    <p class="ct-muted">Every field gets a label with a <span class="ct-mono">for</span> attribute. No exceptions — it is what makes the label clickable and readable by a screen reader.</p>
+
+    <div class="ct-card" style="margin-top: var(--ct-sp-5); max-width: 30rem;">
+      <div class="ct-stack">
+        <div class="ct-field">
+          <label class="ct-label" for="d-text">Text field</label>
+          <input class="ct-input" id="d-text" type="text" placeholder="https://example.com/">
+          <span class="ct-hint">A hint sits under the field, not inside it.</span>
+        </div>
+        <div class="ct-field">
+          <label class="ct-label" for="d-select">Select</label>
+          <select class="ct-select" id="d-select">
+            <option>Choose an option</option>
+            <option>Another option</option>
+          </select>
+        </div>
+        <div class="ct-field">
+          <label class="ct-label" for="d-area">Textarea</label>
+          <textarea class="ct-textarea" id="d-area" placeholder="Longer text goes here."></textarea>
+        </div>
+        <div class="ct-field">
+          <label class="ct-label" for="d-colour">Colour</label>
+          <div class="ct-colour">
+            <input type="color" id="d-colour" value="#496DDB">
+            <span class="ct-colour__label">Pick a colour</span>
+          </div>
+        </div>
+        <label class="ct-check" for="d-check">
+          <input type="checkbox" id="d-check" checked>
+          <span>A checkbox, with its label beside it</span>
+        </label>
+      </div>
+      <pre class="sg-code">&lt;div class="ct-field"&gt;
+  &lt;label class="ct-label" for="url"&gt;Text field&lt;/label&gt;
+  &lt;input class="ct-input" id="url" type="text"&gt;
+  &lt;span class="ct-hint"&gt;A hint.&lt;/span&gt;
+&lt;/div&gt;</pre>
+    </div>
+  </section>
+
+  <!-- ================= Notes ================= -->
+  <section class="sg-section">
+    <h2>Notes</h2>
+    <p class="ct-muted">Each one carries an icon and a word, so colour is never the only signal.</p>
+    <div class="ct-stack" style="margin-top: var(--ct-sp-5); max-width: 44rem;">
+      <div class="ct-note">
+        <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/></svg>
+        <div><b>Tip:</b> the neutral note, for guidance and context.</div>
+      </div>
+      <div class="ct-note ct-note--warning">
+        <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/></svg>
+        <div><b>Careful:</b> something needs attention but nothing has broken.</div>
+      </div>
+      <div class="ct-note ct-note--danger">
+        <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/></svg>
+        <div><b>Problem:</b> it has broken, and here is what to do about it.</div>
+      </div>
+      <div class="ct-note ct-note--success">
+        <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <div><b>Done:</b> it worked.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Badges, tags, table ================= -->
+  <section class="sg-section">
+    <h2>Badges and tags</h2>
+    <p class="ct-muted">Badges are rectangular. The pill shape is kept for tag chips only, where it is the established convention.</p>
+    <div class="ct-card" style="margin-top: var(--ct-sp-5);">
+      <div class="sg-demo">
+        <span class="ct-badge">Neutral</span>
+        <span class="ct-badge ct-badge--accent">Accent</span>
+        <span class="ct-badge ct-badge--warning">Warning</span>
+        <span class="ct-badge ct-badge--danger">Danger</span>
+        <span class="ct-badge ct-badge--success">Success</span>
+      </div>
+      <hr class="ct-divider">
+      <div class="sg-demo">
+        <span class="ct-tag">Employability</span>
+        <span class="ct-tag">Placements</span>
+        <span class="ct-tag">Graduate schemes</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sg-section">
+    <h2>Table</h2>
+    <div class="ct-table-wrap" style="margin-top: var(--ct-sp-5);">
+      <table class="ct-table">
+        <thead>
+          <tr><th>Tool</th><th>Purpose</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>QR Code Maker</td><td>Print-resolution QR codes</td><td><span class="ct-badge ct-badge--success">Restyled</span></td></tr>
+          <tr><td>Widget Maker</td><td>Embeddable widgets</td><td><span class="ct-badge">Queued</span></td></tr>
+          <tr><td>Skills Radar</td><td>Sector skill comparison</td><td><span class="ct-badge">Queued</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= Rules ================= -->
+  <section class="sg-section">
+    <h2>Rules</h2>
+    <ul class="sg-rules" style="margin-top: var(--ct-sp-5); max-width: 44rem;">
+      <li>
+        <svg class="sg-mark" viewBox="0 0 20 20" fill="var(--ct-accent)" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <span><b>No pill shapes</b>Except tag chips. Rounded rectangles everywhere else — 8px on controls, 14px on cards.</span>
+      </li>
+      <li>
+        <svg class="sg-mark" viewBox="0 0 20 20" fill="var(--ct-accent)" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <span><b>Colour is never the only signal</b>Every status carries an icon and a word as well, because two of the palette colours look alike to colourblind readers.</span>
+      </li>
+      <li>
+        <svg class="sg-mark" viewBox="0 0 20 20" fill="var(--ct-accent)" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <span><b>One solid primary button per screen</b>If everything shouts, nothing does.</span>
+      </li>
+      <li>
+        <svg class="sg-mark" viewBox="0 0 20 20" fill="var(--ct-accent)" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <span><b>Sentence case</b>In buttons, headings and labels. Not Title Case, not SHOUTING.</span>
+      </li>
+      <li>
+        <svg class="sg-mark" viewBox="0 0 20 20" fill="var(--ct-accent)" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <span><b>Nothing loads from anyone else's server</b>Fonts are hosted here. No third-party images in tool chrome.</span>
+      </li>
+      <li>
+        <svg class="sg-mark" viewBox="0 0 20 20" fill="var(--ct-accent)" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.7 13.6L5.4 10.3l1.3-1.3 2 2 4.6-4.6 1.3 1.3z"/></svg>
+        <span><b>Every page carries a viewport tag</b><span class="ct-mono ct-small">&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;</span> — without it a phone renders the page at desktop width and shrinks it.</span>
+      </li>
+    </ul>
+  </section>
+
+  <footer style="margin-top: var(--ct-sp-12); padding-top: var(--ct-sp-5); border-top: 1px solid var(--ct-line);">
+    <p class="ct-small ct-muted">
+      DM Sans and DM Mono are used under the SIL Open Font License —
+      <a href="fonts/OFL.txt">see the licence</a>.
+    </p>
+  </footer>
+</main>
+
+<div class="ct-toast" id="toast" role="status" aria-live="polite"></div>
+
+</body>
+</html>

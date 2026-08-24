@@ -1,117 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Events RSS List Widget Maker</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
-        
-        /* --- Tool Header --- */
-        .tool-header { 
-            background-color: #0069fa; 
-            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); 
-            background-position: right center; 
-            background-repeat: no-repeat; 
-            background-size: contain; 
-            color: #ffffff; 
-            padding: 20px 40px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        }
-        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
-        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-
-        /* --- Layout --- */
-        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
-        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
-        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.5; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; overflow-y: auto; }
-        
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
-        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        
-        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
-        
-        /* Instructions & Guides */
-        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.9rem; }
-        .instructions b { color: #b45309; display: block; margin-bottom: 10px; font-size: 1rem; }
-        .instructions ul { margin: 0; padding-left: 20px; }
-        .instructions li { margin-bottom: 5px; font-weight: 500; }
-
-        .hosting-guide { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 0.85rem; color: #475569; }
-        .hosting-guide h3 { margin-top: 0; font-size: 1rem; color: #1e293b; margin-bottom: 10px; }
-        .hosting-guide code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #0f172a; font-family: monospace; }
-
-        #code-output { margin-top: 10px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 120px; font-size: 0.8rem; border: none; resize: none; width: 100%; box-sizing: border-box;}
-        .copy-btn { background: #0069fa; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
-        .copy-btn:hover { background: #0056cc; }
-
-        #preview-container { margin-top: 20px; flex-grow: 1; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f1f5f9; min-height: 550px; overflow: hidden; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; background: white; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Events RSS List Widget Maker</title>
+<meta name="description" content="Build a responsive card widget from your TargetConnect events feed.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #preview-container { padding: 0; overflow: hidden; min-height: 480px; align-items: stretch; }
+  #preview-iframe { width: 100%; min-height: 480px; border: 0; background: #fff; border-radius: var(--ct-radius-lg); }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <header class="tool-header">
-        <div class="hero-content">
-            <h1>Events RSS List Widget Maker</h1>
-            <div class="header-divider"></div>
-            <p>Design a beautiful, responsive card widget using your TargetConnect Events RSS feed.</p>
-            <span class="badge">Universal Edition 1.0</span>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div class="panel-left">
-            <h2>⚙️ Style & Data</h2>
-            
-            <div class="instructions">
-                <b>🚨 Required TargetConnect Setup:</b>
-                In TargetConnect RSS settings, ensure 'Show field name' is checked for:
-                <ul>
-                    <li>Title</li>
-                    <li>Location</li>
-                    <li>Brief Description</li>
-                    <li>Closest Future Date</li>
-                </ul>
-            </div>
-
-            <label>1. TargetConnect RSS Link</label>
-            <input type="text" id="rss-url" placeholder="https://yourlink.targetconnect.net/rss/..." oninput="updateAll()">
-
-            <label>2. Primary Accent Color</label>
-            <div class="color-picker-wrapper">
-                <input type="color" id="accent-color" value="#0069fa" oninput="updateAll()">
-                <span>Controls the card border and date icon header</span>
-            </div>
-
-            <label>3. Layout Style</label>
-            <select id="layout-style" onchange="updateAll()">
-                <option value="carousel">Horizontal Carousel (Scrollable)</option>
-                <option value="grid">Responsive Grid</option>
-                <option value="vertical">Vertical List (Stacked)</option>
-            </select>
-
-            <div class="hosting-guide">
-                <h3>💾 Hosting & Embedding Guide</h3>
-                <p>1. Copy the code below and save it as <b>events-widget.html</b>.</p>
-                <p>2. Host the file securely (HTTPS) on your web server or GitHub Pages.</p>
-                <p>3. Embed it anywhere (SharePoint, Canvas, Blackboard, TargetConnect) using an iframe:<br><br>
-                <code>&lt;iframe src="YOUR_HOSTED_URL" width="100%" height="450" frameborder="0"&gt;&lt;/iframe&gt;</code></p>
-                <p style="margin-top:10px;"><b>Heads up:</b> a browser cannot read another site's RSS feed directly, so this widget fetches yours through the free public relay <b>rss2json.com</b>. That relay rate-limits and occasionally goes offline. For a widget people depend on, run your own small feed proxy instead.</p>
-            </div>
-            
-            <h2 style="margin-top: 30px;">💾 Export Widget Code</h2>
-            <textarea id="code-output" readonly></textarea>
-            <button class="copy-btn" onclick="copyCode()">📋 Copy Widget HTML Code</button>
-        </div>
-
-        <div class="panel-right">
-            <h2>👀 Live Visual Preview</h2>
-            <div id="preview-container">
-                <iframe id="preview-iframe"></iframe>
-            </div>
-        </div>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">RSS</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Events RSS List Widget Maker</h1>
+      <p class="ct-toolbar__sub">A card list built from your events feed.</p>
     </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Style and data</h2>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-note ct-note--warning">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+          </svg>
+          <div><b>Required TargetConnect setup.</b> In your RSS settings, tick
+          <i>Show field name</i> for Title, Location, Brief Description and
+          Closest Future Date.</div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="rss-url">TargetConnect RSS link</label>
+          <input class="ct-input" type="url" id="rss-url"
+                 placeholder="https://yourlink.targetconnect.net/rss/...">
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="accent-color">Accent colour</label>
+          <div class="ct-colour">
+            <input type="color" id="accent-color" value="#496DDB">
+            <span class="ct-colour__label">Card border and date header</span>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="layout-style">Layout</label>
+          <select class="ct-select" id="layout-style">
+            <option value="carousel">Horizontal carousel &mdash; scrollable</option>
+            <option value="grid">Responsive grid</option>
+            <option value="vertical">Vertical list &mdash; stacked</option>
+          </select>
+        </div>
+
+        <hr class="ct-divider">
+
+        <h3>Hosting and embedding</h3>
+        <ol class="ct-small ct-muted" style="padding-left: 1.2rem; line-height: 1.7;">
+          <li>Copy the code below and save it as <span class="ct-mono">events-widget.html</span>.</li>
+          <li>Host it over HTTPS on your web server or GitHub Pages.</li>
+          <li>Embed it anywhere with an iframe.</li>
+        </ol>
+        <pre class="ct-codebox" style="min-height:0; padding: var(--ct-sp-3); white-space: pre-wrap;">&lt;iframe src="YOUR_HOSTED_URL" width="100%" height="450" frameborder="0"&gt;&lt;/iframe&gt;</pre>
+
+        <div class="ct-note ct-note--warning">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+          </svg>
+          <div><b>About the feed relay.</b> A browser cannot read another site&rsquo;s RSS
+          feed directly, so this widget goes through the free public relay
+          <span class="ct-mono">rss2json.com</span>. It rate-limits and occasionally goes
+          offline. Fine for a screen in a foyer; run your own feed proxy for anything
+          people depend on.</div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <div class="ct-row" style="justify-content: space-between;">
+            <label class="ct-label" for="code-output">Widget HTML</label>
+            <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                    data-ct-copy="#code-output" data-ct-copy-label="Widget code copied">
+              Copy widget HTML
+            </button>
+          </div>
+          <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+      </div>
+      <div class="ct-stage" id="preview-container">
+        <iframe id="preview-iframe" title="Preview of the generated events widget"></iframe>
+      </div>
+    </section>
+
+  </div>
+</main>
 
     <script>
         function getContrast(hexconf) {
@@ -312,13 +323,11 @@ ${layoutCSS}
             iframe.srcdoc = html;
         }
 
-        function copyCode() {
-            const copyText = document.getElementById("code-output");
-            copyText.select();
-            document.execCommand("copy");
-            alert("Code copied to clipboard! Ready to be saved as an HTML file.");
-        }
-        
+        // Redraw whenever any control changes, rather than hanging an
+        // oninput attribute off every single field.
+        var controls = document.getElementById('controls');
+        controls.addEventListener('input', updateAll);
+        controls.addEventListener('change', updateAll);
         updateAll();
     </script>
 </body>

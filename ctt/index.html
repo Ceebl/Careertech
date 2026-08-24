@@ -5,132 +5,216 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CareerTech Tools</title>
 <meta name="description" content="Free, self-contained tools and widget builders for careers services.">
+<link rel="stylesheet" href="../brand/ct.css">
+<script src="../brand/ct.js"></script>
 <style>
-  :root {
-    color-scheme: light dark;
-    --bg: #ffffff; --fg: #16181d; --muted: #6b7280;
-    --line: #e5e7eb; --card: #f9fafb; --accent: #2563eb;
+  /* Hub-page only. */
+  .hub-hero { max-width: 44rem; padding: var(--ct-sp-10) 0 var(--ct-sp-12); }
+
+  .hub-group { margin-top: var(--ct-sp-10); }
+  .hub-group > h2 { margin-bottom: var(--ct-sp-2); }
+
+  .hub-list {
+    list-style: none; padding: 0;
+    margin: var(--ct-sp-4) 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--ct-sp-3);
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f1115; --fg: #e8e8e8; --muted: #9ca3af;
-      --line: #262b35; --card: #161a22; --accent: #60a5fa;
-    }
+
+  /* Written as a.hub-card so it beats the generic link colour in ct.css -
+     these read as cards, not as blue links. The arrow carries the affordance. */
+  a.hub-card {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: var(--ct-sp-3);
+    height: 100%;
+    padding: var(--ct-sp-4);
+    text-decoration: none;
+    color: var(--ct-text);
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius-lg);
+    transition: border-color .15s var(--ct-ease), box-shadow .15s var(--ct-ease);
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 3rem 1.25rem; background: var(--bg); color: var(--fg);
-    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  a.hub-card:hover { border-color: var(--ct-accent); box-shadow: var(--ct-shadow-md); color: var(--ct-text); }
+  .hub-card__name { display: block; font-weight: 700; letter-spacing: -0.01em; }
+  .hub-card__what { display: block; margin-top: 2px; font-size: var(--ct-size-sm); color: var(--ct-text-soft); }
+  .hub-card__arrow { flex: none; color: var(--ct-text-faint); transition: color .15s var(--ct-ease), transform .15s var(--ct-ease); }
+  .hub-card:hover .hub-card__arrow { color: var(--ct-accent); transform: translateX(2px); }
+
+  /* A one-item list gets its own single-column grid. Spanning with
+     grid-column: 1 / -1 does not work against a repeat(auto-fill) track list. */
+  .hub-list--single { grid-template-columns: minmax(0, 1fr); }
+
+  /* Also element-qualified, so it matches a.hub-card's specificity and the
+     later rule wins. A bare .hub-card--feature would lose to it. */
+  a.hub-card--feature {
+    border-color: var(--ct-accent-line);
+    background: var(--ct-accent-tint);
+    align-items: center;
   }
-  main { max-width: 46rem; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
-  .sub { color: var(--muted); margin: 0 0 2.5rem; }
-  h2 {
-    font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
-    color: var(--muted); margin: 2.5rem 0 .9rem; font-weight: 600;
-  }
-  h2:first-of-type { margin-top: 0; }
-  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
-  a.card {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 1rem; padding: .9rem 1.1rem; text-decoration: none; color: inherit;
-    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
-  }
-  a.card:hover, a.card:focus-visible { border-color: var(--accent); }
-  a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .name { font-weight: 600; }
-  .what { display: block; font-weight: 400; color: var(--muted); font-size: .9rem; }
-  .arrow { color: var(--muted); flex: none; }
-  .feature .name { font-size: 1.05rem; }
-  footer {
-    margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
-    color: var(--muted); font-size: .85rem;
-  }
-  footer p { margin: 0 0 .5rem; }
+  .hub-card--feature .hub-card__what { color: var(--ct-accent-text); }
 </style>
 </head>
-<body>
-<main>
-  <h1>CareerTech Tools</h1>
-  <p class="sub">
-    Small, free tools for careers services &mdash; generic versions of things
-    built for one service and shared with the
-    <a href="https://www.targetconnect.net/">TargetConnect</a> community.
-    Every one of them is a single page that runs entirely in your browser.
-    Nothing is uploaded, stored or tracked.
-  </p>
+<body class="ct-page">
 
-  <h2>CV Builder</h2>
-  <ul>
-    <li><a class="card feature" href="cv-builder/">
-      <span class="name">CV Builder
-        <span class="what">Full r&eacute;sum&eacute; editor with templates and PDF export. Works offline; your CV never leaves your device.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-  </ul>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">CT</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">CareerTech Tools</h1>
+      <p class="ct-toolbar__sub">Free tools for careers services.</p>
+    </div>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
 
-  <h2>Student activities</h2>
-  <ul>
-    <li><a class="card" href="activities/cv-verb-roulette.html">
-      <span class="name">CV Action Verb Roulette
-        <span class="what">Spin for stronger openers than &ldquo;responsible for&rdquo;.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="activities/skills-radar.html">
-      <span class="name">Sector Skills Radar
-        <span class="what">Chart your skills against what a sector asks for.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="activities/star-flashcards.html">
-      <span class="name">STAR(R) Method Flashcards
-        <span class="what">Interview answer practice, one prompt at a time.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-  </ul>
+<main class="ct-shell">
 
-  <h2>Widget builders</h2>
-  <p class="sub" style="margin-bottom:.9rem; font-size:.9rem;">
-    Each of these generates a self-contained HTML file you can host yourself and
-    embed anywhere &mdash; TargetConnect, SharePoint, Canvas, Blackboard.
-  </p>
-  <ul>
-    <li><a class="card" href="builders/widget-maker.html">
-      <span class="name">Universal Widget Maker
-        <span class="what">The general-purpose one. Start here.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/TC-Custom-Pane-Builder.html">
-      <span class="name">Custom Pane Maker
-        <span class="what">Build a styled TargetConnect content pane.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/event-builder.html">
-      <span class="name">Event Template Builder
-        <span class="what">Lay out a single event page.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/event-cal-builder.html">
-      <span class="name">Event Calendar Maker
-        <span class="what">Calendar view of an events feed.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/event-feed-builder.html">
-      <span class="name">Events RSS List Widget Maker
-        <span class="what">Scrolling list of upcoming events.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/vancancies-feed-builder.html">
-      <span class="name">Vacancies List Widget Maker
-        <span class="what">Live vacancy list from a feed.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/modal-maker.html">
-      <span class="name">Pure CSS Modal Maker
-        <span class="what">Pop-up dialogs with no JavaScript at all.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-    <li><a class="card" href="builders/qr-maker.html">
-      <span class="name">QR Code Maker
-        <span class="what">Colour-customisable QR codes, transparent background optional.</span>
-      </span><span class="arrow">&rarr;</span></a></li>
-  </ul>
+  <section class="hub-hero">
+      <h2 class="ct-display">Small, sharp tools for <span class="ct-hl">careers</span> services</h2>
+      <p class="ct-muted" style="font-size: var(--ct-size-lg); max-width: 32rem;">
+        Generic versions of things built for one service and shared with the
+        <a href="https://www.targetconnect.net/">TargetConnect</a> community.
+        Every one is a single page that runs entirely in your browser.
+      </p>
 
-  <footer>
-    <p>
+      <div class="ct-stats" style="margin-top: var(--ct-sp-8);">
+        <div>
+          <span class="ct-stat__value">12</span>
+          <span class="ct-stat__label">Tools</span>
+        </div>
+        <div>
+          <span class="ct-stat__value">0</span>
+          <span class="ct-stat__label">Accounts needed</span>
+        </div>
+        <div>
+          <span class="ct-stat__value">0</span>
+          <span class="ct-stat__label">Data collected</span>
+        </div>
+      </div>
+  </section>
+
+  <section class="hub-group">
+    <h2>CV Builder</h2>
+    <ul class="hub-list hub-list--single">
+      <li><a class="hub-card hub-card--feature" href="cv-builder/">
+        <span>
+          <span class="hub-card__name">CV Builder</span>
+          <span class="hub-card__what">Full r&eacute;sum&eacute; editor with templates and PDF export. Works offline; your CV never leaves your device.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+    </ul>
+  </section>
+
+  <section class="hub-group">
+    <h2>Student activities</h2>
+    <ul class="hub-list">
+      <li><a class="hub-card" href="activities/cv-verb-roulette.html">
+        <span>
+          <span class="hub-card__name">CV Action Verb Roulette</span>
+          <span class="hub-card__what">Spin for stronger openers than &ldquo;responsible for&rdquo;.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="activities/skills-radar.html">
+        <span>
+          <span class="hub-card__name">Sector Skills Radar</span>
+          <span class="hub-card__what">Chart your skills against what a sector asks for.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="activities/star-flashcards.html">
+        <span>
+          <span class="hub-card__name">STAR(R) Method Flashcards</span>
+          <span class="hub-card__what">Interview answer practice, one prompt at a time.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+    </ul>
+  </section>
+
+  <section class="hub-group">
+    <h2>Widget builders</h2>
+    <p class="ct-muted ct-small" style="max-width: 40rem;">
+      Each of these generates a self-contained HTML file you can host yourself and
+      embed anywhere &mdash; TargetConnect, SharePoint, Canvas, Blackboard.
+    </p>
+    <ul class="hub-list">
+      <li><a class="hub-card" href="builders/widget-maker.html">
+        <span>
+          <span class="hub-card__name">Universal Widget Maker</span>
+          <span class="hub-card__what">The general-purpose one. Start here.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/TC-Custom-Pane-Builder.html">
+        <span>
+          <span class="hub-card__name">Custom Pane Maker</span>
+          <span class="hub-card__what">Build a styled TargetConnect content pane.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/event-builder.html">
+        <span>
+          <span class="hub-card__name">Event Template Builder</span>
+          <span class="hub-card__what">Lay out a single event page.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/event-cal-builder.html">
+        <span>
+          <span class="hub-card__name">Event Calendar Maker</span>
+          <span class="hub-card__what">Calendar view of an events feed.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/event-feed-builder.html">
+        <span>
+          <span class="hub-card__name">Events RSS List Widget Maker</span>
+          <span class="hub-card__what">Scrolling list of upcoming events.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/vancancies-feed-builder.html">
+        <span>
+          <span class="hub-card__name">Vacancies List Widget Maker</span>
+          <span class="hub-card__what">Live vacancy list from a feed.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/modal-maker.html">
+        <span>
+          <span class="hub-card__name">Pure CSS Modal Maker</span>
+          <span class="hub-card__what">Pop-up dialogs with no JavaScript at all.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+      <li><a class="hub-card" href="builders/qr-maker.html">
+        <span>
+          <span class="hub-card__name">QR Code Maker</span>
+          <span class="hub-card__what">Colour-customisable QR codes, transparent background optional.</span>
+        </span>
+        <span class="hub-card__arrow" aria-hidden="true">&rarr;</span>
+      </a></li>
+    </ul>
+  </section>
+
+  <footer style="margin-top: var(--ct-sp-12); padding-top: var(--ct-sp-5); border-top: 1px solid var(--ct-line);">
+    <p class="ct-small ct-muted" style="max-width: 44rem;">
       The three feed-driven builders read RSS through a free public relay, which
       rate-limits and sometimes goes down. Fine for a screen in a foyer; host
       your own proxy for anything critical.
     </p>
-    <p>
+    <p class="ct-small ct-muted" style="max-width: 44rem;">
       Take these, change them, use them. The CV Builder is a build of
       <a href="https://github.com/AmruthPillai/Reactive-Resume">Reactive Resume</a>
       and carries its MIT licence.

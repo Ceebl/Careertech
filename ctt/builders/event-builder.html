@@ -1,173 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Event Template Builder</title>
-    <style>
-        /* --- Builder Interface Styles --- */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f1f5f9;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            gap: 30px;
-            height: 100vh;
-            box-sizing: border-box;
-        }
-        .panel {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-        }
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.9rem; }
-        input, textarea, select {
-            width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box;
-        }
-        textarea { resize: vertical; min-height: 80px; }
-        .hint { font-size: 0.75rem; color: #64748b; margin-top: 3px; }
-        .feature-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; margin-top: 10px; }
-        
-        .preview-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;}
-        .preview-header h2 { border: none; margin: 0; padding: 0; }
-        
-        /* --- Buttons --- */
-        .header-buttons { display: flex; gap: 10px; }
-        .copy-btn {
-            background: #0069fa; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;
-        }
-        .copy-btn:hover { background: #0056cc; }
-        .help-btn {
-            background: #e2e8f0; color: #334155; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.2s;
-        }
-        .help-btn:hover { background: #cbd5e1; color: #0f172a; }
-        
-        #code-output {
-            margin-top: 20px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; min-height: 150px; font-size: 0.85rem;
-        }
-
-        /* --- Modal Styles --- */
-        .modal-overlay {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-            width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px);
-            align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background-color: #ffffff; padding: 30px; border-radius: 12px; max-width: 650px; width: 90%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; max-height: 90vh; overflow-y: auto;
-        }
-        .close-modal {
-            position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: #64748b; cursor: pointer;
-        }
-        .close-modal:hover { color: #0f172a; }
-        .instruction-img {
-            max-width: 100%; border: 1px solid #e2e8f0; border-radius: 6px; margin: 10px 0 20px 0; display: block;
-        }
-        .instruction-step { font-size: 1.05rem; color: #334155; line-height: 1.5; margin-bottom: 5px;}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Event Template Builder</title>
+<meta name="description" content="Lay out a single event page and paste the result straight into TargetConnect.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #live-preview { display: block; background: var(--ct-n0); max-height: 60vh; }
+  .eb-feature {
+    display: grid; gap: var(--ct-sp-2); padding: var(--ct-sp-3);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius);
+  }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <div class="panel">
-        <h2>✏️ Event Details</h2>
-        
-        <label>Design Style</label>
-        <select id="input-template" oninput="generateTemplate()">
-            <option value="creative">Creative (Fun & Bold)</option>
-            <option value="formal">Formal (Clean & Professional)</option>
-            <option value="modern" selected>Modern (Sleek & Minimalist)</option>
-        </select>
-
-        <label>Theme Color</label>
-        <select id="input-color" oninput="generateTemplate()">
-            <option value="#0069fa">Blue</option>
-            <option value="#FF6600">Orange</option>
-            <option value="#8DC63F">Green</option>
-            <option value="#E6007E">Pink</option>
-        </select>
-
-        <label>Event Title *</label>
-        <input type="text" id="input-title" value="Creative Connections" oninput="generateTemplate()">
-
-        <label>Tagline (Optional)</label>
-        <input type="text" id="input-tagline" value="// an alumni networking mixer" oninput="generateTemplate()">
-
-        <label>Date & Time (Optional)</label>
-        <input type="text" id="input-when" value="March 20, 2026 | 6:30 PM - 9:00 PM" oninput="generateTemplate()">
-
-        <label>Location (Optional)</label>
-        <input type="text" id="input-where" value="City Space + Online via Hub" oninput="generateTemplate()">
-
-        <label>Description *</label>
-        <textarea id="input-desc" oninput="generateTemplate()">Ready to rediscover your network? Reunite with fellow grads for an evening dedicated to the power of collaboration.
-
-Creative Connections is more than just a mixer; it's a high-energy space where artists, designers, writers, and digital innovators gather to share insights, vent about the industry, and spark brand-new projects.</textarea>
-
-        <label>The Rundown / Schedule (Optional)</label>
-        <div class="hint">Format: Time | Activity. Put each on a new line.</div>
-        <textarea id="input-rundown" oninput="generateTemplate()">6:30 PM | Arrival & Drinks
-7:15 PM | The 'Connection' Hour (Guided)
-8:15 PM | Open Gallery & Socializing</textarea>
-
-        <label>3 Key Features (Optional)</label>
-        <div class="feature-box">
-            <input type="text" id="input-f1-title" value="⚡ Speed Intro" style="margin-bottom: 5px;" oninput="generateTemplate()">
-            <input type="text" id="input-f1-desc" value="30 mins of fast-paced peer matching." oninput="generateTemplate()">
-        </div>
-        <div class="feature-box">
-            <input type="text" id="input-f2-title" value="🎤 The Spotlight" style="margin-bottom: 5px;" oninput="generateTemplate()">
-            <input type="text" id="input-f2-desc" value="Alumni 'breaking the mold' in the industry." oninput="generateTemplate()">
-        </div>
-        <div class="feature-box">
-            <input type="text" id="input-f3-title" value="🍹 Open Gallery" style="margin-bottom: 5px;" oninput="generateTemplate()">
-            <input type="text" id="input-f3-desc" value="Showcases, snacks, and socializing." oninput="generateTemplate()">
-        </div>
-
-        <label>Don't Forget! Tip (Optional)</label>
-        <input type="text" id="input-tip" value="Bring your digital portfolio or business cards! We have a 'Project Wall' ready for your contact info and 'Help Wanted' ads." oninput="generateTemplate()">
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">EV</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Event Template Builder</h1>
+      <p class="ct-toolbar__sub">Lay out a single event page for TargetConnect.</p>
     </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
 
-    <div class="panel">
-        <div class="preview-header">
-            <h2>👀 Live Preview</h2>
-            <div class="header-buttons">
-                <button class="help-btn" onclick="openModal()">❓ How to add this</button>
-                <button class="copy-btn" onclick="copyCode()">📋 Copy HTML</button>
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <!-- ---------- Controls ---------- -->
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Event details</h2>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-template">Design style</label>
+          <select class="ct-select" id="input-template">
+            <option value="creative">Creative &mdash; fun and bold</option>
+            <option value="formal">Formal &mdash; clean and professional</option>
+            <option value="modern" selected>Modern &mdash; sleek and minimal</option>
+          </select>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-color">Theme colour</label>
+          <select class="ct-select" id="input-color">
+            <option value="#496DDB">Blue</option>
+            <option value="#EE8434">Orange</option>
+            <option value="#6B6A21">Green</option>
+            <option value="#C95D63">Pink</option>
+          </select>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-title">Event title</label>
+          <input class="ct-input" type="text" id="input-title" value="Creative Connections">
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-tagline">Tagline</label>
+          <input class="ct-input" type="text" id="input-tagline" value="// an alumni networking mixer">
+          <span class="ct-hint">Optional.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-when">Date and time</label>
+          <input class="ct-input" type="text" id="input-when" value="March 20, 2026 | 6:30 PM - 9:00 PM">
+          <span class="ct-hint">Optional.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-where">Location</label>
+          <input class="ct-input" type="text" id="input-where" value="City Space + Online via Hub">
+          <span class="ct-hint">Optional.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-desc">Description</label>
+          <textarea class="ct-textarea" id="input-desc" style="min-height:150px">Ready to rediscover your network? Reunite with fellow grads for an evening dedicated to the power of collaboration.
+
+Creative Connections is more than just a mixer; it is a high-energy space where artists, designers, writers, and digital innovators gather to share insights, vent about the industry, and spark brand-new projects.</textarea>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-rundown">The rundown</label>
+          <textarea class="ct-textarea" id="input-rundown">6:30 PM | Arrival and drinks
+7:15 PM | The connection hour (guided)
+8:15 PM | Open gallery and socialising</textarea>
+          <span class="ct-hint">Optional. One per line, written as <span class="ct-mono">Time | Activity</span>.</span>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Three key features</span>
+          <span class="ct-hint">Optional. A short heading and a line of detail for each.</span>
+          <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+            <div class="eb-feature">
+              <label class="ct-sr-only" for="input-f1-title">Feature one heading</label>
+              <input class="ct-input" type="text" id="input-f1-title" value="Speed intro">
+              <label class="ct-sr-only" for="input-f1-desc">Feature one detail</label>
+              <input class="ct-input" type="text" id="input-f1-desc" value="30 mins of fast-paced peer matching.">
             </div>
-        </div>
-        
-        <div id="live-preview" style="flex-grow: 1; border: 1px dashed #cbd5e1; padding: 20px; border-radius: 8px; background: #fff; overflow-y: auto; max-height: 800px;"></div>
-
-        <label>Generated Code (Copy this into TargetConnect)</label>
-        <textarea id="code-output" readonly></textarea>
-    </div>
-
-    <div id="instruction-modal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">✖</span>
-            <h2 style="border-bottom: none; padding-bottom: 0;">How to add this to your event</h2>
-            <p class="instruction-step"><strong>1.</strong> In the About Section of TargetConnect, click this icon in the Long Description's toolbox to open code view.</p>
-            <img src="https://i.ibb.co/pS1WzXh/tc-event-html-codeicon.png" alt="Code view icon in TargetConnect" class="instruction-img">
-            <p class="instruction-step"><strong>2.</strong> Replace anything here with the code provided by the builder.</p>
-            <img src="https://i.ibb.co/N25tSyBf/tc-event-html-codeview.png" alt="Code view text area in TargetConnect" class="instruction-img">
-            <div style="background: #eef2ff; border-left: 4px solid #4f46e5; padding: 12px; border-radius: 4px; margin-top: 15px; color: #312e81; font-size: 0.95rem;">
-                <strong>💡 Tip:</strong> You can click the code icon again to preview exactly how the template will look!
+            <div class="eb-feature">
+              <label class="ct-sr-only" for="input-f2-title">Feature two heading</label>
+              <input class="ct-input" type="text" id="input-f2-title" value="The spotlight">
+              <label class="ct-sr-only" for="input-f2-desc">Feature two detail</label>
+              <input class="ct-input" type="text" id="input-f2-desc" value="Alumni breaking the mould in the industry.">
             </div>
+            <div class="eb-feature">
+              <label class="ct-sr-only" for="input-f3-title">Feature three heading</label>
+              <input class="ct-input" type="text" id="input-f3-title" value="Open gallery">
+              <label class="ct-sr-only" for="input-f3-desc">Feature three detail</label>
+              <input class="ct-input" type="text" id="input-f3-desc" value="Showcases, snacks and socialising.">
+            </div>
+          </div>
         </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-tip">Closing tip</label>
+          <input class="ct-input" type="text" id="input-tip" value="Bring your digital portfolio or business cards. We have a Project Wall ready for your contact info and Help Wanted ads.">
+          <span class="ct-hint">Optional.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Preview and output ---------- -->
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <div class="ct-row">
+          <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+            How to add this
+          </button>
+          <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                  data-ct-copy="#code-output" data-ct-copy-label="Event HTML copied">
+            Copy HTML
+          </button>
+        </div>
+      </div>
+
+      <div class="ct-stage" id="live-preview"></div>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="code-output">Generated code</label>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
+        <span class="ct-hint">Paste this into the Long Description field in TargetConnect.</span>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How to add this to your event</h2>
+    <p><b>1.</b> In the About section of TargetConnect, open the Long Description
+    toolbar and click the code view icon.</p>
+    <img src="https://i.ibb.co/pS1WzXh/tc-event-html-codeicon.png"
+         alt="The code view icon in the TargetConnect toolbar" class="ct-modal__figure">
+    <p><b>2.</b> Replace everything in there with the code from this builder.</p>
+    <img src="https://i.ibb.co/N25tSyBf/tc-event-html-codeview.png"
+         alt="The code view text area in TargetConnect" class="ct-modal__figure">
+    <div class="ct-note">
+      <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+      </svg>
+      <div><b>Tip:</b> click the code icon again to see exactly how it will look.</div>
     </div>
+  </div>
+</div>
 
     <script>
-        function openModal() { document.getElementById('instruction-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('instruction-modal').style.display = 'none'; }
-        window.onclick = function(event) { if (event.target == document.getElementById('instruction-modal')) closeModal(); }
 
-        // Adjusts text color dynamically for modern headers
+        // Picks readable text for a coloured header band. Restored verbatim -
+        // generateTemplate calls it for every template.
         function getContrastYIQ(hexcolor){
             hexcolor = hexcolor.replace("#", "");
             var r = parseInt(hexcolor.substr(0,2),16);
@@ -349,13 +372,11 @@ Creative Connections is more than just a mixer; it's a high-energy space where a
             document.getElementById('code-output').value = finalHtml.trim();
         }
 
-        function copyCode() {
-            const codeBox = document.getElementById('code-output');
-            codeBox.select();
-            document.execCommand('copy');
-            alert('HTML Code copied! You can now paste this into TargetConnect.');
-        }
-
+        // Redraw whenever any control changes, rather than hanging an
+        // oninput attribute off every single field.
+        var controls = document.getElementById('controls');
+        controls.addEventListener('input', generateTemplate);
+        controls.addEventListener('change', generateTemplate);
         generateTemplate();
     </script>
 </body>

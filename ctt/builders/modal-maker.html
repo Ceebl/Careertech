@@ -1,107 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Pure CSS Modal Maker</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
-        
-        /* --- Tool Header (Toolkit Branding) --- */
-        .tool-header { 
-            background-color: #0069fa; 
-            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); 
-            background-position: right center; 
-            background-repeat: no-repeat; 
-            background-size: contain; 
-            color: #ffffff; 
-            padding: 20px 40px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        }
-        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
-        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-
-        /* --- Layout --- */
-        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
-        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
-        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.2; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; }
-        
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
-        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        textarea { resize: vertical; min-height: 80px; }
-        
-        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
-        
-        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.9rem; }
-        
-        .copy-btn { background: #0069fa; color: white; border: none; padding: 14px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 1.05rem; transition: background 0.2s; }
-        .copy-btn:hover { background: #0056cc; }
-
-        .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .preview-header h2 { border: none; margin: 0; padding: 0; }
-        
-        #live-preview { flex-grow: 1; border: 1px dashed #cbd5e1; padding: 40px; border-radius: 8px; background: #f8fafc; overflow-y: auto; max-height: 40vh; display: flex; align-items: center; justify-content: center; }
-        #code-output { margin-top: 15px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 250px; font-size: 0.85rem; border: none; resize: none; width: 100%; box-sizing: border-box; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pure CSS Modal Maker</title>
+<meta name="description" content="Generate pop-up modals that use no JavaScript at all, for TargetConnect, SharePoint or Canvas.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #live-preview { flex-direction: column; gap: var(--ct-sp-3); text-align: center; }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <header class="tool-header">
-        <div class="hero-content">
-            <h1>Pure CSS Modal Maker</h1>
-            <div class="header-divider"></div>
-            <p>Generate unbreakable, JavaScript-free pop-up modals for TargetConnect, SharePoint, or Canvas.</p>
-            <span class="badge">Universal Edition 1.1</span>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div class="panel-left">
-            <h2>⚙️ Modal Configuration</h2>
-            
-            <div class="instructions">
-                <b>💡 How it works:</b> This generator uses a hidden HTML checkbox instead of JavaScript. This bypasses rigid security filters in LMS platforms and CRM pathways!
-            </div>
-
-            <label>1. Design Template</label>
-            <select id="input-template" oninput="generateModal()">
-                <option value="modern">Modern Solid</option>
-                <option value="saas">Premium SaaS</option>
-                <option value="minimal">Minimalist Alert</option>
-            </select>
-
-            <label>2. Primary Theme Color</label>
-            <div class="color-picker-wrapper">
-                <input type="color" id="input-color" value="#4f46e5" oninput="generateModal()">
-                <span>Button & Highlight Color</span>
-            </div>
-
-            <label>3. Trigger Button Text</label>
-            <input type="text" id="input-trigger" value="✨ Unlock Secret Tip" oninput="generateModal()">
-
-            <label>4. Modal Title</label>
-            <input type="text" id="input-title" value="Did you know?" oninput="generateModal()">
-
-            <label>5. Modal Body Text (HTML allowed)</label>
-            <textarea id="input-body" oninput="generateModal()">Completing this module increases your <strong>Digital Fluency</strong> score. Industry benchmarks for 2026 suggest that graduates with high AI Fluency are 40% more likely to secure roles in the Tech sector.</textarea>
-
-            <label>6. Close Button Text</label>
-            <input type="text" id="input-close" value="Got it, thanks!" oninput="generateModal()">
-            
-        </div>
-
-        <div class="panel-right">
-            <div class="preview-header">
-                <h2>👀 Live Preview</h2>
-                <button class="copy-btn" style="width: auto; margin: 0; padding: 10px 20px;" onclick="copyCode()">📋 Copy HTML</button>
-            </div>
-            
-            <div id="live-preview"></div>
-
-            <label style="margin-top: 20px;">Generated HTML/CSS (Paste into Source View)</label>
-            <textarea id="code-output" readonly></textarea>
-        </div>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">MM</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Pure CSS Modal Maker</h1>
+      <p class="ct-toolbar__sub">Pop-up dialogs with no JavaScript at all.</p>
     </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <!-- ---------- Controls ---------- -->
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Modal configuration</h2>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-note">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+          <div><b>How it works:</b> this uses a hidden checkbox rather than JavaScript,
+          so it survives the strict security filters in most LMS and CRM platforms.</div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-template">Design template</label>
+          <select class="ct-select" id="input-template">
+            <option value="modern">Modern solid</option>
+            <option value="saas">Premium SaaS</option>
+            <option value="minimal">Minimalist alert</option>
+          </select>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-color">Theme colour</label>
+          <div class="ct-colour">
+            <input type="color" id="input-color" value="#496DDB">
+            <span class="ct-colour__label">Buttons and highlights</span>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-trigger">Trigger button text</label>
+          <input class="ct-input" type="text" id="input-trigger" value="Unlock secret tip">
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-title">Modal title</label>
+          <input class="ct-input" type="text" id="input-title" value="Did you know?">
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-body">Modal body text</label>
+          <textarea class="ct-textarea" id="input-body">Completing this module increases your <strong>Digital Fluency</strong> score. Industry benchmarks for 2026 suggest that graduates with high AI Fluency are 40% more likely to secure roles in the Tech sector.</textarea>
+          <span class="ct-hint">Basic HTML tags are allowed here.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="input-close">Close button text</label>
+          <input class="ct-input" type="text" id="input-close" value="Got it, thanks">
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Preview and output ---------- -->
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#code-output" data-ct-copy-label="Modal code copied">
+          Copy HTML
+        </button>
+      </div>
+
+      <div class="ct-stage" id="live-preview"></div>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="code-output">Generated code</label>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
+        <span class="ct-hint">Paste this into your platform's source or HTML view.</span>
+      </div>
+    </section>
+
+  </div>
+</main>
 
     <script>
         function generateModal() {
@@ -212,15 +223,12 @@
             document.getElementById('code-output').value = finalCode;
         }
 
-        function copyCode() {
-            const codeBox = document.getElementById('code-output');
-            codeBox.select();
-            document.execCommand('copy');
-            alert('Code copied! You can now paste this into your platform.');
-        }
-
-        // Initialize on load
-        window.onload = generateModal;
+        // Redraw whenever any control changes, rather than hanging an
+        // oninput attribute off every single field.
+        var controls = document.getElementById('controls');
+        controls.addEventListener('input', generateModal);
+        controls.addEventListener('change', generateModal);
+        generateModal();
     </script>
 </body>
 </html>
