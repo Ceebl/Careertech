@@ -10,7 +10,8 @@
         :root {
             --primary: #496DDB;
             --primary-glow: rgba(73, 109, 219, 0.15);
-            --accent-green: #C0BF47;
+            --highlight: #EAEFFC;        /* highlighter block behind a word */
+            --highlight-text: #2A46A0;
             --card-bg: #ffffff;
             --text-main: #1C1A22;
             --text-muted: #635C6E;
@@ -54,11 +55,11 @@
             color: var(--text-main);
         }
 
-        /* SHARP GREEN HIGHLIGHT FOR TEXT */
+        /* Highlighter block behind a word */
         .highlight {
-            background-color: var(--accent-green);
+            background-color: var(--highlight);
             padding: 0 8px;
-            color: var(--text-main);
+            color: var(--highlight-text);
             /* Intentionally no border-radius, to match a squared-off brand guide */
         }
 
@@ -124,8 +125,8 @@
 
         /* Landed State - Applies the signature Sharp Green Highlight! */
         .landed .verb-display {
-            background-color: var(--accent-green);
-            color: #1C1A22;
+            background-color: var(--highlight);
+            color: var(--highlight-text);
             animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 

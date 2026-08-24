@@ -9,7 +9,9 @@
         /* --- Core Brand Variables --- */
         :root {
             --primary: #496DDB;
-            --accent-green: #C0BF47;
+            --highlight: #EAEFFC;        /* the tag on the front of a card */
+            --highlight-text: #2A46A0;
+            --front-edge: #AE8799;       /* distinguishes front from back */
             --card-bg: #ffffff;
             --text-main: #1C1A22;
             --text-muted: #635C6E;
@@ -62,12 +64,12 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            border-bottom: 8px solid var(--accent-green); 
+            border-bottom: 8px solid var(--front-edge); 
         }
         
         .question-tag { 
-            background: var(--accent-green); 
-            color: var(--text-main); 
+            background: var(--highlight); 
+            color: var(--highlight-text); 
             padding: 8px 16px; 
             border-radius: 30px; 
             font-size: 0.85rem; 
