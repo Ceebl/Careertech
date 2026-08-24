@@ -1,0 +1,52 @@
+{
+	"name": "CV Builder",
+	"short_name": "CV Builder",
+	"description": "Create, tailor, and export a professional CV. Everything stays in your browser, on your device.",
+	"id": "./?source=pwa",
+	"start_url": "./?source=pwa",
+	"scope": "./",
+	"lang": "en",
+	"display": "standalone",
+	"orientation": "portrait",
+	"theme_color": "#ffffff",
+	"background_color": "#f8fafc",
+	"icons": [
+		{
+			"src": "favicon.ico",
+			"sizes": "128x128",
+			"type": "image/x-icon"
+		},
+		{
+			"src": "pwa-64x64.png",
+			"sizes": "64x64",
+			"type": "image/png"
+		},
+		{
+			"src": "pwa-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "pwa-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "maskable-icon-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		}
+	],
+	"categories": [
+		"business",
+		"career",
+		"cv",
+		"education",
+		"productivity",
+		"resume",
+		"templates",
+		"writing"
+	]
+}

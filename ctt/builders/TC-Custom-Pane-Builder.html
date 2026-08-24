@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mike's Amazing Custom Pane Maker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f9; 
+            margin: 0; 
+            padding: 0;
+        }
+        
+        /* --- Tool Banner (Shortened) --- */
+        .tool-header {
+            background-color: #0069fa; 
+            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png');
+            background-position: right center;
+            background-repeat: no-repeat;
+            background-size: contain;
+            color: #ffffff;
+            padding: 20px 40px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .header-content { max-width: 800px; }
+        .tool-header h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; color: white; }
+        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
+        .tool-header p { margin: 0; color: white; font-size: 1rem; }
+        
+        .header-actions { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
+        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .how-to-use-btn { background: #ffffff; color: #0069fa; border: none; padding: 6px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: background-color 0.2s, transform 0.1s; }
+        .how-to-use-btn:hover { background-color: #f1f5f9; transform: translateY(-1px); }
+
+        /* --- Main Layout (Scrollable with Sticky Preview) --- */
+        .workspace { 
+            display: flex; 
+            gap: 30px; 
+            padding: 25px; 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            align-items: flex-start;
+        }
+        
+        .panel-left {
+            background: #ffffff; border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0;
+        }
+
+        .panel-right {
+            background: #ffffff; border-radius: 12px; padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1; border: 1px solid #e2e8f0;
+            position: sticky;
+            top: 25px; 
+            height: calc(100vh - 50px);
+            display: flex; flex-direction: column; box-sizing: border-box;
+        }
+        
+        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        h3 { color: #3b82f6; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; font-size: 1.1rem; }
+        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        input[type="text"], textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box; font-size: 0.95rem; }
+        
+        .color-group { display: flex; gap: 15px; align-items: center; margin-top: 5px; }
+        .color-picker-wrapper { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; min-width: 90px;}
+        input[type="color"] { border: none; width: 30px; height: 30px; padding: 0; background: none; cursor: pointer; }
+        
+        .segment-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px; position: relative; }
+        .remove-btn { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #991b1b; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        .add-segment-btn { background: #f1f5f9; color: #0f172a; border: 2px dashed #94a3b8; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 25px; transition: all 0.2s; width: 100%; }
+        .add-segment-btn:hover { background: #e2e8f0; border-color: #64748b; }
+        
+        .row { display: flex; gap: 15px; }
+        .col { flex: 1; }
+        
+        .preview-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;}
+        .copy-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;}
+        .copy-btn:hover { background: #2563eb; }
+        
+        #live-preview { flex-grow: 1; border: 1px dashed #cbd5e1; padding: 20px; border-radius: 8px; background: #f1f5f9; overflow-y: auto; }
+        #code-output { margin-top: 20px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 150px; flex-shrink: 0; font-size: 0.85rem; border: none; resize: vertical; }
+        .hint { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+
+        /* --- Help Modal Styles --- */
+        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
+        .modal-content { background-color: #ffffff; padding: 30px; border-radius: 12px; max-width: 650px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; max-height: 85vh; display: flex; flex-direction: column; }
+        .modal-content h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .close-modal { position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: #64748b; cursor: pointer; transition: color 0.2s; }
+        .close-modal:hover { color: #0f172a; }
+        .modal-scroll-area { color: #475569; line-height: 1.7; overflow-y: auto; padding-right: 15px; font-size: 1rem; }
+        .modal-scroll-area h3 { margin-top: 20px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; color: #0f172a;}
+        .modal-scroll-area ul { padding-left: 20px; margin: 10px 0; }
+        .modal-scroll-area li { margin-bottom: 10px; }
+        .modal-scroll-area code { background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #3b82f6;}
+    </style>
+</head>
+<body>
+
+    <header class="tool-header">
+        <div class="header-content">
+            <h1>Mike's Amazing Custom Pane Maker</h1>
+            <div class="header-divider"></div>
+            <p>Generate responsive, targeted banners for TargetConnect using Velocity logic.</p>
+            <div class="header-actions">
+                <span class="badge">Universal Edition 2.0</span>
+                <button class="how-to-use-btn" onclick="openHelpModal()">📖 How to Use</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="panel-left">
+            <h2>🛠️ Rule Builder</h2>
+            <div id="segments-container"></div>
+            <button class="add-segment-btn" onclick="addSegment()">➕ Add Another Audience Segment</button>
+
+            <div class="segment-card" style="border-color: #94a3b8; background: #f8fafc;">
+                <h3 style="color: #475569; border-color: #cbd5e1;">The Fallback (Default Banner)</h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 15px 0;">What should users see if they don't match any tags above? Leave headline blank to show nothing.</p>
+                
+                <div class="row">
+                    <div class="col">
+                        <label>Template Style</label>
+                        <select id="fallback-template" onchange="updateUI('fallback')">
+                            <option value="notice">Important Notice</option>
+                            <option value="modern" selected>Modern</option>
+                            <option value="professional">Professional</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="image">Custom Image Banner</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Colors</label>
+                        <div class="color-group">
+                            <div class="color-picker-wrapper" title="Primary Theme Color">
+                                <input type="color" id="fallback-color1" value="#3b82f6" oninput="autoContrast('fallback')"> Primary
+                            </div>
+                            <div class="color-picker-wrapper" title="Background / Gradient Color">
+                                <input type="color" id="fallback-color2" value="#ffffff" oninput="autoContrast('fallback')"> <span id="fallback-c2-label">BG</span>
+                            </div>
+                            <div class="color-picker-wrapper" title="Text Color (Auto-calculates for readability)">
+                                <input type="color" id="fallback-text-color" value="#1e293b" oninput="generateCode()"> Text
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Optional Pill Callout</label>
+                        <input type="text" id="fallback-pill" placeholder="e.g., NEW FEATURE" oninput="generateCode()">
+                    </div>
+                    <div class="col">
+                        <label>Image URL (If Image Template selected)</label>
+                        <input type="text" id="fallback-image" placeholder="https://..." oninput="generateCode()">
+                    </div>
+                </div>
+
+                <label>Headline / Image Alt Text</label>
+                <input type="text" id="fallback-title" placeholder="e.g., Welcome to the Careers Hub" oninput="generateCode()">
+                <label>Text</label>
+                <textarea id="fallback-text" rows="2" placeholder="Contact our team for personalised support." oninput="generateCode()"></textarea>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Btn 1</label>
+                        <input type="text" id="fallback-b1-txt" placeholder="Btn 1 Text" oninput="generateCode()">
+                        <select id="fallback-b1-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('fallback', 1)">
+                            <option value="">- No Link -</option>
+                            <option value="/leap/appointments.html">Appointments</option>
+                            <option value="/leap/events.html">Events</option>
+                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
+                            <option value="/leap/queries.html">Queries / Helpdesk</option>
+                            <option value="/leap/pathways/list.html">Pathways</option>
+                            <option value="custom">Custom URL...</option>
+                        </select>
+                        <input type="text" id="fallback-b1-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
+                    </div>
+                    <div class="col">
+                        <label>Btn 2</label>
+                        <input type="text" id="fallback-b2-txt" placeholder="Btn 2 Text" oninput="generateCode()">
+                        <select id="fallback-b2-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('fallback', 2)">
+                            <option value="">- No Link -</option>
+                            <option value="/leap/appointments.html">Appointments</option>
+                            <option value="/leap/events.html">Events</option>
+                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
+                            <option value="/leap/queries.html">Queries / Helpdesk</option>
+                            <option value="/leap/pathways/list.html">Pathways</option>
+                            <option value="custom">Custom URL...</option>
+                        </select>
+                        <input type="text" id="fallback-b2-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
+                    </div>
+                    <div class="col">
+                        <label>Btn 3</label>
+                        <input type="text" id="fallback-b3-txt" placeholder="Btn 3 Text" oninput="generateCode()">
+                        <select id="fallback-b3-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('fallback', 3)">
+                            <option value="">- No Link -</option>
+                            <option value="/leap/appointments.html">Appointments</option>
+                            <option value="/leap/events.html">Events</option>
+                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
+                            <option value="/leap/queries.html">Queries / Helpdesk</option>
+                            <option value="/leap/pathways/list.html">Pathways</option>
+                            <option value="custom">Custom URL...</option>
+                        </select>
+                        <input type="text" id="fallback-b3-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <div class="preview-header">
+                <h2 style="border:none; margin:0;">👀 Live Preview</h2>
+                <button class="copy-btn" onclick="copyVelocityCode()">📋 Copy Velocity Code</button>
+            </div>
+            <div id="live-preview"></div>
+            <label style="margin-top:20px;">Generated Code (Paste into TargetConnect HTML Editor)</label>
+            <textarea id="code-output" readonly></textarea>
+        </div>
+    </div>
+
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeHelpModal()">✖</span>
+            <h2>Mike's Custom Pane Maker: Instructions</h2>
+            <div class="modal-scroll-area">
+                <p>This tool generates responsive HTML banners with smart Velocity logic to personalize student content in TargetConnect based on their tags. <strong>All templates use hardened, table-based layouts to prevent TargetConnect's global CSS from breaking your buttons!</strong></p>
+                <h3>1. Setting Audience Rules (AND logic)</h3>
+                <p>This tool creates <strong>IF / ELSE IF / ELSE</strong> logic. This means rules are checked in order from top to bottom. The <strong>first rule</strong> that matches the user's tags is the only one they will see.</p>
+                <ul>
+                    <li><strong>Target Tags:</strong> Type comma-separated tags into the field. This rule operates as an "AND" condition. For example, typing <code>Business School, Final Year</code> means the student must have <strong>ALL</strong> of those tags to see that banner.</li>
+                    <li><strong>Case-Sensitivity:</strong> <strong style="color: #d97706;">IMPORTANT: Tag checks are case-sensitive.</strong> Make sure you type them exactly as they appear in TargetConnect (e.g., 'Business' will not match 'business').</li>
+                    <li><strong>Limits:</strong> While the tool can handle many rules, try limiting to ~15 distinct groups for optimal system performance in TargetConnect.</li>
+                </ul>
+                <h3>2. Choosing a Style & Colors</h3>
+                <p>Five distinct templates are available from the dropdown. Colors will auto-adapt to templates, but you can control them:</p>
+                <ul>
+                    <li><strong>Modern:</strong> Clean box with soft shadows. Great for standard announcements.</li>
+                    <li><strong>Notice (Important Notice):</strong> Bold border styling for urgent deadlines.</li>
+                    <li><strong>Professional:</strong> Crisp, squared edges for corporate/academic announcements.</li>
+                    <li><strong>Gradient:</strong> Creates a sweep between Primary and Grad 2. A popular choice for a modern feel.</li>
+                    <li><strong>Custom Image Banner:</strong> Paste a link to a graphical banner in the "Image URL" field. The tool will render the image responsively and place buttons underneath. Note: Leave headline blank to only show the image.</li>
+                </ul>
+                <h3>3. The Fallback (Default Banner)</h3>
+                <p>The <strong>Fallback (Default Banner)</strong> card is the final condition. Students who do not have any tags matching the dynamic rules above will see this standard banner. Leave the headline field blank if you prefer that nothing is shown by default.</p>
+                <h3>4. Buttons & Links</h3>
+                <p>You can add up to three buttons. For each, use the dropdown to select common, internal TargetConnect "Leap Links" like Appointments, Events, or Jobs. Select "Custom URL..." to type in your own internal page or external website link.</p>
+                <h3>5. Getting and Using the Code</h3>
+                <p>Once your rules are set, look at the <strong>👀 Live Preview</strong>. Finally, click the <strong>📋 Copy Velocity Code</strong> button and paste the entire output into the HTML Editor pane within a Custom Pane configuration on the TargetConnect staff dashboard.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let segmentCount = 0;
+
+        function addSegment(presetTags = "", title = "", text = "", tpl = "gradient", c1 = "#8b5cf6", c2 = "#3b82f6", txtC = "#ffffff", pill = "") {
+            segmentCount++;
+            const id = segmentCount;
+            const prefix = `seg-${id}`;
+            
+            const html = `
+            <div class="segment-card" id="segment-${id}">
+                ${id > 1 ? `<button class="remove-btn" onclick="removeSegment(${id})">Remove</button>` : ''}
+                <h3>Segment ${id}</h3>
+                
+                <label>Target Tags (Comma separated)</label>
+                <div class="hint">e.g. <code>Business School, Final Year</code> (User must have ALL tags typed here)</div>
+                <input type="text" id="${prefix}-tags" value="${presetTags}" placeholder="e.g., Alumni, London Campus" oninput="generateCode()">
+
+                <div class="row" style="margin-top: 15px;">
+                    <div class="col">
+                        <label>Template Style</label>
+                        <select id="${prefix}-template" onchange="updateUI('${prefix}')">
+                            <option value="notice" ${tpl === 'notice' ? 'selected' : ''}>Important Notice</option>
+                            <option value="modern" ${tpl === 'modern' ? 'selected' : ''}>Modern</option>
+                            <option value="professional" ${tpl === 'professional' ? 'selected' : ''}>Professional</option>
+                            <option value="gradient" ${tpl === 'gradient' ? 'selected' : ''}>Gradient</option>
+                            <option value="image" ${tpl === 'image' ? 'selected' : ''}>Custom Image Banner</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label>Colors</label>
+                        <div class="color-group">
+                            <div class="color-picker-wrapper" title="Primary Theme Color">
+                                <input type="color" id="${prefix}-color1" value="${c1}" oninput="autoContrast('${prefix}')"> Primary
+                            </div>
+                            <div class="color-picker-wrapper" title="Background / Gradient Color">
+                                <input type="color" id="${prefix}-color2" value="${c2}" oninput="autoContrast('${prefix}')"> <span id="${prefix}-c2-label">${tpl === 'gradient' ? 'Grad 2' : 'BG'}</span>
+                            </div>
+                            <div class="color-picker-wrapper" title="Button/Pill Text Color (Auto-calculates for readability)">
+                                <input type="color" id="${prefix}-text-color" value="${txtC}" oninput="generateCode()"> Text
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Optional Pill Callout</label>
+                        <input type="text" id="${prefix}-pill" value="${pill}" placeholder="e.g., ACTION REQUIRED" oninput="generateCode()">
+                    </div>
+                    <div class="col">
+                        <label>Image URL (If Image Template selected)</label>
+                        <input type="text" id="${prefix}-image" placeholder="https://..." oninput="generateCode()">
+                    </div>
+                </div>
+
+                <label>Headline / Image Alt Text</label>
+                <input type="text" id="${prefix}-title" value="${title}" placeholder="e.g., Exclusive Alumni Events" oninput="generateCode()">
+                
+                <label>Text</label>
+                <textarea id="${prefix}-text" rows="2" placeholder="Book your sessions below..." oninput="generateCode()">${text}</textarea>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Btn 1</label>
+                        <input type="text" id="${prefix}-b1-txt" placeholder="Btn 1 Text" oninput="generateCode()">
+                        <select id="${prefix}-b1-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('${prefix}', 1)">
+                            <option value="">- No Link -</option>
+                            <option value="/leap/appointments.html">Appointments</option>
+                            <option value="/leap/events.html">Events</option>
+                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
+                            <option value="/leap/queries.html">Queries / Helpdesk</option>
+                            <option value="/leap/pathways/list.html">Pathways</option>
+                            <option value="custom">Custom URL...</option>
+                        </select>
+                        <input type="text" id="${prefix}-b1-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
+                    </div>
+                    <div class="col">
+                        <label>Btn 2</label>
+                        <input type="text" id="${prefix}-b2-txt" placeholder="Btn 2 Text" oninput="generateCode()">
+                        <select id="${prefix}-b2-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('${prefix}', 2)">
+                            <option value="">- No Link -</option>
+                            <option value="/leap/appointments.html">Appointments</option>
+                            <option value="/leap/events.html">Events</option>
+                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
+                            <option value="/leap/queries.html">Queries / Helpdesk</option>
+                            <option value="/leap/pathways/list.html">Pathways</option>
+                            <option value="custom">Custom URL...</option>
+                        </select>
+                        <input type="text" id="${prefix}-b2-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
+                    </div>
+                    <div class="col">
+                        <label>Btn 3</label>
+                        <input type="text" id="${prefix}-b3-txt" placeholder="Btn 3 Text" oninput="generateCode()">
+                        <select id="${prefix}-b3-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('${prefix}', 3)">
+                            <option value="">- No Link -</option>
+                            <option value="/leap/appointments.html">Appointments</option>
+                            <option value="/leap/events.html">Events</option>
+                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
+                            <option value="/leap/queries.html">Queries / Helpdesk</option>
+                            <option value="/leap/pathways/list.html">Pathways</option>
+                            <option value="custom">Custom URL...</option>
+                        </select>
+                        <input type="text" id="${prefix}-b3-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
+                    </div>
+                </div>
+            </div>`;
+            
+            document.getElementById('segments-container').insertAdjacentHTML('beforeend', html);
+            generateCode();
+        }
+
+        function removeSegment(id) {
+            document.getElementById(`segment-${id}`).remove();
+            generateCode();
+        }
+
+        function handleLinkChange(prefix, btnNum) {
+            const select = document.getElementById(`${prefix}-b${btnNum}-link-type`);
+            const input = document.getElementById(`${prefix}-b${btnNum}-url`);
+            if (select.value === 'custom') {
+                input.style.display = 'block';
+            } else {
+                input.style.display = 'none';
+                input.value = select.value; 
+            }
+            generateCode();
+        }
+
+        function updateUI(prefix) {
+            const tpl = document.getElementById(`${prefix}-template`).value;
+            const c2Label = document.getElementById(`${prefix}-c2-label`);
+            c2Label.innerText = tpl === 'gradient' ? 'Grad 2' : 'BG';
+            autoContrast(prefix); 
+        }
+
+        function autoContrast(prefix) {
+            const tpl = document.getElementById(`${prefix}-template`).value;
+            const c1 = document.getElementById(`${prefix}-color1`).value;
+            const c2 = document.getElementById(`${prefix}-color2`).value;
+            const txtInput = document.getElementById(`${prefix}-text-color`);
+            let bgColorToCheck = tpl === 'gradient' ? c1 : c2;
+
+            const hex = bgColorToCheck.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            
+            txtInput.value = (yiq >= 128) ? '#1e293b' : '#ffffff';
+            generateCode();
+        }
+
+        function safeVarName(tag) { return "has_" + tag.trim().replace(/[^a-zA-Z0-9]/g, ''); }
+
+        function buildBannerHTML(title, text, template, c1, c2, txtColor, pill, imgUrl, buttons) {
+            if(!title && template !== 'image') return '';
+            
+            let buttonsHtml = '';
+            if (buttons.length > 0) {
+                let tds = '';
+                let width = (100 / buttons.length) + '%';
+                
+                buttons.forEach((b, index) => {
+                    let btnBg = c1; let btnTxt = txtColor;
+                    if (template === 'gradient') { btnBg = txtColor; btnTxt = c1; }
+                    else if (txtColor === '#1e293b') { btnTxt = '#ffffff'; }
+
+                    let tdPadding = 'padding: 0 !important;';
+                    if (buttons.length === 2) {
+                        if (index === 0) tdPadding = 'padding: 0 6px 0 0 !important;';
+                        if (index === 1) tdPadding = 'padding: 0 0 0 6px !important;';
+                    } else if (buttons.length === 3) {
+                        if (index === 0) tdPadding = 'padding: 0 8px 0 0 !important;';
+                        if (index === 1) tdPadding = 'padding: 0 8px !important;';
+                        if (index === 2) tdPadding = 'padding: 0 0 0 8px !important;';
+                    }
+
+                    tds += `
+                    <td width="${width}" align="center" valign="top" style="${tdPadding} border: none !important;">
+                        <a href="${b.url}" style="text-decoration: none !important; display: block !important; margin: 0 !important; padding: 0 !important;">
+                            <div style="background: ${btnBg} !important; color: ${btnTxt} !important; padding: 12px 5px !important; border-radius: 6px !important; text-align: center !important; font-weight: bold !important; font-size: 0.95rem !important; border: 1px solid ${btnBg} !important; width: 100% !important; box-sizing: border-box !important; margin: 0 !important; line-height: 1.5 !important;">
+                                ${b.txt}
+                            </div>
+                        </a>
+                    </td>`;
+                });
+
+                buttonsHtml = `
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 25px !important; width: 100% !important; border: none !important; table-layout: fixed !important; border-collapse: collapse !important;">
+                    <tr>${tds}</tr>
+                </table>`;
+            }
+
+            const cleanText = text.replace(/\n/g, '<br>');
+
+            if (template === 'notice') {
+                const pillHtml = pill ? `<div style="margin-bottom: 15px !important; display: block !important;"><span style="display:inline-block !important; background:${c1} !important; color:#ffffff !important; padding: 4px 10px !important; border-radius:4px !important; font-size:0.8rem !important; font-weight:bold !important; text-transform:uppercase !important; letter-spacing:1px !important;">🚨 ${pill}</span></div>` : '';
+                return `
+<div style="margin-bottom: 25px !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; box-sizing: border-box !important;">
+  <div style="background: ${c2} !important; border: 2px solid ${c1} !important; border-left: 8px solid ${c1} !important; padding: 25px !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important; box-sizing: border-box !important;">
+    ${pillHtml}
+    <h2 style="font-size: 1.6rem !important; font-weight: 800 !important; margin: 0 0 8px 0 !important; color: ${txtColor} !important; line-height: 1.2 !important; border: none !important; padding: 0 !important;">${title}</h2>
+    <p style="font-size: 1rem !important; margin: 0 !important; color: ${txtColor} !important; opacity: 0.9 !important; line-height: 1.5 !important;">${cleanText}</p>
+    ${buttonsHtml}
+  </div>
+</div>`;
+            } 
+            else if (template === 'modern') {
+                const pillHtml = pill ? `<div style="margin-bottom: 15px !important; display: block !important;"><span style="display:inline-block !important; border: 1px solid ${c1} !important; color:${c1} !important; padding: 4px 15px !important; border-radius:20px !important; font-size:0.8rem !important; font-weight:bold !important; text-transform:uppercase !important; letter-spacing: 1px !important;">${pill}</span></div>` : '';
+                return `
+<div style="margin-bottom: 25px !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; box-sizing: border-box !important;">
+  <div style="background: ${c2} !important; padding: 30px !important; border-radius: 16px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important; box-sizing: border-box !important;">
+    ${pillHtml}
+    <h2 style="font-size: 1.8rem !important; font-weight: 800 !important; margin: 0 0 10px 0 !important; color: ${txtColor} !important; line-height: 1.2 !important; letter-spacing: -0.5px !important; border: none !important; padding: 0 !important;">${title}</h2>
+    <p style="font-size: 1.05rem !important; margin: 0 !important; color: ${txtColor} !important; opacity: 0.85 !important; line-height: 1.6 !important;">${cleanText}</p>
+    ${buttonsHtml}
+  </div>
+</div>`;
+            }
+            else if (template === 'professional') {
+                const pillHtml = pill ? `<div style="margin-bottom: 15px !important; display: block !important;"><div style="color: ${c1} !important; font-size: 0.85rem !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;">${pill}</div></div>` : '';
+                return `
+<div style="margin-bottom: 25px !important; font-family: Arial, Helvetica, sans-serif !important; box-sizing: border-box !important;">
+  <div style="background: ${c2} !important; padding: 30px !important; border-top: 5px solid ${c1} !important; border-radius: 4px !important; border-left: 1px solid #e2e8f0 !important; border-right: 1px solid #e2e8f0 !important; border-bottom: 1px solid #e2e8f0 !important; box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important; box-sizing: border-box !important;">
+    ${pillHtml}
+    <h2 style="font-size: 1.6rem !important; font-weight: bold !important; margin: 0 0 10px 0 !important; color: ${txtColor} !important; line-height: 1.3 !important; border: none !important; padding: 0 !important;">${title}</h2>
+    <p style="font-size: 1rem !important; margin: 0 !important; color: ${txtColor} !important; opacity: 0.9 !important; line-height: 1.6 !important;">${cleanText}</p>
+    ${buttonsHtml}
+  </div>
+</div>`;
+            }
+            else if (template === 'gradient') {
+                const pillHtml = pill ? `<div style="margin-bottom: 15px !important; display: block !important;"><span style="display:inline-block !important; background:rgba(255,255,255,0.2) !important; border: 1px solid rgba(255,255,255,0.3) !important; color:${txtColor} !important; padding: 4px 12px !important; border-radius:20px !important; font-size:0.8rem !important; font-weight:bold !important; text-transform:uppercase !important; letter-spacing: 0.5px !important;">✨ ${pill}</span></div>` : '';
+                return `
+<div style="margin-bottom: 25px !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; box-sizing: border-box !important;">
+  <div style="background: linear-gradient(135deg, ${c1}, ${c2}) !important; color: ${txtColor} !important; padding: 30px !important; border-radius: 12px !important; box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important; box-sizing: border-box !important;">
+    ${pillHtml}
+    <h2 style="font-size: 1.8rem !important; font-weight: 800 !important; margin: 0 !important; color: inherit !important; line-height: 1.2 !important; border: none !important; padding: 0 !important;">${title}</h2>
+    <hr style="border: 0 !important; height: 1px !important; background: rgba(255, 255, 255, 0.3) !important; margin: 15px 0 !important; display: block !important;" />
+    <p style="font-size: 1.05rem !important; margin: 0 !important; color: inherit !important; opacity: 0.9 !important; line-height: 1.6 !important;">${cleanText}</p>
+    ${buttonsHtml}
+  </div>
+</div>`;
+            }
+            else if (template === 'image') {
+                const imageTag = imgUrl ? `<img src="${imgUrl}" alt="${title}" style="width: 100% !important; height: auto !important; display: block !important; border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important; margin-bottom: 15px !important;">` : `<div style="width:100% !important; height: 150px !important; background:#e2e8f0 !important; border-radius:8px !important; display:flex !important; align-items:center !important; justify-content:center !important; color:#64748b !important; margin-bottom:15px !important; font-weight:bold !important;">[Image Placeholder - Paste URL]</div>`;
+                return `
+<div style="margin-bottom: 25px !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; box-sizing: border-box !important;">
+  ${imageTag}
+  ${buttonsHtml}
+</div>`;
+            }
+        }
+
+        function generateCode() {
+            let previewHTML = '';
+            let segmentLogics = [];
+            let allUsedTags = new Set();
+
+            const cards = document.querySelectorAll('.segment-card[id^="segment-"]');
+            cards.forEach(card => {
+                const prefix = card.id.replace('segment', 'seg');
+                const rawTags = document.getElementById(`${prefix}-tags`).value;
+                const checkedTags = rawTags.split(',').map(t => t.trim()).filter(t => t);
+                checkedTags.forEach(t => allUsedTags.add(t));
+                const title = document.getElementById(`${prefix}-title`).value;
+                const text = document.getElementById(`${prefix}-text`).value;
+                const tpl = document.getElementById(`${prefix}-template`).value;
+                const c1 = document.getElementById(`${prefix}-color1`).value;
+                const c2 = document.getElementById(`${prefix}-color2`).value;
+                const txtC = document.getElementById(`${prefix}-text-color`).value;
+                const pill = document.getElementById(`${prefix}-pill`).value;
+                const img = document.getElementById(`${prefix}-image`).value;
+                let btns = [];
+                for(let i=1; i<=3; i++) {
+                    let btnTxt = document.getElementById(`${prefix}-b${i}-txt`).value;
+                    let btnUrl = document.getElementById(`${prefix}-b${i}-url`).value;
+                    if(btnTxt && btnUrl) btns.push({txt: btnTxt, url: btnUrl});
+                }
+                if (checkedTags.length > 0 && (title || tpl === 'image')) {
+                    const bannerHtml = buildBannerHTML(title, text, tpl, c1, c2, txtC, pill, img, btns);
+                    previewHTML += `<div style="margin-bottom:40px;"><div style="background:#e2e8f0; padding:6px 12px; font-size:0.8rem; font-weight:bold; display:inline-block; border-radius:4px; margin-bottom:15px; color:#334155;">IF TAGS: ${checkedTags.join(' AND ')}</div>${bannerHtml}</div>`;
+                    const conditionStr = checkedTags.map(t => `$${safeVarName(t)}`).join(' && ');
+                    segmentLogics.push({ condition: conditionStr, html: bannerHtml });
+                }
+            });
+
+            const fallTitle = document.getElementById('fallback-title').value;
+            const fTpl = document.getElementById('fallback-template').value;
+            let fallHtml = '';
+            if (fallTitle || fTpl === 'image') {
+                const fallText = document.getElementById('fallback-text').value;
+                const fC1 = document.getElementById('fallback-color1').value;
+                const fC2 = document.getElementById('fallback-color2').value;
+                const fTxtC = document.getElementById('fallback-text-color').value;
+                const fPill = document.getElementById('fallback-pill').value;
+                const fImg = document.getElementById('fallback-image').value;
+                let fallBtns = [];
+                for(let i=1; i<=3; i++) {
+                    let bTxt = document.getElementById(`fallback-b${i}-txt`).value;
+                    let bUrl = document.getElementById(`fallback-b${i}-url`).value;
+                    if(bTxt && bUrl) fallBtns.push({txt: bTxt, url: bUrl});
+                }
+                fallHtml = buildBannerHTML(fallTitle, fallText, fTpl, fC1, fC2, fTxtC, fPill, fImg, fallBtns);
+                previewHTML += `<div style="margin-bottom:40px;"><div style="background:#fef08a; padding:6px 12px; font-size:0.8rem; font-weight:bold; display:inline-block; border-radius:4px; margin-bottom:15px; color:#854d0e;">ELSE (Fallback):</div>${fallHtml}</div>`;
+            }
+            document.getElementById('live-preview').innerHTML = previewHTML || '<p style="color:#94a3b8; font-style:italic;">Fill out a segment to see the preview...</p>';
+
+            if (segmentLogics.length === 0) {
+                document.getElementById('code-output').value = "Please configure at least one segment with tags and a title.";
+                return;
+            }
+
+            let vCode = "\n";
+            allUsedTags.forEach(tag => { vCode += `#set($${safeVarName(tag)} = false)\n`; });
+            
+            // Safety wrapper to prevent TargetConnect silent crashing
+            vCode += `\n\n#if($user.Tags)\n  #foreach($tag in $user.Tags)\n`;
+            Array.from(allUsedTags).forEach((tag, index) => {
+                const statement = index === 0 ? "#if" : "#elseif";
+                vCode += `    ${statement}($tag == '${tag}')\n      #set($${safeVarName(tag)} = true)\n`;
+            });
+            vCode += `    #end\n  #end\n#end\n\n\n<div class="custom-pane-container">\n\n`;
+            segmentLogics.forEach((seg, idx) => {
+                const statement = idx === 0 ? "#if" : "#elseif";
+                vCode += `${statement}(${seg.condition})\n${seg.html}\n\n`;
+            });
+            if (fallHtml) { vCode += `#else\n${fallHtml}\n\n`; }
+            vCode += `#end\n</div>`;
+            document.getElementById('code-output').value = vCode;
+        }
+
+        function copyVelocityCode() {
+            const codeBox = document.getElementById('code-output');
+            codeBox.select();
+            document.execCommand('copy');
+            alert('Velocity Logic Copied! Ready for TargetConnect.');
+        }
+
+        // --- Help Modal Logic ---
+        function openHelpModal() {
+            document.getElementById('help-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden'; 
+        }
+        function closeHelpModal() {
+            document.getElementById('help-modal').style.display = 'none';
+            document.body.style.overflow = 'auto'; 
+        }
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('help-modal');
+                if (modal.style.display === 'flex') {
+                    closeHelpModal();
+                }
+            }
+        });
+        document.addEventListener('click', (event) => {
+            const modal = document.getElementById('help-modal');
+            if (event.target === modal && modal.style.display === 'flex') {
+                closeHelpModal();
+            }
+        });
+
+        // Initialize with default demo
+        addSegment("Final Year", "Your Graduate Journey Starts Here", "Don't miss our exclusive fast-track application scheme.", "gradient", "#6366f1", "#ec4899", "#ffffff", "OPENS MONDAY");
+    </script>
+</body>
+</html>

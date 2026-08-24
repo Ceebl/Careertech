@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sector Skills Radar</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- Modern CSS Variables & Resets --- */
+        :root {
+            --primary: #0069fa;
+            --primary-glow: rgba(0, 105, 250, 0.15);
+            --accent: #ff7533;
+            --accent-glow: rgba(255, 117, 51, 0.15);
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px 10px;
+            color: var(--text-main);
+        }
+
+        .radar-app {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.04);
+            border: 1px solid #e2e8f0;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* --- Header & Controls --- */
+        .app-header {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 20px;
+        }
+
+        .app-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .app-header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+            background: #f8fafc;
+            padding: 20px 25px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .control-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+        }
+
+        /* Native-looking Dropdown */
+        select {
+            width: 100%;
+            appearance: none;
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%230f172a%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+            border: 2px solid #cbd5e1;
+            padding: 14px 40px 14px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); }
+
+        /* Toggle Styling */
+        .toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 52px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; width: 20px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .toggle-text {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        /* --- Layout Grid --- */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        @media (max-width: 850px) {
+            .content-grid { grid-template-columns: 1fr; gap: 40px; }
+            .radar-app { padding: 20px; }
+        }
+
+        /* --- Sliders --- */
+        .sliders-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            min-width: 0; 
+        }
+
+        .skill-group { width: 100%; }
+
+        .skill-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .skill-value {
+            color: var(--primary);
+            background: var(--primary-glow);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 105, 250, 0.3);
+            transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+        /* --- Fixed Chart Container --- */
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 450px; /* Fixed height prevents grid blowout */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Insights & Sources Section (Hidden by Default) --- */
+        .insights-section {
+            display: none; 
+            margin-top: 50px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 40px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .insights-header {
+            margin-bottom: 25px;
+        }
+
+        .insights-header h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+            color: var(--text-main);
+            font-weight: 800;
+        }
+        
+        .insights-header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .insight-card {
+            background: #f8fafc;
+            border-left: 4px solid var(--accent);
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 15px;
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .insight-title {
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+
+        .insight-target {
+            color: var(--accent);
+            background: var(--accent-glow);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .insight-text {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* --- The Sources Box --- */
+        .sources-box {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 35px;
+        }
+
+        .sources-box h4 {
+            margin: 0 0 15px 0;
+            color: #334155;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sources-list {
+            margin: 0;
+            padding: 0 0 0 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .sources-list li {
+            margin-bottom: 8px;
+        }
+
+        .sources-list a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .sources-list a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="radar-app">
+        <div class="app-header">
+            <h2>Professional Skills Radar</h2>
+            <p>Self-assess your competencies and reveal the 2026 industry benchmarks.</p>
+        </div>
+        
+        <div class="controls-bar">
+            <div class="control-group">
+                <label for="sectorDrop">1. Select Target Industry</label>
+                <select id="sectorDrop" onchange="updateSectorData()">
+                    <option value="tech">Technology & Software</option>
+                    <option value="finance">Banking, Finance & Prof Services</option>
+                    <option value="engineering">Engineering & Manufacturing</option>
+                    <option value="health">Healthcare & Life Sciences</option>
+                    <option value="creative">Creative Arts & Media</option>
+                    <option value="public">Public Sector & Education</option>
+                    <option value="entrepreneur">Entrepreneurship</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>2. The Reality Check</label>
+                <div class="toggle-wrapper">
+                    <label class="switch">
+                        <input type="checkbox" id="employerToggle" onchange="toggleEmployerExpectations()">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-text">Show Employer Expectations</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="sliders-container" id="sliders">
+                </div>
+
+            <div class="chart-wrapper">
+                <canvas id="skillsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="insights-section" id="insights-section">
+            <div class="insights-header">
+                <h3>Industry Rationales</h3>
+                <p>Why this sector demands these specific skill levels.</p>
+            </div>
+            
+            <div id="insights-container">
+                </div>
+
+            <div class="sources-box">
+                <h4>📚 Sources & Further Reading</h4>
+                <ul class="sources-list" id="sources-list">
+                    </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const coreSkills = ["Communication", "Teamwork", "Leadership", "Commercial Awareness", "Problem Solving", "Digital / AI Fluency"];
+        let studentScores = [5, 5, 5, 5, 5, 5];
+
+        // Database drawn directly from the 2026 Graduate Skills Priority Report Bibliography
+        const sectorDatabase = {
+            tech: {
+                benchmarks: [7, 8, 7, 8, 10, 10],
+                rationales: [
+                    "Communication is essential for technical writers and explaining complex AI logic to non-technical clients.",
+                    "Agile development remains the standard, requiring seamless remote and cross-functional collaboration.",
+                    "There is high value placed on project ownership and the ability to self-manage AI program development.",
+                    "Understanding the commercial 'AI bubble' and identifying where automation creates actual business value is critical.",
+                    "Problem-solving is non-negotiable; heavily focused on debugging complex systems and creative algorithmic design.",
+                    "Basic coding is no longer enough; graduates must possess AI Fluency, understanding orchestration and ethical bias."
+                ],
+                sources: [
+                    { title: "What Employers Want in 2026", url: "https://londonlanguageclub.co.uk/employability-skills-2026-graduates/" },
+                    { title: "Choosing Wisely — AI Jobs & Hiring Demand", url: "https://community.deeplearning.ai/t/choosing-wisely-ai-jobs-hiring-demand-2026-edition/886043" },
+                    { title: "Business Development skills for 2026", url: "https://hyperisland.com/en/blog/hyper-insights/business-development-skills-and-why-they-matter-for-every-role" },
+                    { title: "What Graduates Must Know About the 2026 Job Market", url: "https://www.adriasolutions.co.uk/graduate-job-market-2026/" },
+                    { title: "AI Literacy Isn't Enough: Why Your Workforce Needs AI Fluency", url: "https://www.netcomlearning.com/en-IN/blog/ai-literacy-isn't-enough-why-your-workforce-needs-ai-fluency-by-2026" }
+                ]
+            },
+            finance: {
+                benchmarks: [9, 7, 8, 10, 9, 9],
+                rationales: [
+                    "Vital for building client trust and articulating financial risk and compliance to non-experts.",
+                    "Collaborative project work is standard, increasingly requiring integration with tech and data teams.",
+                    "High expectation for self-discipline, resilience, and the ability to manage high-pressure regulatory deadlines.",
+                    "Business critical; requires deep understanding of inflation, interest rates, ESG compliance, and global markets.",
+                    "Focused heavily on risk management, legislative compliance, and strategic financial forecasting.",
+                    "Essential mastery of Excel, SQL, and increasingly, AI-driven financial analytics tools."
+                ],
+                sources: [
+                    { title: "Top 7 accounting and finance skills in 2026", url: "https://globalbanking.ac.uk/blog/top-seven-accounting-and-finance-skills-employers-are-looking-for-in-2026/" },
+                    { title: "Skills Employers Want in 2026", url: "https://www.ucenmanchester.ac.uk/news/skills-employers-want/" },
+                    { title: "Commercial awareness - Grant Thornton UK", url: "https://www.grantthornton.co.uk/careers/early-careers/employability-hub/commercial-awareness/" }
+                ]
+            },
+            engineering: {
+                benchmarks: [8, 9, 7, 8, 10, 9],
+                rationales: [
+                    "Necessary for articulating design constraints and aligning with multi-disciplinary teams across the supply chain.",
+                    "High-intensity collaboration is required for complex infrastructure and manufacturing automation projects.",
+                    "Value is placed on Agile project management and taking initiative on the factory floor.",
+                    "Requires understanding energy costs, supply chain logistics, and tariff impacts on exports.",
+                    "Business critical; focused on root cause analysis and innovative product development.",
+                    "Mastery of 'Digital Twins', AI diagnostics, and Industrial IoT security is essential."
+                ],
+                sources: [
+                    { title: "Make UK Executive Survey 2026 - PwC UK", url: "https://www.pwc.co.uk/industries/documents/make-uk-executive-survey-2026.pdf" },
+                    { title: "What Is Commercial Awareness? - Bright Network", url: "https://www.brightnetwork.co.uk/graduate-career-advice/what-is-commercial-awareness/" },
+                    { title: "Graduate Jobs in 2026 - What Are UK Employers Looking For?", url: "https://www.carringtonwest.com/blog/2026/04/graduate-jobs-in-2026-what-are-uk-employers-looking-for" }
+                ]
+            },
+            health: {
+                benchmarks: [9, 10, 8, 8, 9, 9],
+                rationales: [
+                    "Essential for patient care and translating complex research for regulatory authorities.",
+                    "Non-negotiable; requires seamless collaboration across clinical, research, and quality assurance teams.",
+                    "High demand for 'Regulatory Specialists' who can guide medical projects through compliance.",
+                    "Understanding the life sciences patent landscape and market access strategy is crucial.",
+                    "Focused heavily on clinical trial design and identifying gaps in technical R&D data.",
+                    "Business critical; proficiency in bioinformatics and AI-driven drug discovery diagnostics."
+                ],
+                sources: [
+                    { title: "Emerging Life Sciences Roles and Skills in 2026", url: "https://www.epmscientific.com/en-us/industry-insights/career-advice/emerging-life-sciences-roles-and-skills-in-2026" },
+                    { title: "techUK Life Sciences Working Group 2026 Priorities", url: "https://www.techuk.org/resource/techuk-life-sciences-working-group-introducing-our-2026-priorities-and-work-programme.html" },
+                    { title: "IP Trends in UK Life Sciences for 2026", url: "https://www.mathys-squire.com/insights-and-events/news/ip-trends-for-2026-life-sciences-chemistry/" },
+                    { title: "Life sciences competitiveness indicators 2026 - GOV.UK", url: "https://www.gov.uk/government/publications/life-sciences-competitiveness-indicators-2026/life-sciences-competitiveness-indicators-2026-life-sciences-ecosystem" },
+                    { title: "UK Life Science Job Market 2026", url: "https://www.kinetic.ae/uk-life-science-job-market-2026/" }
+                ]
+            },
+            creative: {
+                benchmarks: [10, 8, 7, 7, 9, 10],
+                rationales: [
+                    "The core of the industry; storytelling and articulating creative vision remain vital.",
+                    "Production is inherently collaborative, requiring integration with VFX and technical teams.",
+                    "Focus is on self-directed projects and 'entrepreneurial' creative practices.",
+                    "Understanding 'Worldbuilding' for commercial impact and Intellectual Property protection.",
+                    "Approaching creative briefs with 'human curiosity' that AI cannot currently replicate.",
+                    "Graduates are expected to understand how to train AI on their own work and act as AI-Enhanced Designers."
+                ],
+                sources: [
+                    { title: "Data Science and AI in Creative Industries MSc", url: "https://norwichuni.ac.uk/courses/find-your-course/msc-data-science-and-ai-in-creative-industries/" },
+                    { title: "Graphic Design and Creative AI MA", url: "https://www.mdx.ac.uk/courses/postgraduate/graphic-design-and-creative-ai-ma/" },
+                    { title: "MA Creative AI for Screen", url: "https://www.herts.ac.uk/courses/postgraduate-masters/creative-ai-for-screen" },
+                    { title: "AI and Creative Media - Birkbeck", url: "https://www.bbk.ac.uk/courses/postgraduate/ai-creative-media" }
+                ]
+            },
+            public: {
+                benchmarks: [10, 9, 8, 6, 8, 8],
+                rationales: [
+                    "Absolute requirement for teaching, social work, and public administration.",
+                    "Public services depend on inter-disciplinary collaboration and community engagement.",
+                    "High value on classroom management and the ability to lead policy implementation.",
+                    "Understanding 'value for money' and navigating public sector budgets.",
+                    "Solving community issues and adapting teaching methods to diverse needs.",
+                    "Necessary for EdTech, 'Agentic' admin, and responsible data handling."
+                ],
+                sources: [
+                    { title: "2026 graduate labour market: what recruiters need to know", url: "https://ise.org.uk/knowledge/insights/527/2026_graduate_labour_market_what_recruiters_need_to_know/" },
+                    { title: "AI Skills for Life and Work - GOV.UK", url: "https://www.gov.uk/government/publications/ai-skills-for-life-and-work-summary-report/ai-skills-for-life-and-work-summary-report--2" }
+                ]
+            },
+            entrepreneur: {
+                benchmarks: [9, 6, 10, 10, 10, 9],
+                rationales: [
+                    "Essential for pitching to investors and building a trusted brand reputation.",
+                    "Often solo-focused; requires managing freelance experts and strategic partnerships.",
+                    "Business critical; requires extreme self-discipline and visionary resilience.",
+                    "Essential for 'Market Fit', cash flow mastery, and compliance.",
+                    "Business critical; focused on 'Pivoting' and managing unpredictable growth.",
+                    "High reliance on automation, CRM tools, and AI for operational efficiency."
+                ],
+                sources: [
+                    { title: "UK Business Visa Options for International Entrepreneurs in 2026", url: "https://www.jobbatical.com/blog/uk-business-visa-options-international-entrepreneurs" },
+                    { title: "Small business predictions: trends to watch in 2026", url: "https://www.simplybusiness.co.uk/knowledge/business-news/2026-small-business-predictions/" },
+                    { title: "10 Steps for Small Business Success in 2026", url: "https://businessinfopoint.co.uk/10-steps-for-small-business-success-in-2026/" }
+                ]
+            }
+        };
+
+        let chartInstance = null;
+        let currentSector = "tech";
+
+        function initApp() {
+            renderSliders();
+            initChart();
+            renderInsights();
+        }
+
+        function renderSliders() {
+            const container = document.getElementById('sliders');
+            container.innerHTML = '';
+            
+            coreSkills.forEach((skill, index) => {
+                const group = document.createElement('div');
+                group.className = 'skill-group';
+                group.innerHTML = `
+                    <div class="skill-label">
+                        <span>${skill}</span>
+                        <span class="skill-value" id="val-${index}">${studentScores[index]}/10</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="${studentScores[index]}" 
+                           oninput="updateSkill(${index}, this.value)">
+                `;
+                container.appendChild(group);
+            });
+        }
+
+        function renderInsights() {
+            // 1. Render the Rationale Cards
+            const container = document.getElementById('insights-container');
+            container.innerHTML = '';
+            const data = sectorDatabase[currentSector];
+
+            coreSkills.forEach((skill, index) => {
+                const targetScore = data.benchmarks[index];
+                const rationale = data.rationales[index];
+
+                const card = document.createElement('div');
+                card.className = 'insight-card';
+                card.innerHTML = `
+                    <div class="insight-title">
+                        <span>${skill}</span>
+                        <span class="insight-target">Expectation: ${targetScore}/10</span>
+                    </div>
+                    <p class="insight-text">${rationale}</p>
+                `;
+                container.appendChild(card);
+            });
+
+            // 2. Render the Sources Box
+            const sourceList = document.getElementById('sources-list');
+            sourceList.innerHTML = '';
+            data.sources.forEach(source => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="${source.url}" target="_blank">${source.title}</a>`;
+                sourceList.appendChild(li);
+            });
+        }
+
+        function updateSkill(index, newValue) {
+            studentScores[index] = parseInt(newValue);
+            document.getElementById(`val-${index}`).innerText = `${newValue}/10`;
+            chartInstance.data.datasets[0].data[index] = newValue;
+            chartInstance.update();
+        }
+
+        function updateSectorData() {
+            currentSector = document.getElementById('sectorDrop').value;
+            const newBenchmarks = sectorDatabase[currentSector].benchmarks;
+            chartInstance.data.datasets[1].data = newBenchmarks;
+            chartInstance.update();
+            renderInsights();
+        }
+
+        function toggleEmployerExpectations() {
+            const isChecked = document.getElementById('employerToggle').checked;
+            const insightsSection = document.getElementById('insights-section');
+            
+            chartInstance.setDatasetVisibility(1, isChecked);
+            chartInstance.update();
+
+            if (isChecked) {
+                insightsSection.style.display = 'block';
+                // Slight delay to allow display:block to render before scrolling
+                setTimeout(() => {
+                    insightsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            } else {
+                insightsSection.style.display = 'none';
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            
+            const studentColor = 'rgba(0, 105, 250, 0.4)'; 
+            const studentBorder = 'rgba(0, 105, 250, 1)';
+            const employerColor = 'rgba(255, 117, 51, 0.1)'; 
+            const employerBorder = 'rgba(255, 117, 51, 0.8)';
+
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: coreSkills,
+                    datasets: [
+                        {
+                            label: 'Your Assessment',
+                            data: studentScores,
+                            backgroundColor: studentColor,
+                            borderColor: studentBorder,
+                            pointBackgroundColor: studentBorder,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            order: 1
+                        },
+                        {
+                            label: 'Sector Expectation',
+                            data: sectorDatabase[currentSector].benchmarks,
+                            backgroundColor: employerColor,
+                            borderColor: employerBorder,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: true,
+                            order: 2,
+                            hidden: true 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // The magic fix for the infinite scaling issue
+                    scales: {
+                        r: {
+                            min: 0, max: 10,
+                            ticks: { display: false }, 
+                            grid: { color: '#e2e8f0' },
+                            angleLines: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: 12, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', weight: '700' },
+                                color: '#0f172a'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: {family: '-apple-system, sans-serif', weight: '600'} } },
+                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                    },
+                    animation: { duration: 300, easing: 'easeOutQuart' } 
+                }
+            });
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>

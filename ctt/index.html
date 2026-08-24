@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CareerTech Tools</title>
+<meta name="description" content="Free, self-contained tools and widget builders for careers services.">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #16181d; --muted: #6b7280;
+    --line: #e5e7eb; --card: #f9fafb; --accent: #2563eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115; --fg: #e8e8e8; --muted: #9ca3af;
+      --line: #262b35; --card: #161a22; --accent: #60a5fa;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 3rem 1.25rem; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
+  .sub { color: var(--muted); margin: 0 0 2.5rem; }
+  h2 {
+    font-size: .8rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 2.5rem 0 .9rem; font-weight: 600;
+  }
+  h2:first-of-type { margin-top: 0; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+  a.card {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: .9rem 1.1rem; text-decoration: none; color: inherit;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  }
+  a.card:hover, a.card:focus-visible { border-color: var(--accent); }
+  a.card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .name { font-weight: 600; }
+  .what { display: block; font-weight: 400; color: var(--muted); font-size: .9rem; }
+  .arrow { color: var(--muted); flex: none; }
+  .feature .name { font-size: 1.05rem; }
+  footer {
+    margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: .85rem;
+  }
+  footer p { margin: 0 0 .5rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>CareerTech Tools</h1>
+  <p class="sub">
+    Small, free tools for careers services &mdash; generic versions of things
+    built for one service and shared with the
+    <a href="https://www.targetconnect.net/">TargetConnect</a> community.
+    Every one of them is a single page that runs entirely in your browser.
+    Nothing is uploaded, stored or tracked.
+  </p>
+
+  <h2>CV Builder</h2>
+  <ul>
+    <li><a class="card feature" href="cv-builder/">
+      <span class="name">CV Builder
+        <span class="what">Full r&eacute;sum&eacute; editor with templates and PDF export. Works offline; your CV never leaves your device.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+  </ul>
+
+  <h2>Student activities</h2>
+  <ul>
+    <li><a class="card" href="activities/cv-verb-roulette.html">
+      <span class="name">CV Action Verb Roulette
+        <span class="what">Spin for stronger openers than &ldquo;responsible for&rdquo;.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="activities/skills-radar.html">
+      <span class="name">Sector Skills Radar
+        <span class="what">Chart your skills against what a sector asks for.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="activities/star-flashcards.html">
+      <span class="name">STAR(R) Method Flashcards
+        <span class="what">Interview answer practice, one prompt at a time.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+  </ul>
+
+  <h2>Widget builders</h2>
+  <p class="sub" style="margin-bottom:.9rem; font-size:.9rem;">
+    Each of these generates a self-contained HTML file you can host yourself and
+    embed anywhere &mdash; TargetConnect, SharePoint, Canvas, Blackboard.
+  </p>
+  <ul>
+    <li><a class="card" href="builders/widget-maker.html">
+      <span class="name">Universal Widget Maker
+        <span class="what">The general-purpose one. Start here.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/TC-Custom-Pane-Builder.html">
+      <span class="name">Custom Pane Maker
+        <span class="what">Build a styled TargetConnect content pane.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/event-builder.html">
+      <span class="name">Event Template Builder
+        <span class="what">Lay out a single event page.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/event-cal-builder.html">
+      <span class="name">Event Calendar Maker
+        <span class="what">Calendar view of an events feed.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/event-feed-builder.html">
+      <span class="name">Events RSS List Widget Maker
+        <span class="what">Scrolling list of upcoming events.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/vancancies-feed-builder.html">
+      <span class="name">Vacancies List Widget Maker
+        <span class="what">Live vacancy list from a feed.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/modal-maker.html">
+      <span class="name">Pure CSS Modal Maker
+        <span class="what">Pop-up dialogs with no JavaScript at all.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+    <li><a class="card" href="builders/qr-maker.html">
+      <span class="name">QR Code Maker
+        <span class="what">Colour-customisable QR codes, transparent background optional.</span>
+      </span><span class="arrow">&rarr;</span></a></li>
+  </ul>
+
+  <footer>
+    <p>
+      The three feed-driven builders read RSS through a free public relay, which
+      rate-limits and sometimes goes down. Fine for a screen in a foyer; host
+      your own proxy for anything critical.
+    </p>
+    <p>
+      Take these, change them, use them. The CV Builder is a build of
+      <a href="https://github.com/AmruthPillai/Reactive-Resume">Reactive Resume</a>
+      and carries its MIT licence.
+    </p>
+  </footer>
+</main>
+</body>
+</html>

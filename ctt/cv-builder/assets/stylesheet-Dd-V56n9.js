@@ -1,0 +1,2 @@
+import{Ln as e,Rn as t,wn as n,yt as r}from"./schemas-A3PaYDt0.js";var i=`@version 1;
+`,a=e({languageVersion:n().int().positive(),text:t()}),o=e({mode:r([`legacy`,`semantic`]),source:a,applied:a});export{o as n,i as t};

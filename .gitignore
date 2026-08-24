@@ -1,3 +1,6 @@
 # Local test data. Never commit -- top-level folders get published to the web root.
 data/
 node_modules/
+
+# Detailed infrastructure notes. Kept out of the public repo on purpose.
+DOCS.local.md

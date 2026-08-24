@@ -1,0 +1,7 @@
+# Default: normalise text files to LF inside the repository.
+* text=auto
+
+# The CV Builder is a pre-built bundle, not source. Its minified files carry
+# newlines *inside* JavaScript string literals, so rewriting line endings would
+# change what the code does. Copy the whole folder verbatim, byte for byte.
+ctt/cv-builder/** -text

@@ -1,0 +1,8 @@
+<svg width="200" height="44" viewBox="0 0 200 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+<title>CV Builder</title>
+<rect x="3" y="5" width="26" height="34" rx="4" stroke="#f8fafc" stroke-width="3"/>
+<rect x="9" y="13" width="14" height="3" rx="1.5" fill="#f8fafc"/>
+<rect x="9" y="20" width="14" height="3" rx="1.5" fill="#f8fafc"/>
+<rect x="9" y="27" width="9" height="3" rx="1.5" fill="#f8fafc"/>
+<text x="42" y="29" font-family="Poppins, Arial, sans-serif" font-size="20" font-weight="700" fill="#f8fafc">CV Builder</text>
+</svg>

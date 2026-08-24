@@ -1,0 +1,30 @@
+{
+	"appName": "CV Builder",
+	"institutionName": "",
+	"institutionUrl": "",
+	"headline": "Build a CV that shows",
+	"headlineHighlight": "your strengths",
+	"description": "Create, tailor, and export a professional CV. Everything stays in your browser, on your device.",
+	"logo": {
+		"headerLight": "",
+		"headerDark": "",
+		"heroLight": "",
+		"heroDark": ""
+	},
+	"colors": {
+		"primary": "#2563eb",
+		"primaryDark": "#60a5fa",
+		"highlight": "#cfff75",
+		"highlightForeground": "#0f172a"
+	},
+	"support": {
+		"name": "",
+		"url": ""
+	},
+	"links": {
+		"institution": [],
+		"support": []
+	},
+	"languages": [],
+	"copyrightHolder": ""
+}

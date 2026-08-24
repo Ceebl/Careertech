@@ -1,0 +1,1 @@
+import{a as e}from"./local-client-gWi2km3q.js";function t(t,n){return`${e(t)}${n?`.${n}`:``}`}function n(e,t){let n=document.createElement(`a`),r=URL.createObjectURL(e);n.href=r,n.rel=`noopener`,n.download=t,document.body.appendChild(n),n.click(),document.body.removeChild(n),setTimeout(()=>URL.revokeObjectURL(r),5e3)}export{t as n,n as t};

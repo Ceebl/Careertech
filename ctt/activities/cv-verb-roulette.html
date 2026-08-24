@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Action Verb Roulette</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Core Brand Variables --- */
+        :root {
+            --primary: #0069fa;
+            --primary-glow: rgba(0, 105, 250, 0.15);
+            --accent-green: #cfff75;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: transparent; 
+            margin: 0;
+            padding: 20px 10px;
+            display: flex;
+            justify-content: center;
+            color: var(--text-main);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Clean Header --- */
+        .header {
+            padding: 35px 30px 20px 30px;
+            border-bottom: 2px dashed var(--border-color);
+        }
+
+        .header h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        /* SHARP GREEN HIGHLIGHT FOR TEXT */
+        .highlight {
+            background-color: var(--accent-green);
+            padding: 0 8px;
+            color: var(--text-main);
+            /* Intentionally no border-radius, to match a squared-off brand guide */
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* --- Roulette Area --- */
+        .roulette-screen {
+            padding: 40px 20px;
+            min-height: 240px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .category-tag {
+            background: var(--text-main);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            opacity: 0; 
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+        }
+
+        .verb-wrapper {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verb-display {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--text-main);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 20px;
+            /* Removed border-radius entirely to match the sharp highlight style */
+            border-radius: 0; 
+            transition: all 0.2s ease;
+        }
+
+        /* Spinning State */
+        .spinning .verb-display {
+            filter: blur(3px);
+            opacity: 0.6;
+            transform: scale(0.95);
+        }
+
+        /* Landed State - Applies the signature Sharp Green Highlight! */
+        .landed .verb-display {
+            background-color: var(--accent-green);
+            color: #0f172a;
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.9); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .example-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+            width: 90%;
+            max-width: 500px;
+            opacity: 0; 
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+        }
+
+        .landed .example-box {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .landed .category-tag {
+            opacity: 1;
+        }
+
+        .example-label {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .example-text {
+            font-size: 1.05rem;
+            color: var(--text-main);
+            margin: 0;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* --- Controls --- */
+        .controls {
+            padding: 30px 20px;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .spin-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 45px;
+            border-radius: 40px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 15px var(--primary-glow);
+            transition: all 0.2s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 105, 250, 0.3);
+            background: #0056cc;
+        }
+
+        .spin-btn:disabled {
+            background: var(--border-color);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <h2>CV Action Verb <span class="highlight">Roulette</span></h2>
+            <p>Stop using "helped" or "did". Spin for high-impact alternatives!</p>
+        </div>
+
+        <div class="roulette-screen" id="screen">
+            <span class="category-tag" id="category">Category</span>
+            
+            <div class="verb-wrapper">
+                <h1 class="verb-display" id="verb">READY?</h1>
+            </div>
+            
+            <div class="example-box" id="example-container">
+                <span class="example-label">Example Bullet Point:</span>
+                <p class="example-text" id="example">Click spin to find your next great bullet point.</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="spin-btn" id="spin-btn" onclick="spinRoulette()">🎰 Spin the Wheel</button>
+        </div>
+    </div>
+
+    <script>
+        const verbDatabase = [
+            // Leadership / Management
+            { verb: "Spearheaded", category: "Leadership", example: "Spearheaded a digital marketing campaign that increased student society membership by 25%." },
+            { verb: "Orchestrated", category: "Leadership", example: "Orchestrated a charity fundraising event, coordinating a team of 15 volunteers to raise £1,200." },
+            { verb: "Mentored", category: "Leadership", example: "Mentored three junior staff members, reducing their onboarding time by two weeks." },
+            { verb: "Directed", category: "Leadership", example: "Directed front-of-house operations during peak weekend shifts, ensuring zero customer complaints." },
+            { verb: "Delegated", category: "Leadership", example: "Delegated tasks effectively across a 5-person project team to ensure all deadlines were met ahead of schedule." },
+            
+            // Communication / Teamwork
+            { verb: "Facilitated", category: "Communication", example: "Facilitated weekly team briefings to ensure all staff were aligned on the new health and safety protocols." },
+            { verb: "Negotiated", category: "Communication", example: "Negotiated a 15% discount with local suppliers for university event catering." },
+            { verb: "Advocated", category: "Communication", example: "Advocated for better accessibility features on the student union website, presenting findings to the board." },
+            { verb: "Collaborated", category: "Teamwork", example: "Collaborated alongside a cross-functional team of 5 students to deliver a first-class final year project." },
+
+            // Problem Solving / Innovation
+            { verb: "Formulated", category: "Problem Solving", example: "Formulated a new stock-taking process that saved the retail team 3 hours per week." },
+            { verb: "Overhauled", category: "Innovation", example: "Overhauled the society's outdated social media strategy, resulting in a 40% boost in Instagram followers." },
+            { verb: "Resolved", category: "Problem Solving", example: "Resolved over 50 complex customer complaints per shift with a 98% satisfaction rating." },
+            { verb: "Pioneered", category: "Innovation", example: "Pioneered a peer-review study system that was later adopted by the entire department." },
+
+            // Analysis & Research
+            { verb: "Evaluated", category: "Analysis & Research", example: "Evaluated customer feedback surveys to identify three key areas for service improvement." },
+            { verb: "Investigated", category: "Analysis & Research", example: "Investigated discrepancies in the monthly financial reports, recovering £300 in misallocated funds." },
+            { verb: "Synthesized", category: "Analysis & Research", example: "Synthesized data from 40+ academic journals into a comprehensive literature review." },
+
+            // Organisation & Administration
+            { verb: "Systematised", category: "Organisation", example: "Systematised the office filing network, migrating 500+ physical documents to a secure cloud database." },
+            { verb: "Coordinated", category: "Organisation", example: "Coordinated travel logistics, accommodation, and itineraries for a 30-person university field trip." },
+            { verb: "Streamlined", category: "Efficiency", example: "Streamlined the society's ticketing process by moving it online, eliminating queue times entirely." },
+
+            // Support & Helping
+            { verb: "Empowered", category: "Support", example: "Empowered first-year students by acting as a peer mentor, helping them navigate campus life and study schedules." },
+            { verb: "Guided", category: "Support", example: "Guided visually impaired patrons through the gallery space, ensuring an inclusive and welcoming environment." },
+            
+            // Tech & Digital
+            { verb: "Programmed", category: "Tech & Digital", example: "Programmed an automated email response system that reduced customer wait times by 40%." },
+            { verb: "Deployed", category: "Tech & Digital", example: "Deployed a new content management system for the student newspaper, training 10 editors on its use." },
+
+            // Results / Achievement
+            { verb: "Generated", category: "Results", example: "Generated £500 in additional sales per month by actively up-selling promotional items at the till." },
+            { verb: "Quantified", category: "Data & Results", example: "Quantified the success of the advertising campaign by tracking a 15% increase in click-through rates." },
+            { verb: "Surpassed", category: "Results", example: "Surpassed quarterly sales targets by 18% during the busy holiday retail period." },
+            { verb: "Maximised", category: "Results", example: "Maximised the efficiency of the kitchen layout, allowing food orders to be completed 2 minutes faster." }
+        ];
+
+        const verbDisplay = document.getElementById('verb');
+        const categoryTag = document.getElementById('category');
+        const exampleText = document.getElementById('example');
+        const screen = document.getElementById('screen');
+        const spinBtn = document.getElementById('spin-btn');
+
+        let isSpinning = false;
+
+        function spinRoulette() {
+            if (isSpinning) return;
+            isSpinning = true;
+
+            spinBtn.disabled = true;
+            spinBtn.innerText = "Spinning...";
+            screen.classList.remove('landed');
+            screen.classList.add('spinning');
+
+            let spinCount = 0;
+            const totalSpins = 25; 
+            const spinIntervalTime = 50; 
+
+            const spinInterval = setInterval(() => {
+                const randomVerb = verbDatabase[Math.floor(Math.random() * verbDatabase.length)].verb;
+                verbDisplay.innerText = randomVerb;
+                spinCount++;
+
+                if (spinCount >= totalSpins) {
+                    clearInterval(spinInterval);
+                    landOnVerb();
+                }
+            }, spinIntervalTime);
+        }
+
+        function landOnVerb() {
+            const finalSelection = verbDatabase[Math.floor(Math.random() * verbDatabase.length)];
+            
+            verbDisplay.innerText = finalSelection.verb;
+            categoryTag.innerText = finalSelection.category;
+            exampleText.innerText = `"${finalSelection.example}"`;
+
+            screen.classList.remove('spinning');
+            
+            setTimeout(() => {
+                screen.classList.add('landed');
+            }, 50);
+
+            spinBtn.disabled = false;
+            spinBtn.innerText = "🎰 Spin Again";
+            isSpinning = false;
+        }
+    </script>
+</body>
+</html>

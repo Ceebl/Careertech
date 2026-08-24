@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAR(R) Method Flashcards Widget</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Core Brand Variables --- */
+        :root {
+            --primary: #0069fa;
+            --accent-green: #cfff75;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: transparent; /* Allows seamless iframe embedding */
+            margin: 0; 
+            padding: 10px; 
+            color: var(--text-main); 
+        }
+
+        /* =========================================
+           WIDGET-SPECIFIC STYLES (3D Flip & Grid)
+        ========================================= */
+        .flashcard-wrapper {
+            width: 100%;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* --- 3D Card Engine --- */
+        .scene { width: 100%; height: 480px; perspective: 1000px; margin-bottom: 25px; cursor: pointer; }
+        .card { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            padding: 40px 30px;
+            box-sizing: border-box;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover .card-face--front { border-color: var(--text-main); }
+
+        /* Front of Card */
+        .card-face--front {
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-bottom: 8px solid var(--accent-green); 
+        }
+        
+        .question-tag { 
+            background: var(--accent-green); 
+            color: var(--text-main); 
+            padding: 8px 16px; 
+            border-radius: 30px; 
+            font-size: 0.85rem; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            position: absolute; 
+            top: 30px; 
+        }
+        
+        .question-text { font-size: 1.6rem; font-weight: 800; line-height: 1.4; margin: 0; color: var(--text-main); }
+        
+        .flip-hint { 
+            position: absolute; 
+            bottom: 30px; 
+            font-size: 0.9rem; 
+            font-weight: 600;
+            color: var(--text-muted); 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            background: #f1f5f9; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+        }
+
+        /* Back of Card */
+        .card-face--back {
+            transform: rotateY(180deg);
+            text-align: left;
+            overflow-y: auto;
+            border-bottom: 8px solid var(--primary); 
+        }
+        
+        .back-title { 
+            color: var(--text-muted); 
+            font-size: 0.9rem; 
+            font-weight: 800; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0; 
+            margin-bottom: 20px; 
+            padding-bottom: 15px; 
+            border-bottom: 2px dashed var(--border-color); 
+            text-align: center; 
+        }
+        
+        .star-breakdown { display: flex; flex-direction: column; gap: 15px; }
+        .star-item { display: flex; gap: 15px; align-items: flex-start; }
+        
+        .star-letter { 
+            font-weight: 900; 
+            font-size: 1.2rem; 
+            width: 38px; 
+            height: 38px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border-radius: 8px; 
+            flex-shrink: 0; 
+        }
+        
+        /* Vibrant Letter Colors (Reinstated) */
+        .star-s { color: #0069fa; background: rgba(0, 105, 250, 0.15); }
+        .star-t { color: #f97316; background: #ffedd5; }
+        .star-a { color: #ec4899; background: #fce7f3; }
+        .star-r1 { color: #16a34a; background: #dcfce7; }
+        .star-r2 { color: #9333ea; background: #f3e8ff; } 
+
+        .star-content { font-size: 0.95rem; line-height: 1.5; margin-top: 4px; color: var(--text-main); }
+        .star-content strong { display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.5px;}
+
+        /* Custom Scrollbar for the back */
+        .card-face--back::-webkit-scrollbar { width: 6px; }
+        .card-face--back::-webkit-scrollbar-track { background: transparent; }
+        .card-face--back::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* --- Controls --- */
+        .controls { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
+        .counter { font-weight: 800; color: var(--text-muted); font-size: 1rem; }
+        
+        .btn-outline {
+            background: white;
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            border-color: var(--text-main);
+            background: #f8fafc;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flashcard-wrapper">
+        <div class="scene" onclick="flipCard()">
+            <div class="card" id="flashcard">
+                <div class="card-face card-face--front">
+                    <div class="question-tag" id="card-tag">Leadership</div>
+                    <p class="question-text" id="card-question">Loading...</p>
+                    <div class="flip-hint">👆 Tap to reveal answer</div>
+                </div>
+                
+                <div class="card-face card-face--back">
+                    <div class="back-title">STAR(R) Structure Example</div>
+                    <div class="star-breakdown">
+                        <div class="star-item">
+                            <div class="star-letter star-s">S</div>
+                            <div class="star-content"><strong>Situation</strong><span id="star-s">...</span></div>
+                        </div>
+                        <div class="star-item">
+                            <div class="star-letter star-t">T</div>
+                            <div class="star-content"><strong>Task</strong><span id="star-t">...</span></div>
+                        </div>
+                        <div class="star-item">
+                            <div class="star-letter star-a">A</div>
+                            <div class="star-content"><strong>Action</strong><span id="star-a">...</span></div>
+                        </div>
+                        <div class="star-item">
+                            <div class="star-letter star-r1">R</div>
+                            <div class="star-content"><strong>Result</strong><span id="star-r1">...</span></div>
+                        </div>
+                        <div class="star-item">
+                            <div class="star-letter star-r2">R</div>
+                            <div class="star-content"><strong>Reflection</strong><span id="star-r2">...</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-outline" id="btn-prev" onclick="changeCard(-1)">← Previous</button>
+            <div class="counter" id="card-counter">1 / 5</div>
+            <button class="btn-outline" id="btn-next" onclick="changeCard(1)">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        // The STAR(R) Database
+        const deck = [
+            {
+                tag: "Leadership",
+                question: "Tell us about a time you've demonstrated effective leadership.",
+                s: "During a group project at university, team morale was low and we were falling behind schedule.",
+                t: "I needed to get the group back on track so we could deliver a high-quality presentation on time.",
+                a: "I organised a brief, informal meeting to listen to everyone's concerns. I then suggested we reassign tasks based on individual strengths rather than splitting it randomly, and set up a shared digital tracker.",
+                r: "The team became much more engaged, and we finished the presentation two days early, receiving a first-class grade.",
+                r2: "I learned that effective leadership isn't about dictating orders, but rather listening, playing to people's strengths, and providing clear structure."
+            },
+            {
+                tag: "Problem Solving",
+                question: "Give an example of a challenge you faced in the workplace and describe how you overcame it.",
+                s: "I was working a busy weekend shift in retail during a major holiday sale.",
+                t: "The digital till system completely crashed, and a massive queue of frustrated customers was forming.",
+                a: "I stayed calm, apologised to the queue, and clearly communicated the issue. While a colleague called IT, I quickly set up a manual, paper-based tracking system to process cash transactions.",
+                r: "We managed to keep the queue moving and minimised customer frustration until the system restarted 20 minutes later.",
+                r2: "This experience taught me the importance of staying calm under pressure and communicating transparently rather than panicking."
+            },
+            {
+                tag: "Resilience",
+                question: "Can you give me an example of when you failed at something, and how you dealt with it?",
+                s: "In my first year of university, I took on too many extracurricular activities while trying to balance my studies.",
+                t: "I had to submit a major essay but had completely mismanaged my time leading up to the deadline.",
+                a: "I rushed the essay the night before and received a very poor grade. I owned the mistake, met with my tutor for constructive feedback, and immediately started using a calendar blocking system.",
+                r: "By managing my time strictly, my grades improved significantly in the next semester.",
+                r2: "Failing taught me that time management is crucial, and it's okay to say 'no' to things to protect my core priorities."
+            },
+            {
+                tag: "Teamwork",
+                question: "Describe a time when you had to work with a difficult team member.",
+                s: "I was part of a group assignment where one member was consistently missing deadlines and not contributing.",
+                t: "I had to ensure the project was completed on time without just doing all of their work for them.",
+                a: "Instead of getting angry, I initiated a private, non-confrontational chat to see if they were okay. I discovered they were genuinely struggling to understand the software we were using, so I offered a quick 20-minute tutorial.",
+                r: "They felt supported, started contributing effectively to the project, and we scored highly.",
+                r2: "I learned that assuming positive intent and offering support often resolves conflict much better than frustration."
+            },
+            {
+                tag: "Adaptability",
+                question: "Tell me about a time you had to adapt to a sudden or unexpected change.",
+                s: "I was scheduled to give a 15-minute presentation to a client during my summer internship.",
+                t: "Ten minutes before the meeting, the projector broke, meaning I couldn't use any of the slides I had prepared.",
+                a: "I quickly printed handouts of my key graphs for the client. Instead of relying on the screen, I adapted my delivery to be more conversational, using the handouts to guide the discussion.",
+                r: "The client actually loved the interactive, face-to-face approach, and we successfully secured their contract.",
+                r2: "I learned the immense value of over-preparation, and that being flexible when technology fails can actually turn a negative into a positive."
+            }
+        ];
+
+        let currentIndex = 0;
+        const cardElement = document.getElementById('flashcard');
+
+        function loadCard(index) {
+            const data = deck[index];
+            document.getElementById('card-tag').innerText = data.tag;
+            document.getElementById('card-question').innerText = data.question;
+            document.getElementById('star-s').innerText = data.s;
+            document.getElementById('star-t').innerText = data.t;
+            document.getElementById('star-a').innerText = data.a;
+            document.getElementById('star-r1').innerText = data.r;
+            document.getElementById('star-r2').innerText = data.r2; 
+            
+            document.getElementById('card-counter').innerText = `${index + 1} / ${deck.length}`;
+            
+            document.getElementById('btn-prev').disabled = index === 0;
+            document.getElementById('btn-next').disabled = index === deck.length - 1;
+        }
+
+        function flipCard() {
+            cardElement.classList.toggle('is-flipped');
+        }
+
+        function changeCard(direction) {
+            if (cardElement.classList.contains('is-flipped')) {
+                cardElement.classList.remove('is-flipped');
+                setTimeout(() => {
+                    currentIndex += direction;
+                    loadCard(currentIndex);
+                }, 300); 
+            } else {
+                currentIndex += direction;
+                loadCard(currentIndex);
+            }
+        }
+
+        loadCard(currentIndex);
+    </script>
+</body>
+</html>

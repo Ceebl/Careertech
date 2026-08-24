@@ -1,0 +1,1 @@
+import{i as e}from"./react-pdf.browser-CgDa_05e.js";export{e as PDFViewer};

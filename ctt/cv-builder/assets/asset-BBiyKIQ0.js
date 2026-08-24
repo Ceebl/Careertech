@@ -1,0 +1,1 @@
+var e=e=>`${`./`.replace(/\/$/,``)}/${e.replace(/^\//,``)}`;export{e as t};

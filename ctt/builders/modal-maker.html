@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pure CSS Modal Maker</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        
+        /* --- Tool Header (Toolkit Branding) --- */
+        .tool-header { 
+            background-color: #0069fa; 
+            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); 
+            background-position: right center; 
+            background-repeat: no-repeat; 
+            background-size: contain; 
+            color: #ffffff; 
+            padding: 20px 40px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
+        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+
+        /* --- Layout --- */
+        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
+        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
+        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.2; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; }
+        
+        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
+        input[type="text"], select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
+        
+        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.9rem; }
+        
+        .copy-btn { background: #0069fa; color: white; border: none; padding: 14px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; font-size: 1.05rem; transition: background 0.2s; }
+        .copy-btn:hover { background: #0056cc; }
+
+        .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .preview-header h2 { border: none; margin: 0; padding: 0; }
+        
+        #live-preview { flex-grow: 1; border: 1px dashed #cbd5e1; padding: 40px; border-radius: 8px; background: #f8fafc; overflow-y: auto; max-height: 40vh; display: flex; align-items: center; justify-content: center; }
+        #code-output { margin-top: 15px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 250px; font-size: 0.85rem; border: none; resize: none; width: 100%; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+
+    <header class="tool-header">
+        <div class="hero-content">
+            <h1>Pure CSS Modal Maker</h1>
+            <div class="header-divider"></div>
+            <p>Generate unbreakable, JavaScript-free pop-up modals for TargetConnect, SharePoint, or Canvas.</p>
+            <span class="badge">Universal Edition 1.1</span>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="panel-left">
+            <h2>⚙️ Modal Configuration</h2>
+            
+            <div class="instructions">
+                <b>💡 How it works:</b> This generator uses a hidden HTML checkbox instead of JavaScript. This bypasses rigid security filters in LMS platforms and CRM pathways!
+            </div>
+
+            <label>1. Design Template</label>
+            <select id="input-template" oninput="generateModal()">
+                <option value="modern">Modern Solid</option>
+                <option value="saas">Premium SaaS</option>
+                <option value="minimal">Minimalist Alert</option>
+            </select>
+
+            <label>2. Primary Theme Color</label>
+            <div class="color-picker-wrapper">
+                <input type="color" id="input-color" value="#4f46e5" oninput="generateModal()">
+                <span>Button & Highlight Color</span>
+            </div>
+
+            <label>3. Trigger Button Text</label>
+            <input type="text" id="input-trigger" value="✨ Unlock Secret Tip" oninput="generateModal()">
+
+            <label>4. Modal Title</label>
+            <input type="text" id="input-title" value="Did you know?" oninput="generateModal()">
+
+            <label>5. Modal Body Text (HTML allowed)</label>
+            <textarea id="input-body" oninput="generateModal()">Completing this module increases your <strong>Digital Fluency</strong> score. Industry benchmarks for 2026 suggest that graduates with high AI Fluency are 40% more likely to secure roles in the Tech sector.</textarea>
+
+            <label>6. Close Button Text</label>
+            <input type="text" id="input-close" value="Got it, thanks!" oninput="generateModal()">
+            
+        </div>
+
+        <div class="panel-right">
+            <div class="preview-header">
+                <h2>👀 Live Preview</h2>
+                <button class="copy-btn" style="width: auto; margin: 0; padding: 10px 20px;" onclick="copyCode()">📋 Copy HTML</button>
+            </div>
+            
+            <div id="live-preview"></div>
+
+            <label style="margin-top: 20px;">Generated HTML/CSS (Paste into Source View)</label>
+            <textarea id="code-output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        function generateModal() {
+            const template = document.getElementById('input-template').value;
+            const color = document.getElementById('input-color').value;
+            const trigger = document.getElementById('input-trigger').value || 'Click Here';
+            const title = document.getElementById('input-title').value || 'Alert';
+            const body = document.getElementById('input-body').value || 'Modal content goes here.';
+            const closeTxt = document.getElementById('input-close').value || 'Close';
+            
+            // Generate a unique ID so multiple modals don't clash on the same page
+            const uniqueId = 'modal-toggle-' + Math.floor(Math.random() * 10000);
+
+            let css = '';
+            let html = '';
+
+            // --- TEMPLATE 1: MODERN SOLID ---
+            if (template === 'modern') {
+                css = `
+  <style>
+    #${uniqueId} { display: none; }
+    .mod-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    #${uniqueId}:checked ~ .mod-overlay { display: flex; }
+    .mod-box { background: #ffffff; padding: 40px; border-radius: 16px; max-width: 550px; width: 90%; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: modPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes modPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .mod-box h2 { color: ${color}; margin-top: 0; font-weight: 800; font-size: 1.8rem; border-bottom: 3px solid #e2e8f0; padding-bottom: 10px; display: inline-block; }
+    .mod-box p { color: #475569; line-height: 1.6; font-size: 1.05rem; }
+    .mod-close-x { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; cursor: pointer; color: #94a3b8; }
+    .mod-btn { background: ${color}; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; display: inline-block; transition: opacity 0.2s; }
+    .mod-btn:hover { opacity: 0.9; }
+  </style>`;
+                html = `
+  <input type="checkbox" id="${uniqueId}">
+  <label for="${uniqueId}" class="mod-btn">${trigger}</label>
+  <div class="mod-overlay">
+      <div class="mod-box">
+          <label for="${uniqueId}" class="mod-close-x">✖</label>
+          <h2>${title}</h2>
+          <p>${body}</p>
+          <label for="${uniqueId}" class="mod-btn" style="display:block; text-align:center; margin-top:20px;">${closeTxt}</label>
+      </div>
+  </div>`;
+            } 
+            
+            // --- TEMPLATE 2: PREMIUM SAAS ---
+            else if (template === 'saas') {
+                css = `
+  <style>
+    #${uniqueId} { display: none; }
+    .saas-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); align-items: center; justify-content: center; font-family: -apple-system, sans-serif; }
+    #${uniqueId}:checked ~ .saas-overlay { display: flex; }
+    .saas-box { background: #ffffff; padding: 0; border-radius: 24px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: saasPop 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; }
+    @keyframes saasPop { 0% { transform: scale(0.95) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+    .saas-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 30px 40px 20px 40px; border-bottom: 1px solid #e2e8f0; position: relative; }
+    .saas-header h2 { margin: 0; font-weight: 800; font-size: 1.8rem; color: #0f172a; line-height: 1.2; }
+    .saas-body { padding: 30px 40px; }
+    .saas-body p { color: #475569; line-height: 1.7; font-size: 1.05rem; margin: 0 0 20px 0; }
+    .saas-close-x { position: absolute; right: 25px; top: 25px; width: 32px; height: 32px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .saas-btn { padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; text-align: center; display: inline-block; background: ${color}; color: white; width: 100%; box-sizing: border-box; transition: transform 0.2s; }
+    .saas-btn:hover { transform: translateY(-2px); }
+  </style>`;
+                html = `
+  <input type="checkbox" id="${uniqueId}">
+  <label for="${uniqueId}" class="saas-btn" style="width: auto;">${trigger}</label>
+  <div class="saas-overlay">
+      <div class="saas-box">
+          <div class="saas-header">
+              <label for="${uniqueId}" class="saas-close-x">✕</label>
+              <h2>${title}</h2>
+          </div>
+          <div class="saas-body">
+              <p>${body}</p>
+              <label for="${uniqueId}" class="saas-btn">${closeTxt}</label>
+          </div>
+      </div>
+  </div>`;
+            }
+
+            // --- TEMPLATE 3: MINIMALIST ---
+            else if (template === 'minimal') {
+                 css = `
+  <style>
+    #${uniqueId} { display: none; }
+    .min-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); align-items: center; justify-content: center; font-family: -apple-system, sans-serif; }
+    #${uniqueId}:checked ~ .min-overlay { display: flex; }
+    .min-box { background: #ffffff; padding: 30px; max-width: 450px; width: 90%; border: 2px solid #e2e8f0; border-top: 6px solid ${color}; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    .min-box h2 { color: #1e293b; margin: 0 0 15px 0; font-size: 1.4rem; }
+    .min-box p { color: #64748b; line-height: 1.5; font-size: 1rem; margin-bottom: 25px; }
+    .min-btn { padding: 10px 20px; font-weight: bold; cursor: pointer; border: 2px solid ${color}; color: ${color}; background: transparent; display: inline-block; transition: background 0.2s; text-align: center; }
+    .min-btn:hover { background: ${color}; color: white; }
+    .min-trigger { background: ${color}; color: white; padding: 10px 20px; font-weight: bold; cursor: pointer; display: inline-block; border: none; transition: opacity 0.2s; }
+    .min-trigger:hover { opacity: 0.9; }
+  </style>`;
+                html = `
+  <input type="checkbox" id="${uniqueId}">
+  <label for="${uniqueId}" class="min-trigger">${trigger}</label>
+  <div class="min-overlay">
+      <div class="min-box">
+          <h2>${title}</h2>
+          <p>${body}</p>
+          <label for="${uniqueId}" class="min-btn" style="display: block;">${closeTxt}</label>
+      </div>
+  </div>`;
+            }
+
+            const finalCode = (css + html).trim();
+            document.getElementById('live-preview').innerHTML = finalCode;
+            document.getElementById('code-output').value = finalCode;
+        }
+
+        function copyCode() {
+            const codeBox = document.getElementById('code-output');
+            codeBox.select();
+            document.execCommand('copy');
+            alert('Code copied! You can now paste this into your platform.');
+        }
+
+        // Initialize on load
+        window.onload = generateModal;
+    </script>
+</body>
+</html>

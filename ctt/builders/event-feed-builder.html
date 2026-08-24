@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Events RSS List Widget Maker</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        
+        /* --- Tool Header --- */
+        .tool-header { 
+            background-color: #0069fa; 
+            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); 
+            background-position: right center; 
+            background-repeat: no-repeat; 
+            background-size: contain; 
+            color: #ffffff; 
+            padding: 20px 40px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
+        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+
+        /* --- Layout --- */
+        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
+        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
+        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.5; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; overflow-y: auto; }
+        
+        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        
+        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
+        
+        /* Instructions & Guides */
+        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; color: #92400e; font-size: 0.9rem; }
+        .instructions b { color: #b45309; display: block; margin-bottom: 10px; font-size: 1rem; }
+        .instructions ul { margin: 0; padding-left: 20px; }
+        .instructions li { margin-bottom: 5px; font-weight: 500; }
+
+        .hosting-guide { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 0.85rem; color: #475569; }
+        .hosting-guide h3 { margin-top: 0; font-size: 1rem; color: #1e293b; margin-bottom: 10px; }
+        .hosting-guide code { background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #0f172a; font-family: monospace; }
+
+        #code-output { margin-top: 10px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 120px; font-size: 0.8rem; border: none; resize: none; width: 100%; box-sizing: border-box;}
+        .copy-btn { background: #0069fa; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+        .copy-btn:hover { background: #0056cc; }
+
+        #preview-container { margin-top: 20px; flex-grow: 1; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f1f5f9; min-height: 550px; overflow: hidden; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; background: white; }
+    </style>
+</head>
+<body>
+
+    <header class="tool-header">
+        <div class="hero-content">
+            <h1>Events RSS List Widget Maker</h1>
+            <div class="header-divider"></div>
+            <p>Design a beautiful, responsive card widget using your TargetConnect Events RSS feed.</p>
+            <span class="badge">Universal Edition 1.0</span>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="panel-left">
+            <h2>⚙️ Style & Data</h2>
+            
+            <div class="instructions">
+                <b>🚨 Required TargetConnect Setup:</b>
+                In TargetConnect RSS settings, ensure 'Show field name' is checked for:
+                <ul>
+                    <li>Title</li>
+                    <li>Location</li>
+                    <li>Brief Description</li>
+                    <li>Closest Future Date</li>
+                </ul>
+            </div>
+
+            <label>1. TargetConnect RSS Link</label>
+            <input type="text" id="rss-url" placeholder="https://yourlink.targetconnect.net/rss/..." oninput="updateAll()">
+
+            <label>2. Primary Accent Color</label>
+            <div class="color-picker-wrapper">
+                <input type="color" id="accent-color" value="#0069fa" oninput="updateAll()">
+                <span>Controls the card border and date icon header</span>
+            </div>
+
+            <label>3. Layout Style</label>
+            <select id="layout-style" onchange="updateAll()">
+                <option value="carousel">Horizontal Carousel (Scrollable)</option>
+                <option value="grid">Responsive Grid</option>
+                <option value="vertical">Vertical List (Stacked)</option>
+            </select>
+
+            <div class="hosting-guide">
+                <h3>💾 Hosting & Embedding Guide</h3>
+                <p>1. Copy the code below and save it as <b>events-widget.html</b>.</p>
+                <p>2. Host the file securely (HTTPS) on your web server or GitHub Pages.</p>
+                <p>3. Embed it anywhere (SharePoint, Canvas, Blackboard, TargetConnect) using an iframe:<br><br>
+                <code>&lt;iframe src="YOUR_HOSTED_URL" width="100%" height="450" frameborder="0"&gt;&lt;/iframe&gt;</code></p>
+                <p style="margin-top:10px;"><b>Heads up:</b> a browser cannot read another site's RSS feed directly, so this widget fetches yours through the free public relay <b>rss2json.com</b>. That relay rate-limits and occasionally goes offline. For a widget people depend on, run your own small feed proxy instead.</p>
+            </div>
+            
+            <h2 style="margin-top: 30px;">💾 Export Widget Code</h2>
+            <textarea id="code-output" readonly></textarea>
+            <button class="copy-btn" onclick="copyCode()">📋 Copy Widget HTML Code</button>
+        </div>
+
+        <div class="panel-right">
+            <h2>👀 Live Visual Preview</h2>
+            <div id="preview-container">
+                <iframe id="preview-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getContrast(hexconf) {
+            const hex = hexconf.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#1e293b' : '#ffffff';
+        }
+
+        function generateWidgetHTML() {
+            const rssLink = document.getElementById('rss-url').value;
+            const accent = document.getElementById('accent-color').value;
+            const layout = document.getElementById('layout-style').value;
+            const accentText = getContrast(accent);
+
+            // Determine Layout CSS
+            let layoutCSS = '';
+            if (layout === 'carousel') {
+                layoutCSS = `
+        .feed-wrapper { overflow-x: auto; padding-bottom: 20px; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+        .feed-wrapper::-webkit-scrollbar { height: 8px; }
+        .feed-wrapper::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .feed-wrapper::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .events-track { display: flex; gap: 20px; flex-wrap: nowrap; }
+        .event-card { min-width: 320px; max-width: 320px; flex-shrink: 0; }
+                `;
+            } else if (layout === 'grid') {
+                layoutCSS = `
+        .events-track { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+                `;
+            } else if (layout === 'vertical') {
+                layoutCSS = `
+        .events-track { display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: 0 auto; }
+                `;
+            }
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events RSS Widget</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: transparent; margin: 0; padding: 20px 10px; }
+        
+        .events-container { max-width: 1200px; margin: 0 auto; }
+        
+        /* Layout Specifics */
+${layoutCSS}
+
+        /* Event Card Design */
+        .event-card {
+            background: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0;
+            border-left: 6px solid ${accent}; padding: 20px; text-decoration: none;
+            display: flex; flex-direction: column; gap: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .event-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+
+        /* CHANGED: align-items from flex-start to center */
+        .card-header { display: flex; gap: 15px; align-items: center; }
+        
+        .date-icon { width: 55px; flex-shrink: 0; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .date-month { background: ${accent}; color: ${accentText}; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 0; letter-spacing: 0.5px; }
+        .date-day { color: #0f172a; font-size: 1.4rem; font-weight: 800; padding: 6px 0; }
+
+        .event-title { margin: 0; font-size: 1.15rem; font-weight: 700; color: #1e293b; line-height: 1.3; }
+
+        .pill-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .pill { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .pill-time { background: #fee2e2; color: #b91c1c; }
+        .pill-loc { background: #ffedd5; color: #c2410c; }
+
+        .event-desc { color: #475569; font-size: 0.95rem; line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .loading { text-align: center; color: #64748b; font-size: 1rem; width: 100%; padding: 40px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="events-container feed-wrapper">
+        <div class="events-track" id="events-track">
+            <div class="loading">Loading events...</div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchEvents() {
+            const rssInput = '${rssLink}';
+            const track = document.getElementById('events-track');
+            
+            if(!rssInput) {
+                track.innerHTML = '<div class="loading">Enter your RSS URL to display events.</div>';
+                return;
+            }
+
+            const proxyUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssInput);
+
+            try {
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                if (data && data.items && data.items.length > 0) {
+                    renderEvents(data.items, track);
+                } else {
+                    track.innerHTML = '<div class="loading">No upcoming events found.</div>';
+                }
+            } catch (error) {
+                console.error("Error fetching RSS:", error);
+                track.innerHTML = '<div class="loading" style="color: #ef4444;">Unable to load events. Check feed URL.</div>';
+            }
+        }
+
+        function renderEvents(items, track) {
+            track.innerHTML = ''; 
+
+            items.forEach(item => {
+                const dDoc = new DOMParser().parseFromString(item.description, "text/html");
+                let location = "Campus / Online";
+                let briefDesc = "";
+
+                const labels = dDoc.querySelectorAll('.feed-entry-label');
+                labels.forEach(label => {
+                    const txt = label.textContent.toLowerCase();
+                    const parent = label.parentElement;
+                    const valNode = parent.querySelector('.feed-entry-value');
+
+                    if (txt.includes('location')) {
+                        location = valNode ? valNode.textContent.trim() : "Campus / Online";
+                    }
+                    if (txt.includes('brief description')) {
+                        if (valNode) {
+                            briefDesc = valNode.textContent.trim();
+                        } else {
+                            label.remove(); 
+                            briefDesc = parent.textContent.trim();
+                        }
+                        briefDesc = briefDesc.replace(/^:\\s*/, '').trim();
+                    }
+                });
+
+                if (briefDesc.startsWith(':')) briefDesc = briefDesc.substring(1).trim();
+                if (!briefDesc) briefDesc = "Click to view full event details and booking information.";
+                
+                const dateSpan = dDoc.querySelector('.entry-dynamicstrings_days .feed-entry-value');
+                const rawDateStr = dateSpan ? dateSpan.textContent.trim() : null;
+                
+                let displayMonth = "TBC";
+                let displayDay = "--";
+                let displayTime = "Time TBC";
+
+                if (rawDateStr) {
+                    const cleanDateStr = rawDateStr.replace(' at ', ' ');
+                    const dateParts = cleanDateStr.split(' ');
+                    const dateObj = new Date(dateParts[0]);
+
+                    if (!isNaN(dateObj.getTime())) {
+                        displayMonth = dateObj.toLocaleString('en-GB', { month: 'short' }).toUpperCase();
+                        displayDay = dateObj.getDate();
+                        displayTime = dateParts.slice(1).join(' ').trim() || "All Day";
+                    }
+                }
+
+                const card = document.createElement('a');
+                card.href = item.link;
+                card.target = "_blank";
+                card.className = 'event-card';
+
+                card.innerHTML = \`
+                    <div class="card-header">
+                        <div class="date-icon">
+                            <div class="date-month">\${displayMonth}</div>
+                            <div class="date-day">\${displayDay}</div>
+                        </div>
+                        <h3 class="event-title">\${item.title}</h3>
+                    </div>
+                    <div class="pill-container">
+                        <span class="pill pill-time">⏰ \${displayTime}</span>
+                        <span class="pill pill-loc">📍 \${location}</span>
+                    </div>
+                    <p class="event-desc">\${briefDesc}</p>
+                \`;
+
+                track.appendChild(card);
+            });
+        }
+        fetchEvents();
+    <\/script>
+</body>
+</html>`;
+        }
+
+        function updateAll() {
+            const html = generateWidgetHTML();
+            document.getElementById('code-output').value = html;
+            const iframe = document.getElementById('preview-iframe');
+            iframe.srcdoc = html;
+        }
+
+        function copyCode() {
+            const copyText = document.getElementById("code-output");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Code copied to clipboard! Ready to be saved as an HTML file.");
+        }
+        
+        updateAll();
+    </script>
+</body>
+</html>

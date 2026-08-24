@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Calendar Maker</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        
+        /* --- Tool Header --- */
+        .tool-header { 
+            background-color: #0069fa; 
+            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'); 
+            background-position: right center; 
+            background-repeat: no-repeat; 
+            background-size: contain; 
+            color: #ffffff; 
+            padding: 20px 40px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
+        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+
+        /* --- Layout --- */
+        .workspace { display: flex; gap: 30px; padding: 25px; max-width: 1600px; margin: 0 auto; align-items: flex-start; }
+        .panel-left { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0; }
+        .panel-right { background: #ffffff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1.5; border: 1px solid #e2e8f0; position: sticky; top: 25px; height: calc(100vh - 50px); display: flex; flex-direction: column; overflow-y: auto; }
+        
+        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        
+        .color-group { display: flex; gap: 15px; }
+        .color-picker-wrapper { flex: 1; display: flex; align-items: center; gap: 10px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px; border-radius: 6px; }
+        
+        /* Bulleted Instructions */
+        .instructions { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 25px; color: #92400e; font-size: 0.9rem; }
+        .instructions b { color: #b45309; display: block; margin-bottom: 10px; font-size: 1rem; }
+        .instructions ul { margin: 0; padding-left: 20px; }
+        .instructions li { margin-bottom: 5px; font-weight: 500; }
+
+        .hosting-guide { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-top: 25px; font-size: 0.85rem; color: #475569; }
+        .hosting-guide h3 { margin-top: 0; font-size: 1rem; color: #1e293b; }
+
+        #code-output { margin-top: 10px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 100px; font-size: 0.8rem; border: none; resize: none; width: 100%; box-sizing: border-box;}
+        .copy-btn { background: #0069fa; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+        .copy-btn:hover { background: #0056cc; }
+
+        #preview-container { margin-top: 20px; flex-grow: 1; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f1f5f9; min-height: 550px; overflow: hidden; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; background: white; }
+    </style>
+</head>
+<body>
+
+    <header class="tool-header">
+        <div class="hero-content">
+            <h1>Event Calendar Maker</h1>
+            <div class="header-divider"></div>
+            <p>Generate a branded, interactive calendar that syncs with your TargetConnect Events RSS feed.</p>
+            <span class="badge">Universal Edition 1.0</span>
+        </div>
+    </header>
+
+    <div class="workspace">
+        <div class="panel-left">
+            <h2>⚙️ Style & Data</h2>
+            
+            <div class="instructions">
+                <b>🚨 Required TargetConnect Setup:</b>
+                In TargetConnect RSS settings, ensure 'Show field name' is checked for:
+                <ul>
+                    <li>Title</li>
+                    <li>Event Type</li>
+                    <li>Brief Description</li>
+                    <li>Location</li>
+                    <li>Closest Future Date</li>
+                    <li>End Date</li>
+                </ul>
+            </div>
+
+            <label>1. TargetConnect RSS Link</label>
+            <input type="text" id="rss-url" placeholder="https://yourlink.targetconnect.net/rss/..." oninput="updateAll()">
+
+            <div class="color-group">
+                <div style="flex:1;">
+                    <label>2. Header Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="header-color" value="#0069fa" oninput="updateAll()">
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <label>3. Button Color</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="btn-color" value="#0069fa" oninput="updateAll()">
+                    </div>
+                </div>
+            </div>
+
+            <label>4. Button Text</label>
+            <input type="text" id="btn-text" value="Book on the Hub" oninput="updateAll()">
+
+            <label>5. Pop-up (Modal) Style</label>
+            <select id="modal-style" onchange="updateAll()">
+                <option value="modern">Modern (With Pills)</option>
+                <option value="professional">Professional (Clean Text)</option>
+            </select>
+
+            <div class="hosting-guide">
+                <h3>💾 Save & Host Instructions</h3>
+                <p>1. Copy the code from the right panel.<br>
+                2. Open <b>Notepad</b> or <b>TextEdit</b>, paste the code, and save as <b>index.html</b>.<br>
+                3. This file <u>must</u> be hosted on a secure web server (HTTPS) or GitHub Pages to work.<br><br>
+                <b>Security:</b> Your IT team is usually the best point of contact for hosting.</p>
+                <p style="margin-top:10px;"><b>Heads up:</b> a browser cannot read another site's RSS feed directly, so this widget fetches yours through the free public relay <b>rss2json.com</b>. That relay rate-limits and occasionally goes offline. For a widget people depend on, run your own small feed proxy instead.</p>
+            </div>
+        </div>
+
+        <div class="panel-right">
+            <h2>👀 Live Visual Preview</h2>
+            <div id="preview-container">
+                <iframe id="preview-iframe"></iframe>
+            </div>
+            
+            <label style="margin-top:20px;">Widget HTML Code</label>
+            <textarea id="code-output" readonly></textarea>
+            <button class="copy-btn" onclick="copyCode()">📋 Copy Widget HTML Code</button>
+        </div>
+    </div>
+
+    <script>
+        function getContrast(hexconf) {
+            const hex = hexconf.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#1e293b' : '#ffffff';
+        }
+
+        function generateWidgetHTML() {
+            const rssLink = document.getElementById('rss-url').value;
+            const theme = document.getElementById('header-color').value;
+            const btnColor = document.getElementById('btn-color').value;
+            const btnTxt = document.getElementById('btn-text').value;
+            const style = document.getElementById('modal-style').value;
+            
+            const headerText = getContrast(theme);
+            const btnTextCol = getContrast(btnColor);
+
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <style>
+      body { background-color: #f8fafc; margin: 0; padding: 20px; font-family: -apple-system, sans-serif; }
+      .calendar-wrapper { max-width: 1200px; margin: 0 auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+      .calendar-header { background-color: ${theme}; color: ${headerText}; display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; }
+      .calendar-header button { background: rgba(255, 255, 255, 0.2); border: none; color: ${headerText}; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+      .month-title { font-size: 1.5rem; font-weight: bold; margin: 0; }
+      .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); border-top: 1px solid #e0e0e0; border-left: 1px solid #e0e0e0; min-width: 800px; }
+      .day-name { background-color: #f1f5f9; color: #475569; font-weight: 600; text-align: center; padding: 12px 0; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; font-size: 0.9rem; }
+      .calendar-cell { min-height: 120px; background-color: #ffffff; border-right: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+      .date-number { font-weight: 600; color: #1e293b; align-self: flex-end; font-size: 0.95rem; }
+      .date-number.today { background-color: ${theme}; color: ${headerText}; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+      .event-block { background-color: #dbeafe; color: #1e40af; border-left: 3px solid ${theme}; padding: 4px 6px; border-radius: 4px; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+      
+      .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
+      .modal-content { background-color: #ffffff; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; position: relative; }
+      .close-modal { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; font-weight: bold; cursor: pointer; }
+      .book-btn { display: block; text-align: center; background: ${btnColor}; color: ${btnTextCol}; padding: 14px 20px; border-radius: 8px; font-weight: bold; text-decoration: none; }
+      
+      .pill { display: ${style === 'modern' ? 'inline-block' : 'none'}; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-right: 8px; margin-bottom: 8px;}
+      .pill-date { background: #fee2e2; color: #991b1b; }
+      .pill-location { background: #ffedd5; color: #c2410c; }
+      .meta-simple { display: ${style === 'professional' ? 'block' : 'none'}; color: #64748b; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="calendar-wrapper">
+      <div class="calendar-header">
+        <button id="prev-month">❮ Previous</button>
+        <h2 class="month-title" id="month-display">Loading...</h2>
+        <button id="next-month">Next ❯</button>
+      </div>
+      <div style="overflow-x: auto;"><div class="calendar-grid" id="calendar-grid"></div></div>
+    </div>
+
+    <div id="event-modal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">✖</span>
+            <h2 id="modal-title" style="color:#1e293b; margin-bottom:15px;"></h2>
+            <div id="modal-pills"></div>
+            <div id="modal-desc" style="color:#475569; margin-bottom:20px; line-height:1.6;"></div>
+            <a id="modal-btn" href="#" target="_blank" class="book-btn">${btnTxt}</a>
+        </div>
+    </div>
+
+    <script>
+      let currentDate = new Date();
+      let currentMonth = currentDate.getMonth();
+      let currentYear = currentDate.getFullYear();
+      let eventsMap = {};
+
+      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+      async function fetchEvents() {
+        const rssInput = '${rssLink}';
+        if(!rssInput) {
+            document.getElementById('calendar-grid').innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #64748b; font-style: italic;">Enter your RSS URL in the builder to see your events.</div>';
+            document.getElementById('month-display').textContent = monthNames[currentMonth] + " " + currentYear;
+            return;
+        }
+        
+        const api = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssInput);
+        try {
+          const response = await fetch(api);
+          const data = await response.json();
+          if (data && data.items) parseEvents(data.items);
+          renderCalendar();
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('calendar-grid').innerHTML = '<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #ef4444;">Error fetching data. Check your RSS URL or hosting.</div>';
+        }
+      }
+
+      function parseEvents(items) {
+        items.forEach(item => {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = item.description || "";
+          const dateSpan = tempDiv.querySelector('.entry-dynamicstrings_days .feed-entry-value');
+          
+          if (dateSpan) {
+            let highlightedDate = dateSpan.textContent.trim();
+            let parts = highlightedDate.replace(' at ', ' ').split(' ');
+            let parsedDateObj = new Date(parts[0]);
+            
+            if (!isNaN(parsedDateObj.getTime())) {
+              let dateKey = \`\${parsedDateObj.getFullYear()}-\${parsedDateObj.getMonth()}-\${parsedDateObj.getDate()}\`;
+              if (!eventsMap[dateKey]) eventsMap[dateKey] = [];
+              
+              let location = "";
+              tempDiv.querySelectorAll('.feed-entry-label').forEach(label => {
+                const txt = label.textContent.toLowerCase();
+                if (txt.includes('location')) {
+                  location = label.parentElement.querySelector('.feed-entry-value').textContent.trim();
+                }
+                if (txt.includes('event type') || txt.includes('end date') || txt.includes('closest future date')) {
+                    label.parentElement.remove();
+                }
+                if (txt.includes('brief description')) label.remove();
+              });
+              
+              eventsMap[dateKey].push({
+                title: item.title,
+                link: item.link,
+                time: parts[1] || "",
+                fullDate: highlightedDate,
+                location: location,
+                desc: tempDiv.innerHTML
+              });
+            }
+          }
+        });
+      }
+
+      function renderCalendar() {
+        const grid = document.getElementById('calendar-grid');
+        grid.innerHTML = '';
+        document.getElementById('month-display').textContent = \`\${monthNames[currentMonth]} \${currentYear}\`;
+        
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(d => {
+            const h = document.createElement('div'); h.className = 'day-name'; h.textContent = d; grid.appendChild(h);
+        });
+
+        let firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        firstDay = firstDay === 0 ? 6 : firstDay - 1;
+        for (let i = 0; i < firstDay; i++) grid.appendChild(Object.assign(document.createElement('div'), {className: 'calendar-cell empty'}));
+
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+          const cell = document.createElement('div'); cell.className = 'calendar-cell';
+          const num = document.createElement('div'); num.className = 'date-number'; num.textContent = day;
+          if (new Date().getDate() === day && new Date().getMonth() === currentMonth && new Date().getFullYear() === currentYear) num.classList.add('today');
+          cell.appendChild(num);
+
+          const evs = eventsMap[\`\${currentYear}-\${currentMonth}-\${day}\`];
+          if (evs) evs.forEach((e, idx) => {
+            const b = document.createElement('div'); b.className = 'event-block';
+            b.innerHTML = \`<span style="font-weight:bold;">\${e.time}</span> \${e.title}\`;
+            b.onclick = () => openModal(\`\${currentYear}-\${currentMonth}-\${day}\`, idx);
+            cell.appendChild(b);
+          });
+          grid.appendChild(cell);
+        }
+      }
+
+      function openModal(key, idx) {
+        const e = eventsMap[key][idx];
+        document.getElementById('modal-title').textContent = e.title;
+        document.getElementById('modal-desc').innerHTML = e.desc;
+        document.getElementById('modal-pills').innerHTML = \`
+            <span class="pill pill-date">📅 \${e.fullDate}</span>
+            <span class="pill pill-location">📍 \${e.location}</span>
+            <div class="meta-simple"><b>Location:</b> \${e.location}</div>\`;
+        document.getElementById('modal-btn').href = e.link;
+        document.getElementById('event-modal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal() { 
+          document.getElementById('event-modal').style.display = 'none'; 
+          document.body.style.overflow = 'auto';
+      }
+      
+      document.getElementById('prev-month').onclick = () => { currentMonth--; if(currentMonth<0){currentMonth=11;currentYear--;} renderCalendar(); };
+      document.getElementById('next-month').onclick = () => { currentMonth++; if(currentMonth>11){currentMonth=0;currentYear++;} renderCalendar(); };
+      
+      fetchEvents();
+    <\/script>
+</body>
+</html>`;
+        }
+
+        function updateAll() {
+            const html = generateWidgetHTML();
+            document.getElementById('code-output').value = html;
+            const iframe = document.getElementById('preview-iframe');
+            iframe.srcdoc = html;
+        }
+
+        function copyCode() {
+            const copyText = document.getElementById("code-output");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Custom Widget Code Copied!");
+        }
+        
+        updateAll();
+    </script>
+</body>
+</html>

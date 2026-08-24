@@ -79,16 +79,29 @@ PAGE = """<!doctype html>
 """
 
 
+# How a folder should read on the homepage, where the folder name on its own is
+# too terse or too cryptic. The folder name is the URL and never changes -- this
+# only affects the label. Anything not listed here shows its folder name as-is.
+DISPLAY_NAMES = {
+    "ctt": "CareerTech Tools",
+}
+
+
+def label_for(name):
+    return DISPLAY_NAMES.get(name, name)
+
+
 def build(names):
     if not names:
         return '<p class="empty">Nothing deployed yet.</p>'
 
     items = []
     for name in names:
-        safe = html.escape(name, quote=True)
+        href = html.escape(name, quote=True)
+        label = html.escape(label_for(name), quote=True)
         items.append(
-            f'    <li><a class="card" href="/{safe}/">'
-            f'<span class="name">{safe}</span>'
+            f'    <li><a class="card" href="/{href}/">'
+            f'<span class="name">{label}</span>'
             f'<span class="arrow" aria-hidden="true">&rarr;</span></a></li>'
         )
     return "<ul>\n" + "\n".join(items) + "\n  </ul>"
@@ -100,10 +113,14 @@ def main():
     parser.add_argument("--out", required=True, help="where to write index.html")
     args = parser.parse_args()
 
+    # Sorted by the label a visitor actually sees, not the folder behind it.
     names = sorted(
-        line.strip()
-        for line in Path(args.list).read_text().splitlines()
-        if line.strip()
+        (
+            line.strip()
+            for line in Path(args.list).read_text().splitlines()
+            if line.strip()
+        ),
+        key=lambda n: label_for(n).lower(),
     )
 
     page = PAGE.format(

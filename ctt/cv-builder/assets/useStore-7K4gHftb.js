@@ -1,0 +1,1 @@
+import{x as e}from"./tanstack-form-b5a77Bm6.js";var t=(t,n=e=>e,r)=>e(t,n,{compare:r});export{t};

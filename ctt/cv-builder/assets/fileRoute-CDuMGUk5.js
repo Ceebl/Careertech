@@ -1,0 +1,1 @@
+import{n as e}from"./route-Bk-Ewjfb.js";function t(e){return new n(e,{silent:!0}).createRoute}var n=class{constructor(t,n){this.path=t,this.createRoute=t=>{let n=e(t);return n.isRoot=!1,n},this.silent=n?.silent}};export{t};
