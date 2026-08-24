@@ -4,25 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CV Action Verb Roulette</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         /* --- Core Brand Variables --- */
         :root {
-            --primary: #0069fa;
-            --primary-glow: rgba(0, 105, 250, 0.15);
-            --accent-green: #cfff75;
+            --primary: #496DDB;
+            --primary-glow: rgba(73, 109, 219, 0.15);
+            --accent-green: #C0BF47;
             --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --text-main: #1C1A22;
+            --text-muted: #635C6E;
+            --border-color: #E6E3EA;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: transparent; 
             margin: 0;
             padding: 20px 10px;
@@ -81,7 +77,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #f8fafc;
+            background: #F7F6F8;
         }
 
         .category-tag {
@@ -129,7 +125,7 @@
         /* Landed State - Applies the signature Sharp Green Highlight! */
         .landed .verb-display {
             background-color: var(--accent-green);
-            color: #0f172a;
+            color: #1C1A22;
             animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -194,8 +190,8 @@
             color: white;
             border: none;
             padding: 16px 45px;
-            border-radius: 40px;
-            font-family: 'Poppins', sans-serif;
+            border-radius: 8px;
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             font-size: 1.1rem;
             font-weight: 800;
             cursor: pointer;
@@ -208,7 +204,7 @@
         .spin-btn:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0, 105, 250, 0.3);
-            background: #0056cc;
+            background: #3355C4;
         }
 
         .spin-btn:disabled {

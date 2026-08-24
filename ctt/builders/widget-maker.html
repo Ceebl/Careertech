@@ -1,192 +1,151 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Widget Maker</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f9; 
-            margin: 0; 
-            padding: 0;
-        }
-        
-        /* --- Tool Banner with Spark --- */
-        .tool-header {
-            background-color: #0069fa; 
-            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png'), linear-gradient(135deg, #0069fa 0%, #004ecc 100%);
-            background-position: right bottom, center;
-            background-repeat: no-repeat, no-repeat;
-            background-size: contain, cover;
-            color: #ffffff;
-            padding: 30px 40px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .header-content { max-width: 1000px; margin: 0 auto; position: relative; z-index: 2; }
-        .tool-header h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; color: white; }
-        .header-divider { height: 2px; background-color: rgba(255,255,255,0.3); width: 100%; max-width: 650px; margin: 12px 0; }
-        .tool-header p { margin: 0; color: rgba(255,255,255,0.95); font-size: 1.05rem; }
-        
-        .header-actions { display: flex; align-items: center; gap: 15px; margin-top: 20px; }
-        .how-to-use-btn { background: #ffffff; color: #0069fa; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-        .how-to-use-btn:hover { background-color: #f8fafc; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15);}
-
-        /* --- Main Layout --- */
-        .workspace { 
-            display: flex; 
-            gap: 30px; 
-            padding: 30px; 
-            max-width: 1600px; 
-            margin: 0 auto; 
-            align-items: flex-start;
-        }
-        
-        .panel-left {
-            background: #ffffff; border-radius: 12px; padding: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0;
-            max-width: 50%;
-        }
-
-        .panel-right {
-            background: #ffffff; border-radius: 12px; padding: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1; border: 1px solid #e2e8f0;
-            position: sticky;
-            top: 30px; 
-            height: calc(100vh - 60px);
-            display: flex; flex-direction: column; box-sizing: border-box;
-        }
-        
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; font-size: 1.5rem;}
-        h3 { color: #3b82f6; margin-bottom: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-size: 1.2rem; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;}
-        
-        input[type="text"], textarea, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box; font-size: 0.95rem; }
-        textarea { resize: vertical; min-height: 80px; }
-        
-        .color-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; margin-bottom: 25px; }
-        .color-picker-wrapper { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-weight: 600; color: #475569;}
-        input[type="color"] { border: none; width: 32px; height: 32px; padding: 0; background: none; cursor: pointer; border-radius: 4px; }
-        
-        .item-card { background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 20px; margin-bottom: 20px; position: relative; }
-        .remove-btn { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #991b1b; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-        .add-btn { background: #f1f5f9; color: #0f172a; border: 2px dashed #94a3b8; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 25px; transition: all 0.2s; width: 100%; font-size: 1rem;}
-        .add-btn:hover { background: #e2e8f0; border-color: #64748b; }
-        
-        .preview-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px;}
-        .copy-btn { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: background 0.2s; display: flex; align-items: center; gap: 8px;}
-        .copy-btn:hover { background: #059669; }
-        
-        #preview-frame { flex-grow: 1; border: 1px dashed #cbd5e1; border-radius: 8px; background: #f1f5f9; width: 100%; min-height: 450px; }
-        #code-output { margin-top: 20px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 160px; flex-shrink: 0; font-size: 0.85rem; border: none; resize: vertical; }
-
-        /* --- Help Modal Styles --- */
-        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
-        .modal-content { background-color: #ffffff; padding: 40px; border-radius: 12px; max-width: 700px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; max-height: 85vh; display: flex; flex-direction: column; }
-        .modal-content h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
-        .close-modal { position: absolute; right: 25px; top: 25px; font-size: 1.8rem; font-weight: bold; color: #64748b; cursor: pointer; transition: color 0.2s; line-height: 1;}
-        .close-modal:hover { color: #0f172a; }
-        .modal-scroll-area { color: #475569; line-height: 1.7; overflow-y: auto; padding-right: 15px; font-size: 1.05rem; }
-        .modal-scroll-area h3 { margin-top: 25px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; color: #0f172a;}
-        .instruction-box { background: #f8fafc; border-left: 4px solid #3b82f6; padding: 15px 20px; margin: 15px 0; border-radius: 0 8px 8px 0; }
-        
-        .widget-selector { margin-bottom: 25px; padding: 20px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Universal Widget Maker</title>
+<meta name="description" content="Build accessible, interactive careers widgets without writing any code.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #preview-frame { width: 100%; min-height: 520px; border: 0; background: #fff;
+                   border-radius: var(--ct-radius-lg); }
+  .wm-item {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <header class="tool-header">
-        <div class="header-content">
-            <h1>Universal Headless Widget Maker</h1>
-            <div class="header-divider"></div>
-            <p>Build and customize accessible, interactive web components without touching a single line of code.</p>
-            <div class="header-actions">
-                <button class="how-to-use-btn" onclick="openHelpModal()">🌐 How to Host & Embed</button>
-            </div>
-        </div>
-    </header>
-
-    <div class="workspace">
-        <div class="panel-left">
-            <h2>🛠️ Configuration</h2>
-            
-            <div class="widget-selector">
-                <label style="margin-top:0;">1. Select Widget Type</label>
-                <select id="widget-type" onchange="switchWidget()">
-                    <option value="flashcards">STAR(R) Interview Flashcards</option>
-                    <option value="roulette">CV Action Verb Roulette</option>
-                    <option value="mythbuster">Mythbuster Quiz (True/False Cards)</option>
-                    <option value="dosanddonts">Do's and Don'ts Flip Grid</option>
-                </select>
-            </div>
-
-            <div id="theme-settings">
-                <label>2. Brand Colors (Auto-adjusts text for accessibility)</label>
-                <div class="color-group">
-                    <div class="color-picker-wrapper" title="Used for headers, buttons, and highlights">
-                        <input type="color" id="color-primary" value="#6366f1" oninput="updatePreview()"> Primary
-                    </div>
-                    <div class="color-picker-wrapper" title="Used for the main widget background">
-                        <input type="color" id="color-bg" value="#ffffff" oninput="updatePreview()"> Container BG
-                    </div>
-                    <div class="color-picker-wrapper" title="Used for the overall page background behind the widget">
-                        <input type="color" id="color-page-bg" value="#f8fafc" oninput="updatePreview()"> Page BG
-                    </div>
-                </div>
-            </div>
-
-            <div id="content-builder">
-                <label>3. Content Data</label>
-                <div id="items-container"></div>
-                <button class="add-btn" id="add-item-btn" onclick="addItem()">➕ Add Item</button>
-            </div>
-        </div>
-
-        <div class="panel-right">
-            <div class="preview-header">
-                <h2 style="border:none; margin:0; padding:0;">👀 Live Preview</h2>
-                <button class="copy-btn" onclick="copyHTMLCode()">📋 Copy Snippet</button>
-            </div>
-            
-            <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
-            
-            <label style="margin-top:20px;">Generated Headless Snippet (Save as .html file)</label>
-            <textarea id="code-output" readonly></textarea>
-        </div>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">WM</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Universal Widget Maker</h1>
+      <p class="ct-toolbar__sub">Interactive widgets, no code required.</p>
     </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
 
-    <div id="help-modal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeHelpModal()">×</span>
-            <h2>How to Host & Embed Your Widget</h2>
-            <div class="modal-scroll-area">
-                <p>Because these widgets use interactive JavaScript, they cannot be pasted directly into standard text editors (like a TargetConnect description box) which strip out code for security. <strong>You must host the generated code as an HTML file first.</strong></p>
-                
-                <h3>Option 1: The IT Department Route (Recommended)</h3>
-                <p>If you are building this for an official university or corporate platform, your IT team will have a server.</p>
-                <div class="instruction-box">
-                    <strong>1.</strong> Click "Copy Snippet" from this builder.<br>
-                    <strong>2.</strong> Open a plain text editor (like Notepad on Windows or TextEdit on Mac), paste the code, and save the file as <code>my-widget.html</code>.<br>
-                    <strong>3.</strong> Send this file to your IT or Web team and ask them to host it on the university/company server.<br>
-                    <strong>4.</strong> They will give you back a URL (e.g., <code>https://your-uni.edu/assets/my-widget.html</code>).<br>
-                    <strong>5.</strong> You can now embed that URL into TargetConnect (or SharePoint) using an iframe.
-                </div>
+<main class="ct-shell">
+  <div class="ct-workspace">
 
-                <h3>Option 2: The DIY GitHub Route (Free)</h3>
-                <p>If you don't have IT support, you can host it yourself for free using GitHub Pages.</p>
-                <div class="instruction-box">
-                    <strong>1.</strong> Create a free account on <a href="https://github.com" target="_blank" style="color:#0069fa;">GitHub</a>.<br>
-                    <strong>2.</strong> Create a new "Repository" (think of it as a folder) and name it something like <code>careers-tools</code>.<br>
-                    <strong>3.</strong> In your new repository, click <strong>Add file > Create new file</strong>.<br>
-                    <strong>4.</strong> Name the file <code>flashcards.html</code> and paste the code from this builder into the text box. Commit (save) the changes.<br>
-                    <strong>5.</strong> Go to the repository <strong>Settings</strong> > <strong>Pages</strong>.<br>
-                    <strong>6.</strong> Under "Source", select the <code>main</code> branch and click Save. Within a few minutes, GitHub will publish your file.<br>
-                    <strong>7.</strong> Your widget will be live at a URL looking like: <code>https://your-username.github.io/careers-tools/flashcards.html</code>
-                </div>
-            </div>
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How to host and embed
+        </button>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-field">
+          <label class="ct-label" for="widget-type">Widget type</label>
+          <select class="ct-select" id="widget-type">
+            <option value="flashcards">STAR(R) interview flashcards</option>
+            <option value="roulette">CV action verb roulette</option>
+            <option value="mythbuster">Mythbuster quiz</option>
+            <option value="dosanddonts">Do&rsquo;s and don&rsquo;ts flip grid</option>
+          </select>
         </div>
-    </div>
+
+        <div id="theme-settings">
+          <div class="ct-field">
+            <span class="ct-label">Brand colours</span>
+            <span class="ct-hint">Text colour is worked out automatically so it stays readable.</span>
+            <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+              <div class="ct-colour">
+                <input type="color" id="color-primary" value="#496DDB">
+                <label class="ct-colour__label" for="color-primary">Primary &mdash; headers, buttons, highlights</label>
+              </div>
+              <div class="ct-colour">
+                <input type="color" id="color-bg" value="#ffffff">
+                <label class="ct-colour__label" for="color-bg">Widget background</label>
+              </div>
+              <div class="ct-colour">
+                <input type="color" id="color-page-bg" value="#F7F6F8">
+                <label class="ct-colour__label" for="color-page-bg">Page background behind it</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div id="content-builder">
+          <h3>Content</h3>
+          <div id="items-container"></div>
+          <button class="ct-btn ct-btn--sm" type="button" id="add-item-btn" onclick="addItem()">Add item</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#code-output" data-ct-copy-label="Widget snippet copied">
+          Copy snippet
+        </button>
+      </div>
+
+      <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"
+              title="Preview of the generated widget"></iframe>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="code-output">Generated snippet</label>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
+        <span class="ct-hint">Save this as an .html file and host it, then embed that page.</span>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">Hosting and embedding your widget</h2>
+    <p>These widgets use JavaScript, so they cannot be pasted straight into a
+    TargetConnect description box &mdash; those editors strip code out for security.
+    The generated file has to be hosted somewhere first.</p>
+
+    <h3>Option 1: ask your IT team</h3>
+    <ol style="padding-left: 1.2rem; line-height: 1.8;">
+      <li>Click <b>Copy snippet</b>.</li>
+      <li>Paste it into Notepad or TextEdit and save as <span class="ct-mono">my-widget.html</span>.</li>
+      <li>Send the file to your IT or web team and ask them to host it.</li>
+      <li>They give you back a URL.</li>
+      <li>Embed that URL in TargetConnect or SharePoint using an iframe.</li>
+    </ol>
+
+    <h3>Option 2: GitHub Pages, free</h3>
+    <ol style="padding-left: 1.2rem; line-height: 1.8;">
+      <li>Create a free account at <a href="https://github.com" target="_blank" rel="noopener">github.com</a>.</li>
+      <li>Create a repository named something like <span class="ct-mono">careers-tools</span>.</li>
+      <li>Choose <b>Add file &rsaquo; Create new file</b>.</li>
+      <li>Name it <span class="ct-mono">flashcards.html</span>, paste your code in, and commit.</li>
+      <li>Go to <b>Settings &rsaquo; Pages</b>.</li>
+      <li>Under Source pick the <span class="ct-mono">main</span> branch and save.</li>
+      <li>A few minutes later it is live at
+      <span class="ct-mono">https://your-username.github.io/careers-tools/flashcards.html</span></li>
+    </ol>
+  </div>
+</div>
 
     <script>
         let currentWidget = 'flashcards';
@@ -273,48 +232,48 @@
             itemCount++;
             const container = document.getElementById('items-container');
             const card = document.createElement('div');
-            card.className = 'item-card';
+            card.className = 'item-card wm-item';   // item-card is what gatherData looks for
             card.id = `item-${itemCount}`;
             
-            let innerHTML = `<button class="remove-btn" onclick="removeItem(${itemCount})">Remove</button><h3>Item ${itemCount}</h3>`;
+            let innerHTML = `<div class="ct-row" style="justify-content: space-between;"><span class="ct-section-label">Item ${itemCount}</span><button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" onclick="removeItem(${itemCount})">Remove</button></div>`;
             
             if (currentWidget === 'flashcards') {
                 innerHTML += `
-                    <label>Topic Tag</label><input type="text" class="data-tag" value="${presetData.tag || ''}" placeholder="e.g. Teamwork" oninput="updatePreview()">
-                    <label>Interview Question</label><input type="text" class="data-q" value="${presetData.question || ''}" placeholder="Question text..." oninput="updatePreview()">
-                    <label>Situation (S)</label><input type="text" class="data-s" value="${presetData.s || ''}" oninput="updatePreview()">
-                    <label>Task (T)</label><input type="text" class="data-t" value="${presetData.t || ''}" oninput="updatePreview()">
-                    <label>Action (A)</label><input type="text" class="data-a" value="${presetData.a || ''}" oninput="updatePreview()">
-                    <label>Result (R)</label><input type="text" class="data-r1" value="${presetData.r || ''}" oninput="updatePreview()">
-                    <label>Reflection (R)</label><input type="text" class="data-r2" value="${presetData.r2 || ''}" oninput="updatePreview()">
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-tag">Topic Tag</label><input id="f${itemCount}-tag" type="text" class="data-tag ct-input" value="${presetData.tag || ''}" placeholder="e.g. Teamwork" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-q">Interview Question</label><input id="f${itemCount}-q" type="text" class="data-q ct-input" value="${presetData.question || ''}" placeholder="Question text..." oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-s">Situation (S)</label><input id="f${itemCount}-s" type="text" class="data-s ct-input" value="${presetData.s || ''}" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-t">Task (T)</label><input id="f${itemCount}-t" type="text" class="data-t ct-input" value="${presetData.t || ''}" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-a">Action (A)</label><input id="f${itemCount}-a" type="text" class="data-a ct-input" value="${presetData.a || ''}" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-r1">Result (R)</label><input id="f${itemCount}-r1" type="text" class="data-r1 ct-input" value="${presetData.r || ''}" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-r2">Reflection (R)</label><input id="f${itemCount}-r2" type="text" class="data-r2 ct-input" value="${presetData.r2 || ''}" oninput="updatePreview()"></div>
                 `;
             } else if (currentWidget === 'roulette') {
                 innerHTML += `
-                    <label>Category</label><input type="text" class="data-cat" value="${presetData.category || ''}" placeholder="e.g. Leadership" oninput="updatePreview()">
-                    <label>Action Verb</label><input type="text" class="data-verb" value="${presetData.verb || ''}" placeholder="e.g. Spearheaded" oninput="updatePreview()">
-                    <label>Example Sentence</label><textarea class="data-ex" placeholder="Sentence demonstrating the verb..." oninput="updatePreview()">${presetData.example || ''}</textarea>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-cat">Category</label><input id="f${itemCount}-cat" type="text" class="data-cat ct-input" value="${presetData.category || ''}" placeholder="e.g. Leadership" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-verb">Action Verb</label><input id="f${itemCount}-verb" type="text" class="data-verb ct-input" value="${presetData.verb || ''}" placeholder="e.g. Spearheaded" oninput="updatePreview()"></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-ex">Example Sentence</label><textarea id="f${itemCount}-ex" class="data-ex ct-textarea" placeholder="Sentence demonstrating the verb..." oninput="updatePreview()">${presetData.example || ''}</textarea></div>
                 `;
             } else if (currentWidget === 'mythbuster') {
                 const isFact = presetData.answer === 'fact';
                 innerHTML += `
-                    <label>Statement</label><textarea class="data-statement" placeholder="e.g. You must wear a suit to every interview." oninput="updatePreview()">${presetData.statement || ''}</textarea>
-                    <label>Is this a Fact or a Myth?</label>
-                    <select class="data-answer" onchange="updatePreview()">
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-statement">Statement</label><textarea id="f${itemCount}-statement" class="data-statement ct-textarea" placeholder="e.g. You must wear a suit to every interview." oninput="updatePreview()">${presetData.statement || ''}</textarea></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-answer">Is this a Fact or a Myth?</label>
+                    <select id="f${itemCount}-answer" class="data-answer ct-select" onchange="updatePreview()">
                         <option value="myth" ${!isFact ? 'selected' : ''}>Myth</option>
                         <option value="fact" ${isFact ? 'selected' : ''}>Fact</option>
-                    </select>
-                    <label>Explanation</label><textarea class="data-exp" placeholder="Explain why it's a fact or myth..." oninput="updatePreview()">${presetData.explanation || ''}</textarea>
+                    </select></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-exp">Explanation</label><textarea id="f${itemCount}-exp" class="data-exp ct-textarea" placeholder="Explain why it's a fact or myth..." oninput="updatePreview()">${presetData.explanation || ''}</textarea></div>
                 `;
             } else if (currentWidget === 'dosanddonts') {
                 const isDo = presetData.type === 'do';
                 innerHTML += `
-                    <label>Statement / Action</label><textarea class="data-statement" placeholder="e.g. Arrive 10 minutes early." oninput="updatePreview()">${presetData.statement || ''}</textarea>
-                    <label>Is this a DO or a DON'T?</label>
-                    <select class="data-type" onchange="updatePreview()">
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-statement">Statement / Action</label><textarea id="f${itemCount}-statement" class="data-statement ct-textarea" placeholder="e.g. Arrive 10 minutes early." oninput="updatePreview()">${presetData.statement || ''}</textarea></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-type">Is this a DO or a DON'T?</label>
+                    <select id="f${itemCount}-type" class="data-type ct-select" onchange="updatePreview()">
                         <option value="do" ${isDo ? 'selected' : ''}>DO (Good Practice)</option>
                         <option value="dont" ${!isDo ? 'selected' : ''}>DON'T (Mistake)</option>
-                    </select>
-                    <label>Explanation</label><textarea class="data-exp" placeholder="Why is this a good or bad idea?" oninput="updatePreview()">${presetData.explanation || ''}</textarea>
+                    </select></div>
+                    <div class="ct-field"><label class="ct-label" for="f${itemCount}-exp">Explanation</label><textarea id="f${itemCount}-exp" class="data-exp ct-textarea" placeholder="Why is this a good or bad idea?" oninput="updatePreview()">${presetData.explanation || ''}</textarea></div>
                 `;
             }
             card.innerHTML = innerHTML;
@@ -382,26 +341,11 @@
             }, 350); 
         }
 
-        function copyHTMLCode() {
-            const codeBox = document.getElementById('code-output');
-            codeBox.select();
-            document.execCommand('copy');
-            alert('Headless Snippet Copied! Follow the "How to Host" instructions to get this live.');
-        }
+        // Copying is handled by ct.js via data-ct-copy on the button.
 
-        function openHelpModal() {
-            document.getElementById('help-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden'; 
-        }
-        function closeHelpModal() {
-            document.getElementById('help-modal').style.display = 'none';
-            document.body.style.overflow = 'auto'; 
-        }
-        window.onclick = function(event) {
-            const modal = document.getElementById('help-modal');
-            if (event.target == modal) { closeHelpModal(); }
-        }
+        // The help modal is handled by ct.js via data-ct-modal-open / -close.
 
+        document.getElementById('widget-type').addEventListener('change', switchWidget);
         switchWidget();
 
     </script>

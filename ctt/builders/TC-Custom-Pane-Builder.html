@@ -1,257 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Mike's Amazing Custom Pane Maker</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f4f9; 
-            margin: 0; 
-            padding: 0;
-        }
-        
-        /* --- Tool Banner (Shortened) --- */
-        .tool-header {
-            background-color: #0069fa; 
-            background-image: url('https://cdn.groupgti.com/unlayer/ul8009g9t9i94007muadib91/1773744597981-Corner-Sparks-green.png');
-            background-position: right center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            color: #ffffff;
-            padding: 20px 40px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .header-content { max-width: 800px; }
-        .tool-header h1 { margin: 0; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; color: white; }
-        .header-divider { height: 2px; background-color: #ffffff; width: 100%; max-width: 650px; margin: 10px 0; }
-        .tool-header p { margin: 0; color: white; font-size: 1rem; }
-        
-        .header-actions { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
-        .badge { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        .how-to-use-btn { background: #ffffff; color: #0069fa; border: none; padding: 6px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.9rem; transition: background-color 0.2s, transform 0.1s; }
-        .how-to-use-btn:hover { background-color: #f1f5f9; transform: translateY(-1px); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Custom Pane Maker</title>
+<meta name="description" content="Build responsive, tag-targeted banners for TargetConnect custom panes.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #live-preview { display: block; background: var(--ct-n0); min-height: 240px; }
 
-        /* --- Main Layout (Scrollable with Sticky Preview) --- */
-        .workspace { 
-            display: flex; 
-            gap: 30px; 
-            padding: 25px; 
-            max-width: 1600px; 
-            margin: 0 auto; 
-            align-items: flex-start;
-        }
-        
-        .panel-left {
-            background: #ffffff; border-radius: 12px; padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; border: 1px solid #e2e8f0;
-        }
+  .segment-card {
+    position: relative;
+    display: grid; gap: var(--ct-sp-4);
+    padding: var(--ct-sp-4);
+    margin-bottom: var(--ct-sp-3);
+    background: var(--ct-surface-2);
+    border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius);
+  }
+  .segment-card h3 {
+    margin: 0; font-size: var(--ct-size-md); font-weight: 700;
+    padding-bottom: var(--ct-sp-2); border-bottom: 1px solid var(--ct-line);
+  }
+  .segment-card .row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: var(--ct-sp-3);
+  }
+  .segment-card .col { display: grid; gap: var(--ct-sp-2); align-content: start; }
+  .segment-card label { font-size: var(--ct-size-sm); font-weight: 500; color: var(--ct-text); }
+  .segment-card .hint, .hint { font-size: var(--ct-size-xs); color: var(--ct-text-soft); }
 
-        .panel-right {
-            background: #ffffff; border-radius: 12px; padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex: 1; border: 1px solid #e2e8f0;
-            position: sticky;
-            top: 25px; 
-            height: calc(100vh - 50px);
-            display: flex; flex-direction: column; box-sizing: border-box;
-        }
-        
-        h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        h3 { color: #3b82f6; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; font-size: 1.1rem; }
-        label { display: block; font-weight: 600; margin-top: 15px; margin-bottom: 5px; color: #334155; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;}
-        
-        input[type="text"], textarea, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; box-sizing: border-box; font-size: 0.95rem; }
-        
-        .color-group { display: flex; gap: 15px; align-items: center; margin-top: 5px; }
-        .color-picker-wrapper { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; min-width: 90px;}
-        input[type="color"] { border: none; width: 30px; height: 30px; padding: 0; background: none; cursor: pointer; }
-        
-        .segment-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 25px; position: relative; }
-        .remove-btn { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #991b1b; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
-        .add-segment-btn { background: #f1f5f9; color: #0f172a; border: 2px dashed #94a3b8; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; margin-bottom: 25px; transition: all 0.2s; width: 100%; }
-        .add-segment-btn:hover { background: #e2e8f0; border-color: #64748b; }
-        
-        .row { display: flex; gap: 15px; }
-        .col { flex: 1; }
-        
-        .preview-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;}
-        .copy-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; transition: background 0.2s;}
-        .copy-btn:hover { background: #2563eb; }
-        
-        #live-preview { flex-grow: 1; border: 1px dashed #cbd5e1; padding: 20px; border-radius: 8px; background: #f1f5f9; overflow-y: auto; }
-        #code-output { margin-top: 20px; background: #1e293b; color: #e2e8f0; font-family: monospace; padding: 15px; border-radius: 8px; height: 150px; flex-shrink: 0; font-size: 0.85rem; border: none; resize: vertical; }
-        .hint { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+  .segment-card input[type="text"],
+  .segment-card select,
+  .segment-card textarea {
+    width: 100%;
+    min-height: var(--ct-control-h);
+    padding: 0 var(--ct-sp-3);
+    font-family: inherit;
+    font-size: var(--ct-size-sm);
+    color: var(--ct-text);
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-line-strong);
+    border-radius: var(--ct-radius);
+  }
+  .segment-card textarea { padding: var(--ct-sp-2) var(--ct-sp-3); min-height: 72px; resize: vertical; line-height: 1.5; }
+  .segment-card input[type="text"]:focus,
+  .segment-card select:focus,
+  .segment-card textarea:focus {
+    outline: none; border-color: var(--ct-accent); box-shadow: 0 0 0 3px var(--ct-focus);
+  }
 
-        /* --- Help Modal Styles --- */
-        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
-        .modal-content { background-color: #ffffff; padding: 30px; border-radius: 12px; max-width: 650px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; max-height: 85vh; display: flex; flex-direction: column; }
-        .modal-content h2 { margin-top: 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-        .close-modal { position: absolute; right: 20px; top: 20px; font-size: 1.5rem; font-weight: bold; color: #64748b; cursor: pointer; transition: color 0.2s; }
-        .close-modal:hover { color: #0f172a; }
-        .modal-scroll-area { color: #475569; line-height: 1.7; overflow-y: auto; padding-right: 15px; font-size: 1rem; }
-        .modal-scroll-area h3 { margin-top: 20px; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; color: #0f172a;}
-        .modal-scroll-area ul { padding-left: 20px; margin: 10px 0; }
-        .modal-scroll-area li { margin-bottom: 10px; }
-        .modal-scroll-area code { background: #f1f5f9; padding: 2px 5px; border-radius: 4px; font-family: monospace; color: #3b82f6;}
-    </style>
+  .color-group { display: flex; flex-wrap: wrap; gap: var(--ct-sp-2); }
+  .color-picker-wrapper {
+    display: flex; align-items: center; gap: var(--ct-sp-2);
+    padding: var(--ct-sp-2);
+    font-size: var(--ct-size-xs); color: var(--ct-text-soft);
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius-sm);
+  }
+  .color-picker-wrapper input[type="color"] {
+    width: 34px; height: 28px; flex: none; padding: 0;
+    border: 1px solid var(--ct-line-strong); border-radius: 3px;
+    background: none; cursor: pointer;
+  }
+
+  .remove-btn, .add-segment-btn {
+    font-family: inherit; font-weight: 500; cursor: pointer;
+    border-radius: var(--ct-radius); border: 1px solid var(--ct-line-strong);
+    background: var(--ct-surface); color: var(--ct-text);
+  }
+  .remove-btn {
+    position: absolute; top: var(--ct-sp-3); right: var(--ct-sp-3);
+    padding: 4px 10px; font-size: var(--ct-size-xs);
+    color: var(--ct-danger-text); border-color: var(--ct-danger-line);
+    background: var(--ct-danger-tint);
+  }
+  .add-segment-btn { padding: 0 var(--ct-sp-4); min-height: var(--ct-control-h); font-size: var(--ct-size-md); }
+  .add-segment-btn:hover, .remove-btn:hover { filter: brightness(.97); }
+</style>
 </head>
-<body>
+<body class="ct-page">
 
-    <header class="tool-header">
-        <div class="header-content">
-            <h1>Mike's Amazing Custom Pane Maker</h1>
-            <div class="header-divider"></div>
-            <p>Generate responsive, targeted banners for TargetConnect using Velocity logic.</p>
-            <div class="header-actions">
-                <span class="badge">Universal Edition 2.0</span>
-                <button class="how-to-use-btn" onclick="openHelpModal()">📖 How to Use</button>
-            </div>
-        </div>
-    </header>
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">CP</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Custom Pane Maker</h1>
+      <p class="ct-toolbar__sub">Targeted banners for TargetConnect panes.</p>
+    </div>
+    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
 
-    <div class="workspace">
-        <div class="panel-left">
-            <h2>🛠️ Rule Builder</h2>
-            <div id="segments-container"></div>
-            <button class="add-segment-btn" onclick="addSegment()">➕ Add Another Audience Segment</button>
+<main class="ct-shell">
+  <div class="ct-workspace">
 
-            <div class="segment-card" style="border-color: #94a3b8; background: #f8fafc;">
-                <h3 style="color: #475569; border-color: #cbd5e1;">The Fallback (Default Banner)</h3>
-                <p style="font-size: 0.85rem; color: #64748b; margin: 0 0 15px 0;">What should users see if they don't match any tags above? Leave headline blank to show nothing.</p>
-                
-                <div class="row">
-                    <div class="col">
-                        <label>Template Style</label>
-                        <select id="fallback-template" onchange="updateUI('fallback')">
-                            <option value="notice">Important Notice</option>
-                            <option value="modern" selected>Modern</option>
-                            <option value="professional">Professional</option>
-                            <option value="gradient">Gradient</option>
-                            <option value="image">Custom Image Banner</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <label>Colors</label>
-                        <div class="color-group">
-                            <div class="color-picker-wrapper" title="Primary Theme Color">
-                                <input type="color" id="fallback-color1" value="#3b82f6" oninput="autoContrast('fallback')"> Primary
-                            </div>
-                            <div class="color-picker-wrapper" title="Background / Gradient Color">
-                                <input type="color" id="fallback-color2" value="#ffffff" oninput="autoContrast('fallback')"> <span id="fallback-c2-label">BG</span>
-                            </div>
-                            <div class="color-picker-wrapper" title="Text Color (Auto-calculates for readability)">
-                                <input type="color" id="fallback-text-color" value="#1e293b" oninput="generateCode()"> Text
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Rule builder</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How to use
+        </button>
+      </div>
 
-                <div class="row">
-                    <div class="col">
-                        <label>Optional Pill Callout</label>
-                        <input type="text" id="fallback-pill" placeholder="e.g., NEW FEATURE" oninput="generateCode()">
-                    </div>
-                    <div class="col">
-                        <label>Image URL (If Image Template selected)</label>
-                        <input type="text" id="fallback-image" placeholder="https://..." oninput="generateCode()">
-                    </div>
-                </div>
-
-                <label>Headline / Image Alt Text</label>
-                <input type="text" id="fallback-title" placeholder="e.g., Welcome to the Careers Hub" oninput="generateCode()">
-                <label>Text</label>
-                <textarea id="fallback-text" rows="2" placeholder="Contact our team for personalised support." oninput="generateCode()"></textarea>
-
-                <div class="row">
-                    <div class="col">
-                        <label>Btn 1</label>
-                        <input type="text" id="fallback-b1-txt" placeholder="Btn 1 Text" oninput="generateCode()">
-                        <select id="fallback-b1-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('fallback', 1)">
-                            <option value="">- No Link -</option>
-                            <option value="/leap/appointments.html">Appointments</option>
-                            <option value="/leap/events.html">Events</option>
-                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
-                            <option value="/leap/queries.html">Queries / Helpdesk</option>
-                            <option value="/leap/pathways/list.html">Pathways</option>
-                            <option value="custom">Custom URL...</option>
-                        </select>
-                        <input type="text" id="fallback-b1-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
-                    </div>
-                    <div class="col">
-                        <label>Btn 2</label>
-                        <input type="text" id="fallback-b2-txt" placeholder="Btn 2 Text" oninput="generateCode()">
-                        <select id="fallback-b2-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('fallback', 2)">
-                            <option value="">- No Link -</option>
-                            <option value="/leap/appointments.html">Appointments</option>
-                            <option value="/leap/events.html">Events</option>
-                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
-                            <option value="/leap/queries.html">Queries / Helpdesk</option>
-                            <option value="/leap/pathways/list.html">Pathways</option>
-                            <option value="custom">Custom URL...</option>
-                        </select>
-                        <input type="text" id="fallback-b2-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
-                    </div>
-                    <div class="col">
-                        <label>Btn 3</label>
-                        <input type="text" id="fallback-b3-txt" placeholder="Btn 3 Text" oninput="generateCode()">
-                        <select id="fallback-b3-link-type" style="margin-top:5px; font-size:0.85rem;" onchange="handleLinkChange('fallback', 3)">
-                            <option value="">- No Link -</option>
-                            <option value="/leap/appointments.html">Appointments</option>
-                            <option value="/leap/events.html">Events</option>
-                            <option value="/leap/jobs.html">Jobs / Vacancies</option>
-                            <option value="/leap/queries.html">Queries / Helpdesk</option>
-                            <option value="/leap/pathways/list.html">Pathways</option>
-                            <option value="custom">Custom URL...</option>
-                        </select>
-                        <input type="text" id="fallback-b3-url" placeholder="https://..." style="margin-top:5px; display:none;" oninput="generateCode()">
-                    </div>
-                </div>
-            </div>
+      <div class="ct-stack">
+        <div class="ct-note">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+          <div>Rules are checked top to bottom. The <b>first</b> one a student matches
+          is the only banner they see.</div>
         </div>
 
-        <div class="panel-right">
-            <div class="preview-header">
-                <h2 style="border:none; margin:0;">👀 Live Preview</h2>
-                <button class="copy-btn" onclick="copyVelocityCode()">📋 Copy Velocity Code</button>
+        <div id="segments-container"></div>
+        <button class="add-segment-btn" type="button" onclick="addSegment()">Add another audience segment</button>
+
+        <div class="segment-card" id="fallback-card">
+          <h3>The fallback banner</h3>
+          <p class="hint" style="margin:0">What students see if they match none of the
+          rules above. Leave the headline blank to show nothing at all.</p>
+
+          <div class="row">
+            <div class="col">
+              <label for="fallback-template">Template style</label>
+              <select id="fallback-template" onchange="updateUI('fallback')">
+                <option value="notice">Important notice</option>
+                <option value="modern" selected>Modern</option>
+                <option value="professional">Professional</option>
+                <option value="gradient">Gradient</option>
+                <option value="image">Custom image banner</option>
+              </select>
             </div>
-            <div id="live-preview"></div>
-            <label style="margin-top:20px;">Generated Code (Paste into TargetConnect HTML Editor)</label>
-            <textarea id="code-output" readonly></textarea>
+            <div class="col">
+              <label>Colours</label>
+              <div class="color-group">
+                <div class="color-picker-wrapper">
+                  <input type="color" id="fallback-color1" value="#496DDB" oninput="autoContrast('fallback')">
+                  <label for="fallback-color1">Primary</label>
+                </div>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="fallback-color2" value="#ffffff" oninput="autoContrast('fallback')">
+                  <label for="fallback-color2" id="fallback-c2-label">BG</label>
+                </div>
+                <div class="color-picker-wrapper">
+                  <input type="color" id="fallback-text-color" value="#1C1A22" oninput="generateCode()">
+                  <label for="fallback-text-color">Text</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label for="fallback-pill">Optional pill callout</label>
+              <input type="text" id="fallback-pill" placeholder="NEW FEATURE" oninput="generateCode()">
+            </div>
+            <div class="col">
+              <label for="fallback-image">Image URL</label>
+              <input type="text" id="fallback-image" placeholder="https://..." oninput="generateCode()">
+              <span class="hint">Only used by the image template.</span>
+            </div>
+          </div>
+
+          <div class="col">
+            <label for="fallback-title">Headline</label>
+            <input type="text" id="fallback-title" placeholder="Welcome to the Careers Hub" oninput="generateCode()">
+          </div>
+          <div class="col">
+            <label for="fallback-text">Text</label>
+            <textarea id="fallback-text" rows="2" placeholder="Contact our team for personalised support." oninput="generateCode()"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col">
+              <label for="fallback-b1-txt">Button 1</label>
+              <input type="text" id="fallback-b1-txt" placeholder="Button text" oninput="generateCode()">
+              <label class="ct-sr-only" for="fallback-b1-link-type">Button 1 destination</label>
+              <select id="fallback-b1-link-type" onchange="handleLinkChange('fallback', 1)">
+                <option value="">No link</option>
+                <option value="/leap/appointments.html">Appointments</option>
+                <option value="/leap/events.html">Events</option>
+                <option value="/leap/jobs.html">Jobs / vacancies</option>
+                <option value="/leap/queries.html">Queries / helpdesk</option>
+                <option value="/leap/pathways/list.html">Pathways</option>
+                <option value="custom">Custom URL...</option>
+              </select>
+              <label class="ct-sr-only" for="fallback-b1-url">Button 1 custom URL</label>
+              <input type="text" id="fallback-b1-url" placeholder="https://..." style="display:none;" oninput="generateCode()">
+            </div>
+            <div class="col">
+              <label for="fallback-b2-txt">Button 2</label>
+              <input type="text" id="fallback-b2-txt" placeholder="Button text" oninput="generateCode()">
+              <label class="ct-sr-only" for="fallback-b2-link-type">Button 2 destination</label>
+              <select id="fallback-b2-link-type" onchange="handleLinkChange('fallback', 2)">
+                <option value="">No link</option>
+                <option value="/leap/appointments.html">Appointments</option>
+                <option value="/leap/events.html">Events</option>
+                <option value="/leap/jobs.html">Jobs / vacancies</option>
+                <option value="/leap/queries.html">Queries / helpdesk</option>
+                <option value="/leap/pathways/list.html">Pathways</option>
+                <option value="custom">Custom URL...</option>
+              </select>
+              <label class="ct-sr-only" for="fallback-b2-url">Button 2 custom URL</label>
+              <input type="text" id="fallback-b2-url" placeholder="https://..." style="display:none;" oninput="generateCode()">
+            </div>
+            <div class="col">
+              <label for="fallback-b3-txt">Button 3</label>
+              <input type="text" id="fallback-b3-txt" placeholder="Button text" oninput="generateCode()">
+              <label class="ct-sr-only" for="fallback-b3-link-type">Button 3 destination</label>
+              <select id="fallback-b3-link-type" onchange="handleLinkChange('fallback', 3)">
+                <option value="">No link</option>
+                <option value="/leap/appointments.html">Appointments</option>
+                <option value="/leap/events.html">Events</option>
+                <option value="/leap/jobs.html">Jobs / vacancies</option>
+                <option value="/leap/queries.html">Queries / helpdesk</option>
+                <option value="/leap/pathways/list.html">Pathways</option>
+                <option value="custom">Custom URL...</option>
+              </select>
+              <label class="ct-sr-only" for="fallback-b3-url">Button 3 custom URL</label>
+              <input type="text" id="fallback-b3-url" placeholder="https://..." style="display:none;" oninput="generateCode()">
+            </div>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#code-output" data-ct-copy-label="Velocity code copied">
+          Copy Velocity code
+        </button>
+      </div>
+
+      <div class="ct-stage" id="live-preview"></div>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="code-output">Generated code</label>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
+        <span class="ct-hint">Paste this into the HTML editor of a TargetConnect custom pane.</span>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How to use the Custom Pane Maker</h2>
+    <p>This builds responsive HTML banners with Velocity logic, so students see
+    different content based on their tags. Every template uses table-based layout,
+    which stops TargetConnect&rsquo;s own CSS from breaking the buttons.</p>
+
+    <h3>1. Audience rules</h3>
+    <p>The tool writes <b>IF / ELSE IF / ELSE</b> logic. Rules are checked in order and
+    the first match wins.</p>
+    <ul style="line-height: 1.7;">
+      <li><b>Target tags</b> are comma separated and behave as AND. Typing
+      <span class="ct-mono">Business School, Final Year</span> means a student needs
+      <b>both</b> tags.</li>
+      <li>Aim for about 15 rule groups at most, for TargetConnect&rsquo;s sake.</li>
+    </ul>
+
+    <div class="ct-note ct-note--warning">
+      <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
+          </svg>
+      <div><b>Tag checks are case sensitive.</b> Type them exactly as they appear in
+      TargetConnect &mdash; <span class="ct-mono">Business</span> will not match
+      <span class="ct-mono">business</span>.</div>
     </div>
 
-    <div id="help-modal" class="modal-overlay">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeHelpModal()">✖</span>
-            <h2>Mike's Custom Pane Maker: Instructions</h2>
-            <div class="modal-scroll-area">
-                <p>This tool generates responsive HTML banners with smart Velocity logic to personalize student content in TargetConnect based on their tags. <strong>All templates use hardened, table-based layouts to prevent TargetConnect's global CSS from breaking your buttons!</strong></p>
-                <h3>1. Setting Audience Rules (AND logic)</h3>
-                <p>This tool creates <strong>IF / ELSE IF / ELSE</strong> logic. This means rules are checked in order from top to bottom. The <strong>first rule</strong> that matches the user's tags is the only one they will see.</p>
-                <ul>
-                    <li><strong>Target Tags:</strong> Type comma-separated tags into the field. This rule operates as an "AND" condition. For example, typing <code>Business School, Final Year</code> means the student must have <strong>ALL</strong> of those tags to see that banner.</li>
-                    <li><strong>Case-Sensitivity:</strong> <strong style="color: #d97706;">IMPORTANT: Tag checks are case-sensitive.</strong> Make sure you type them exactly as they appear in TargetConnect (e.g., 'Business' will not match 'business').</li>
-                    <li><strong>Limits:</strong> While the tool can handle many rules, try limiting to ~15 distinct groups for optimal system performance in TargetConnect.</li>
-                </ul>
-                <h3>2. Choosing a Style & Colors</h3>
-                <p>Five distinct templates are available from the dropdown. Colors will auto-adapt to templates, but you can control them:</p>
-                <ul>
-                    <li><strong>Modern:</strong> Clean box with soft shadows. Great for standard announcements.</li>
-                    <li><strong>Notice (Important Notice):</strong> Bold border styling for urgent deadlines.</li>
-                    <li><strong>Professional:</strong> Crisp, squared edges for corporate/academic announcements.</li>
-                    <li><strong>Gradient:</strong> Creates a sweep between Primary and Grad 2. A popular choice for a modern feel.</li>
-                    <li><strong>Custom Image Banner:</strong> Paste a link to a graphical banner in the "Image URL" field. The tool will render the image responsively and place buttons underneath. Note: Leave headline blank to only show the image.</li>
-                </ul>
-                <h3>3. The Fallback (Default Banner)</h3>
-                <p>The <strong>Fallback (Default Banner)</strong> card is the final condition. Students who do not have any tags matching the dynamic rules above will see this standard banner. Leave the headline field blank if you prefer that nothing is shown by default.</p>
-                <h3>4. Buttons & Links</h3>
-                <p>You can add up to three buttons. For each, use the dropdown to select common, internal TargetConnect "Leap Links" like Appointments, Events, or Jobs. Select "Custom URL..." to type in your own internal page or external website link.</p>
-                <h3>5. Getting and Using the Code</h3>
-                <p>Once your rules are set, look at the <strong>👀 Live Preview</strong>. Finally, click the <strong>📋 Copy Velocity Code</strong> button and paste the entire output into the HTML Editor pane within a Custom Pane configuration on the TargetConnect staff dashboard.</p>
-            </div>
-        </div>
-    </div>
+    <h3>2. Styles</h3>
+    <ul style="line-height: 1.7;">
+      <li><b>Modern</b> &mdash; clean box with a soft shadow, good for announcements.</li>
+      <li><b>Important notice</b> &mdash; bold border, for urgent deadlines.</li>
+      <li><b>Professional</b> &mdash; squared edges, for formal announcements.</li>
+      <li><b>Gradient</b> &mdash; a sweep between your two colours.</li>
+      <li><b>Custom image banner</b> &mdash; your own graphic, with buttons underneath.
+      Leave the headline blank to show only the image.</li>
+    </ul>
+
+    <h3>3. The fallback</h3>
+    <p>Students matching none of the rules above see the fallback banner. Leave its
+    headline blank if you would rather show nothing.</p>
+
+    <h3>4. Buttons and links</h3>
+    <p>Up to three buttons each. The dropdown covers the common internal TargetConnect
+    pages; choose <i>Custom URL</i> to enter your own.</p>
+
+    <h3>5. Using the code</h3>
+    <p>Check the preview, click <b>Copy Velocity code</b>, and paste the whole thing
+    into the HTML editor of a Custom Pane on the staff dashboard.</p>
+  </div>
+</div>
 
     <script>
         let segmentCount = 0;
@@ -585,36 +641,10 @@
             document.getElementById('code-output').value = vCode;
         }
 
-        function copyVelocityCode() {
-            const codeBox = document.getElementById('code-output');
-            codeBox.select();
-            document.execCommand('copy');
-            alert('Velocity Logic Copied! Ready for TargetConnect.');
-        }
+        // Copying is handled by ct.js via data-ct-copy on the button.
 
         // --- Help Modal Logic ---
-        function openHelpModal() {
-            document.getElementById('help-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden'; 
-        }
-        function closeHelpModal() {
-            document.getElementById('help-modal').style.display = 'none';
-            document.body.style.overflow = 'auto'; 
-        }
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                const modal = document.getElementById('help-modal');
-                if (modal.style.display === 'flex') {
-                    closeHelpModal();
-                }
-            }
-        });
-        document.addEventListener('click', (event) => {
-            const modal = document.getElementById('help-modal');
-            if (event.target === modal && modal.style.display === 'flex') {
-                closeHelpModal();
-            }
-        });
+        // The help modal is handled by ct.js via data-ct-modal-open / -close.
 
         // Initialize with default demo
         addSegment("Final Year", "Your Graduate Journey Starts Here", "Don't miss our exclusive fast-track application scheme.", "gradient", "#6366f1", "#ec4899", "#ffffff", "OPENS MONDAY");

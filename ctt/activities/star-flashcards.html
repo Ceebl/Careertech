@@ -4,24 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STAR(R) Method Flashcards Widget</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         /* --- Core Brand Variables --- */
         :root {
-            --primary: #0069fa;
-            --accent-green: #cfff75;
+            --primary: #496DDB;
+            --accent-green: #C0BF47;
             --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --text-main: #1C1A22;
+            --text-muted: #635C6E;
+            --border-color: #E6E3EA;
         }
 
         body { 
-            font-family: 'Poppins', sans-serif; 
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background-color: transparent; /* Allows seamless iframe embedding */
             margin: 0; 
             padding: 10px; 
@@ -84,7 +80,7 @@
         
         .question-text { font-size: 1.6rem; font-weight: 800; line-height: 1.4; margin: 0; color: var(--text-main); }
         
-        .flip-hint { 
+        .flip-hint { /* not a tag - square it off */ 
             position: absolute; 
             bottom: 30px; 
             font-size: 0.9rem; 
@@ -93,9 +89,9 @@
             display: flex; 
             align-items: center; 
             gap: 8px; 
-            background: #f1f5f9; 
+            background: #F0EEF2; 
             padding: 8px 16px; 
-            border-radius: 20px; 
+            border-radius: 8px; 
         }
 
         /* Back of Card */
@@ -135,11 +131,11 @@
         }
         
         /* Vibrant Letter Colors (Reinstated) */
-        .star-s { color: #0069fa; background: rgba(0, 105, 250, 0.15); }
-        .star-t { color: #f97316; background: #ffedd5; }
-        .star-a { color: #ec4899; background: #fce7f3; }
-        .star-r1 { color: #16a34a; background: #dcfce7; }
-        .star-r2 { color: #9333ea; background: #f3e8ff; } 
+        .star-s { color: #496DDB; background: rgba(73, 109, 219, 0.15); }
+        .star-t { color: #B4610F; background: #FDF1E4; }
+        .star-a { color: #B04A50; background: #FBEDEE; }
+        .star-r1 { color: #6B6A21; background: #F7F7E4; }
+        .star-r2 { color: #8E6478; background: #F6F0F3; } 
 
         .star-content { font-size: 0.95rem; line-height: 1.5; margin-top: 4px; color: var(--text-main); }
         .star-content strong { display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.5px;}
@@ -147,7 +143,7 @@
         /* Custom Scrollbar for the back */
         .card-face--back::-webkit-scrollbar { width: 6px; }
         .card-face--back::-webkit-scrollbar-track { background: transparent; }
-        .card-face--back::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .card-face--back::-webkit-scrollbar-thumb { background: #DAD5E0; border-radius: 10px; }
 
         /* --- Controls --- */
         .controls { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
@@ -158,8 +154,8 @@
             border: 2px solid var(--border-color);
             color: var(--text-main);
             padding: 10px 20px;
-            border-radius: 30px;
-            font-family: 'Poppins', sans-serif;
+            border-radius: 8px;
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             font-weight: 700;
             font-size: 0.9rem;
             cursor: pointer;
@@ -168,7 +164,7 @@
 
         .btn-outline:hover:not(:disabled) {
             border-color: var(--text-main);
-            background: #f8fafc;
+            background: #F7F6F8;
             transform: translateY(-2px);
         }
 

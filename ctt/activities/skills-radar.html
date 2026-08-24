@@ -8,18 +8,18 @@
     <style>
         /* --- Modern CSS Variables & Resets --- */
         :root {
-            --primary: #0069fa;
-            --primary-glow: rgba(0, 105, 250, 0.15);
-            --accent: #ff7533;
-            --accent-glow: rgba(255, 117, 51, 0.15);
-            --bg-color: #f8fafc;
+            --primary: #496DDB;
+            --primary-glow: rgba(73, 109, 219, 0.15);
+            --accent: #EE8434;
+            --accent-glow: rgba(238, 132, 52, 0.15);
+            --bg-color: #F7F6F8;
             --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
+            --text-main: #1C1A22;
+            --text-muted: #635C6E;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: transparent;
             margin: 0;
             padding: 20px 10px;
@@ -32,7 +32,7 @@
             background: var(--card-bg);
             border-radius: 16px;
             box-shadow: 0 4px 25px rgba(0,0,0,0.04);
-            border: 1px solid #e2e8f0;
+            border: 1px solid #E6E3EA;
             padding: 40px;
             box-sizing: border-box;
         }
@@ -40,7 +40,7 @@
         /* --- Header & Controls --- */
         .app-header {
             margin-bottom: 30px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #E6E3EA;
             padding-bottom: 20px;
         }
 
@@ -63,10 +63,10 @@
             flex-wrap: wrap;
             gap: 30px;
             margin-bottom: 40px;
-            background: #f8fafc;
+            background: #F7F6F8;
             padding: 20px 25px;
             border-radius: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #E6E3EA;
         }
 
         .control-group {
@@ -94,7 +94,7 @@
             background-repeat: no-repeat;
             background-position: right 15px top 50%;
             background-size: 12px auto;
-            border: 2px solid #cbd5e1;
+            border: 2px solid #DAD5E0;
             padding: 14px 40px 14px 15px;
             border-radius: 8px;
             font-size: 1rem;
@@ -126,7 +126,7 @@
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #cbd5e1;
+            background-color: #DAD5E0;
             transition: .4s;
             border-radius: 34px;
         }
@@ -199,7 +199,7 @@
             width: 100%;
             height: 8px;
             cursor: pointer;
-            background: #e2e8f0;
+            background: #E6E3EA;
             border-radius: 4px;
         }
         input[type=range]::-webkit-slider-thumb {
@@ -230,7 +230,7 @@
         .insights-section {
             display: none; 
             margin-top: 50px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #E6E3EA;
             padding-top: 40px;
             animation: fadeIn 0.4s ease-out;
         }
@@ -258,14 +258,14 @@
         }
 
         .insight-card {
-            background: #f8fafc;
+            background: #F7F6F8;
             border-left: 4px solid var(--accent);
             padding: 20px;
             border-radius: 0 8px 8px 0;
             margin-bottom: 15px;
-            border-top: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #E6E3EA;
+            border-right: 1px solid #E6E3EA;
+            border-bottom: 1px solid #E6E3EA;
         }
 
         .insight-title {
@@ -295,8 +295,8 @@
 
         /* --- The Sources Box --- */
         .sources-box {
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
+            background: #F0EEF2;
+            border: 1px solid #E6E3EA;
             border-radius: 8px;
             padding: 25px;
             margin-top: 35px;
@@ -304,7 +304,7 @@
 
         .sources-box h4 {
             margin: 0 0 15px 0;
-            color: #334155;
+            color: #4A4454;
             font-size: 1.1rem;
             display: flex;
             align-items: center;
@@ -657,17 +657,17 @@
                         r: {
                             min: 0, max: 10,
                             ticks: { display: false }, 
-                            grid: { color: '#e2e8f0' },
-                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#E6E3EA' },
+                            angleLines: { color: '#E6E3EA' },
                             pointLabels: {
                                 font: { size: 12, family: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', weight: '700' },
-                                color: '#0f172a'
+                                color: '#1C1A22'
                             }
                         }
                     },
                     plugins: {
                         legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: {family: '-apple-system, sans-serif', weight: '600'} } },
-                        tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 8 }
+                        tooltip: { backgroundColor: '#302C38', padding: 12, cornerRadius: 8 }
                     },
                     animation: { duration: 300, easing: 'easeOutQuart' } 
                 }
