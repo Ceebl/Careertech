@@ -130,6 +130,14 @@
           <span class="ct-hint">The cards live inside the link itself, so pasting one back in brings all its content with it.</span>
         </div>
 
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="runtime-base">Address of the flip card page</label>
+          <input class="ct-input ct-input--mono" id="runtime-base" type="text" spellcheck="false">
+          <span class="ct-hint" id="runtime-hint">Working out where the flip card page is&hellip;</span>
+        </div>
+
       </div>
     </section>
 
@@ -206,6 +214,27 @@
       read everything in it.</li>
     </ul>
 
+    <h3>Running your own copy</h3>
+    <p>Both this builder and the flip card page are plain HTML files with no server
+    behind them, so they will sit on any hosting that serves static files &mdash;
+    Kinsta, GitHub Pages, SharePoint, a university web server, anything. There is
+    nothing to install and no database.</p>
+
+    <p>Copy this folder structure across, keeping the shape:</p>
+    <pre class="ct-codebox" style="white-space: pre; padding: var(--ct-sp-3);">brand/ct.css
+brand/ct.js
+builders/flipcard-link-builder.html
+w/flipcards/index.html</pre>
+
+    <p>The builder looks for a copy of the flip card page alongside itself when it
+    loads. If it finds one, your links point at your own hosting and you are entirely
+    independent. If it does not, they point back at the original. Either way the
+    address it settled on is shown at the bottom of the settings, and you can type a
+    different one in.</p>
+
+    <p>If you only want the flip card page and not the builder, that single file is
+    all you need &mdash; build links here and change the address to yours.</p>
+
     <h3>Making it fit the page</h3>
     <p>An embedded frame cannot grow to fit its contents on its own, so the embed code
     sets a fixed height based on your card height. If your web team can add a small script
@@ -216,10 +245,47 @@
 
 <script>
     /* ====================================================================
-       Where the hosted flip card page lives. Change this if it moves.
+       Where the flip card page lives.
+
+       This builder is meant to be copied onto other people's hosting, so
+       it works this out rather than assuming. If a copy of the flip card
+       page is sitting next to it in the usual layout, that copy is used,
+       which keeps a copied folder entirely self-sufficient. If not, links
+       point back at the original.
     ==================================================================== */
-    const PUBLIC_BASE = 'https://emaitch.co.uk/ctt/w/flipcards/';
-    const PREVIEW_BASE = '../w/flipcards/';
+    const FALLBACK_BASE = 'https://emaitch.co.uk/ctt/w/flipcards/';
+
+    async function resolveRuntimeBase() {
+        const field = document.getElementById('runtime-base');
+        const hint = document.getElementById('runtime-hint');
+
+        if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+            field.value = FALLBACK_BASE;
+            hint.textContent = 'This page is not being served by a web server, so links point at ' +
+                               'the original copy. Put it on hosting to use your own.';
+            return;
+        }
+
+        let candidate;
+        try {
+            candidate = new URL('../w/flipcards/', location.href).href;
+        } catch (error) {
+            field.value = FALLBACK_BASE;
+            return;
+        }
+
+        try {
+            const response = await fetch(candidate, { method: 'HEAD' });
+            if (!response.ok) { throw new Error('not-there'); }
+            field.value = candidate;
+            hint.textContent = 'Found a copy of the flip card page alongside this builder, so your ' +
+                               'links will point at your own hosting.';
+        } catch (error) {
+            field.value = FALLBACK_BASE;
+            hint.textContent = 'No copy of the flip card page found alongside this builder, so links ' +
+                               'point at the original. Copy the w/flipcards folder across to use your own.';
+        }
+    }
 
     const STAR_FIELDS = [
         { key: 's',  label: 'Situation (S)' },
@@ -391,6 +457,12 @@
         }
     }
 
+    function currentBase() {
+        let base = document.getElementById('runtime-base').value.trim() || FALLBACK_BASE;
+        base = base.split('#')[0].split('?')[0];
+        return base.endsWith('/') ? base : base + '/';
+    }
+
     async function updateOutput() {
         const payload = buildPayload();
         const embedOutput = document.getElementById('embed-output');
@@ -405,7 +477,8 @@
         }
 
         const fragment = await encodePayload(payload);
-        const link = PUBLIC_BASE + '#' + fragment;
+        const base = currentBase();
+        const link = base + '#' + fragment;
         const frameHeight = payload.theme.height + 110;
         const title = payload.title || 'Flip cards';
 
@@ -422,7 +495,7 @@
         previewTimeout = setTimeout(function () {
             // A hash change alone will not reload a frame, so nudge the query too.
             document.getElementById('preview-frame').src =
-                PREVIEW_BASE + '?r=' + Date.now() + '#' + fragment;
+                base + '?r=' + Date.now() + '#' + fragment;
         }, 350);
     }
 
@@ -546,7 +619,8 @@
     });
     document.getElementById('items-container').addEventListener('input', updateOutput);
 
-    ['deck-title', 'flip-hint', 'color-primary', 'color-edge', 'color-card', 'color-page']
+    ['deck-title', 'flip-hint', 'color-primary', 'color-edge', 'color-card', 'color-page',
+     'runtime-base']
         .forEach(function (id) {
             document.getElementById(id).addEventListener('input', updateOutput);
         });
@@ -554,7 +628,7 @@
     syncPageBg();
     syncHeightReadout();
     loadSampleCards();
-    updateOutput();
+    resolveRuntimeBase().then(updateOutput);
 </script>
 </body>
 </html>
