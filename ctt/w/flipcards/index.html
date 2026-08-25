@@ -274,15 +274,20 @@
         return JSON.parse(new TextDecoder().decode(bytes));
     }
 
+    // Wrapped in a resolved promise so that a damaged link, which makes atob
+    // throw where it stands, comes back as a rejection the catch below can
+    // turn into a message rather than escaping as an uncaught error.
     function readPayload() {
-        var params = paramsFromLocation();
-        if (params.has('d')) {
-            return inflate(bytesFromBase64url(params.get('d'))).then(decodeJson);
-        }
-        if (params.has('j')) {
-            return Promise.resolve(decodeJson(bytesFromBase64url(params.get('j'))));
-        }
-        return Promise.resolve(null);
+        return Promise.resolve().then(function () {
+            var params = paramsFromLocation();
+            if (params.has('d')) {
+                return inflate(bytesFromBase64url(params.get('d'))).then(decodeJson);
+            }
+            if (params.has('j')) {
+                return decodeJson(bytesFromBase64url(params.get('j')));
+            }
+            return null;
+        });
     }
 
     /* --- Tidying up whatever the link contained ---------------------- */

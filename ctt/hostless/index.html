@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hostless Widgets</title>
+<meta name="description" content="Embeddable widgets for careers services with nothing to host. The content travels in the link.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* This page only. */
+  .hl-hero { max-width: 46rem; padding: var(--ct-sp-10) 0 var(--ct-sp-8); }
+
+  .hl-how {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--ct-sp-4); margin-top: var(--ct-sp-8);
+    padding: var(--ct-sp-5); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius-lg); background: var(--ct-surface);
+  }
+  .hl-step__n {
+    display: block; font-size: var(--ct-size-sm); font-weight: 800;
+    color: var(--ct-accent-text); margin-bottom: var(--ct-sp-1);
+  }
+  .hl-step__t { display: block; font-weight: 700; margin-bottom: 2px; }
+  .hl-step__d { display: block; font-size: var(--ct-size-sm); color: var(--ct-text-soft); line-height: 1.5; }
+
+  .hl-list { display: grid; gap: var(--ct-sp-6); margin-top: var(--ct-sp-6); }
+
+  .hl-tool { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; overflow: hidden; }
+  /* The demo column is capped at roughly the width the widget itself uses, so
+     the text column takes whatever is left rather than the widget floating in
+     a wide empty panel. */
+  @media (min-width: 900px) {
+    .hl-tool { grid-template-columns: minmax(0, 1fr) minmax(0, 44rem); }
+  }
+
+  .hl-tool__text { padding: var(--ct-sp-6); display: flex; flex-direction: column; }
+  .hl-tool__name { font-size: var(--ct-size-xl); letter-spacing: -0.01em; margin: 0 0 var(--ct-sp-2); }
+  .hl-tool__what { color: var(--ct-text-soft); line-height: 1.6; margin: 0 0 var(--ct-sp-4); }
+
+  .hl-uses { list-style: none; padding: 0; margin: 0 0 var(--ct-sp-5); display: grid; gap: var(--ct-sp-2); }
+  .hl-uses li {
+    position: relative; padding-left: 1.1rem;
+    font-size: var(--ct-size-sm); color: var(--ct-text-soft); line-height: 1.5;
+  }
+  .hl-uses li::before {
+    content: ""; position: absolute; left: 0; top: 0.55em;
+    width: 5px; height: 5px; border-radius: 1px; background: var(--ct-accent);
+  }
+
+  .hl-tool__actions { margin-top: auto; display: flex; flex-wrap: wrap; gap: var(--ct-sp-2); }
+
+  .hl-demo {
+    border-top: 1px solid var(--ct-line);
+    background: var(--ct-sunken);
+    padding: var(--ct-sp-4);
+    display: flex; flex-direction: column;
+  }
+  @media (min-width: 900px) {
+    .hl-demo { border-top: 0; border-left: 1px solid var(--ct-line); }
+  }
+  .hl-demo__label {
+    font-size: var(--ct-size-xs); font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--ct-text-faint); margin-bottom: var(--ct-sp-2);
+  }
+  .hl-demo iframe { width: 100%; border: 0; background: transparent; display: block; }
+  .hl-demo__fallback { font-size: var(--ct-size-sm); color: var(--ct-text-soft); }
+
+  .hl-next { margin-top: var(--ct-sp-10); }
+  .hl-next ul { columns: 2; column-gap: var(--ct-sp-6); padding-left: 1.1rem; margin: var(--ct-sp-3) 0 0; }
+  .hl-next li { font-size: var(--ct-size-sm); color: var(--ct-text-soft); line-height: 1.9; break-inside: avoid; }
+  @media (max-width: 600px) { .hl-next ul { columns: 1; } }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">CT</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Hostless Widgets</h1>
+      <p class="ct-toolbar__sub">Interactive activities with nothing to upload.</p>
+    </div>
+    <a class="ct-btn ct-btn--sm" href="../">All tools</a>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+
+  <section class="hl-hero">
+    <h2 class="ct-display">Interactive activities when IT <span class="ct-hl">will not let you host files</span></h2>
+    <p class="ct-muted" style="font-size: var(--ct-size-lg); max-width: 34rem;">
+      Plenty of careers teams cannot upload anything to a web server. These widgets
+      remove that step. The page is hosted here once; everything you write travels
+      inside the link. You paste an iframe and you are done.
+    </p>
+
+    <div class="hl-how">
+      <div class="hl-step">
+        <span class="hl-step__n">1</span>
+        <span class="hl-step__t">Write your content</span>
+        <span class="hl-step__d">In the builder, with a live preview beside you.</span>
+      </div>
+      <div class="hl-step">
+        <span class="hl-step__n">2</span>
+        <span class="hl-step__t">Copy the embed code</span>
+        <span class="hl-step__d">One iframe tag, already sized.</span>
+      </div>
+      <div class="hl-step">
+        <span class="hl-step__n">3</span>
+        <span class="hl-step__t">Paste it anywhere</span>
+        <span class="hl-step__d">TargetConnect, SharePoint, Canvas, Blackboard, Moodle.</span>
+      </div>
+    </div>
+
+    <p class="ct-small ct-muted" style="margin-top: var(--ct-sp-4); max-width: 34rem;">
+      Your content sits after the <span class="ct-mono">#</span> in the link, and that part
+      never leaves the browser &mdash; it is never sent to this server and never appears in
+      any log here. The trade is that the embed needs this site to be up. If that is a
+      problem, take a copy: every file is plain HTML that will sit on any static hosting.
+    </p>
+  </section>
+
+  <div class="hl-list" id="tools">
+
+    <article class="ct-card ct-card--flush hl-tool">
+      <div class="hl-tool__text">
+        <h3 class="hl-tool__name">Guess &amp; Reveal</h3>
+        <p class="hl-tool__what">
+          Students commit to an answer before they see the truth. The gap between what
+          they expected and what is real is what makes the point stick &mdash; far better
+          than simply telling them.
+        </p>
+        <ul class="hl-uses">
+          <li>Myth-busting: the hidden job market, application volumes, salary reality</li>
+          <li>Judging a sample interview answer, CV line or email out of five</li>
+          <li>Showing what last year&rsquo;s cohort said, from your own survey data</li>
+        </ul>
+        <div class="hl-tool__actions">
+          <a class="ct-btn ct-btn--primary" href="../builders/reveal-link-builder.html">Build it</a>
+          <a class="ct-btn" href="#" data-open="reveal" target="_blank" rel="noopener">Open the example</a>
+        </div>
+      </div>
+      <div class="hl-demo">
+        <span class="hl-demo__label">Live example &mdash; try it</span>
+        <iframe data-demo="reveal" height="392" title="Example guess and reveal activity" loading="lazy"></iframe>
+        <p class="hl-demo__fallback" data-fallback="reveal" hidden></p>
+      </div>
+    </article>
+
+    <article class="ct-card ct-card--flush hl-tool">
+      <div class="hl-tool__text">
+        <h3 class="hl-tool__name">Flip Cards</h3>
+        <p class="hl-tool__what">
+          A deck of cards with a prompt on the front and the answer on the back. The
+          quiet workhorse: it turns a wall of guidance text into something students
+          actually click through.
+        </p>
+        <ul class="hl-uses">
+          <li>Interview questions with a worked STAR(R) answer on the back</li>
+          <li>Common questions about placements, applications or visas</li>
+          <li>Jargon and what it actually means</li>
+        </ul>
+        <div class="hl-tool__actions">
+          <a class="ct-btn ct-btn--primary" href="../builders/flipcard-link-builder.html">Build it</a>
+          <a class="ct-btn" href="#" data-open="flipcards" target="_blank" rel="noopener">Open the example</a>
+        </div>
+      </div>
+      <div class="hl-demo">
+        <span class="hl-demo__label">Live example &mdash; try it</span>
+        <iframe data-demo="flipcards" height="392" title="Example flip card deck" loading="lazy"></iframe>
+        <p class="hl-demo__fallback" data-fallback="flipcards" hidden></p>
+      </div>
+    </article>
+
+  </div>
+
+  <section class="hl-next">
+    <h2>Being built next</h2>
+    <p class="ct-muted ct-small" style="max-width: 40rem;">
+      Same pattern, same three steps. Nothing here is ready yet &mdash; it is listed so you
+      know what is coming rather than building a workaround for it.
+    </p>
+    <ul>
+      <li>Card sort &mdash; rank or bucket a set of cards</li>
+      <li>Scenario tree &mdash; choices with consequences</li>
+      <li>Self-assessment sliders &mdash; rate yourself, get a profile</li>
+      <li>Action plan builder &mdash; prompts in, formatted text out</li>
+      <li>Checklist &mdash; tickable prep list with a progress bar</li>
+      <li>Step-by-step timeline &mdash; one panel at a time</li>
+    </ul>
+  </section>
+
+  <footer style="margin-top: var(--ct-sp-12); padding-top: var(--ct-sp-5); border-top: 1px solid var(--ct-line);">
+    <p class="ct-small ct-muted" style="max-width: 44rem;">
+      <b>Using these in a TargetConnect Pathway.</b> Nothing is sent anywhere, so a widget
+      cannot report a score back on its own. Where it matters, turn on the option that gives
+      students their answers as text to copy, and pair the embed with a reflection or evidence
+      field in the same activity. TargetConnect does the recording; the widget does the thinking.
+    </p>
+    <p class="ct-small ct-muted" style="max-width: 44rem;">
+      Take these, change them, use them. Every builder and every widget page is a single
+      HTML file with no server behind it.
+    </p>
+  </footer>
+</main>
+
+<script>
+    /* ====================================================================
+       The examples below are built the same way a real link is: the demo
+       content is packed into a fragment at load time and handed to the
+       widget page in an iframe. Nothing is pre-baked, so an example that
+       renders here proves the widget works on this hosting.
+    ==================================================================== */
+
+    const FALLBACK_ORIGIN = 'https://emaitch.co.uk/ctt/w/';
+
+    const DEMOS = {
+        reveal: {
+            v: 1,
+            title: 'Graduate job myths',
+            intro: 'Three quick questions. Have a guess before you see the answer — being ' +
+                   'wrong is the point, it is what makes the real number stick.',
+            opts: { verdict: true, summary: true, copyOut: false },
+            theme: { primary: '#496DDB', cardBg: '#ffffff', pageBg: 'transparent', height: 368 },
+            items: [
+                {
+                    type: 'number',
+                    tag: 'The hidden job market',
+                    q: 'What share of graduate vacancies are never publicly advertised?',
+                    min: 0, max: 100, step: 5, start: 50, answer: 70, tol: 10, suffix: '%',
+                    reveal: 'Estimates put it around 70%. Most roles are filled through referrals, ' +
+                            'speculative approaches and repeat placements before anyone writes an advert.\n\n' +
+                            'Time spent talking to people in the sector is not a distraction from the ' +
+                            'job search. For most of the market, it is the job search.',
+                    source: 'Widely cited industry estimate; treat as indicative'
+                },
+                {
+                    type: 'choice',
+                    tag: 'CVs',
+                    q: 'How long does a recruiter spend on a CV the first time they see it?',
+                    options: ['About 7 seconds', 'About 30 seconds', 'About 2 minutes', 'About 5 minutes'],
+                    answer: 0,
+                    pct: [22, 41, 27, 10],
+                    reveal: 'Around seven seconds on the first pass. They are not reading it, they ' +
+                            'are scanning for a reason to keep it.\n\n' +
+                            'That is why the top third of page one has to do the heavy lifting.'
+                },
+                {
+                    type: 'scale',
+                    tag: 'Interview answers',
+                    q: 'How strong is this answer to "What is your greatest weakness?"',
+                    stim: '"I would say I am a bit of a perfectionist. I really care about getting ' +
+                          'things right, so sometimes I spend longer on things than I need to."',
+                    labels: ['Poor', 'Weak', 'OK', 'Good', 'Excellent'],
+                    answer: 1, tol: 1,
+                    reveal: 'A two. It is the most predictable answer in the room, and it dodges the ' +
+                            'question by dressing a strength up as a flaw.\n\n' +
+                            'Name a real limitation, then spend most of the answer on what you did ' +
+                            'about it and what changed.'
+                }
+            ]
+        },
+
+        flipcards: {
+            v: 1,
+            mode: 'simple',
+            title: 'Application questions',
+            hint: 'Tap to reveal the answer',
+            theme: { primary: '#496DDB', frontEdge: '#AE8799', cardBg: '#ffffff',
+                     pageBg: 'transparent', height: 300 },
+            cards: [
+                {
+                    tag: 'Applications',
+                    question: 'How long should a graduate CV be?',
+                    backTitle: 'The short answer',
+                    back: 'Two pages at most, and one is often stronger.\n\n' +
+                          'Recruiters spend seconds on a first pass, so what wins an interview needs ' +
+                          'to be near the top. Anything you would not want to be asked about does not ' +
+                          'need to be there at all.'
+                },
+                {
+                    tag: 'Cover letters',
+                    question: 'Does anyone actually read cover letters?',
+                    backTitle: 'Sometimes — and that is the point',
+                    back: 'Many are skimmed. Some are never opened. A few decide the shortlist.\n\n' +
+                          'You cannot tell which is which in advance, so the sensible move is a short, ' +
+                          'specific letter that would survive being the only thing they read.'
+                },
+                {
+                    tag: 'Speculative applications',
+                    question: 'Is it worth contacting an employer with no advertised vacancy?',
+                    backTitle: 'Yes, and it is less competitive',
+                    back: 'Most vacancies are filled before they are advertised, so a well-judged ' +
+                          'approach lands in a much emptier inbox than a job advert does.\n\n' +
+                          'Be specific about what you want and what you bring. A vague "any ' +
+                          'opportunities?" gets a vague answer.'
+                }
+            ]
+        }
+    };
+
+    function bytesToBase64url(bytes) {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) { binary += String.fromCharCode(bytes[i]); }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    async function encodePayload(payload) {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        if (typeof CompressionStream === 'undefined') {
+            return 'j=' + bytesToBase64url(bytes);
+        }
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        const packed = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+        return 'd=' + bytesToBase64url(packed);
+    }
+
+    /* Same rule as the builders: use a copy sitting alongside this page if
+       there is one, so a copied folder works on any host, and fall back to
+       the original if not. */
+    async function resolveBase(slug) {
+        if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+            return FALLBACK_ORIGIN + slug + '/';
+        }
+        let candidate;
+        try {
+            candidate = new URL('../w/' + slug + '/', location.href).href;
+        } catch (error) {
+            return FALLBACK_ORIGIN + slug + '/';
+        }
+        try {
+            const response = await fetch(candidate, { method: 'HEAD' });
+            if (!response.ok) { throw new Error('not-there'); }
+            return candidate;
+        } catch (error) {
+            return FALLBACK_ORIGIN + slug + '/';
+        }
+    }
+
+    async function mount(slug) {
+        const frame = document.querySelector('[data-demo="' + slug + '"]');
+        const fallback = document.querySelector('[data-fallback="' + slug + '"]');
+        try {
+            const base = await resolveBase(slug);
+            const link = base + '#' + await encodePayload(DEMOS[slug]);
+            frame.src = link;
+            document.querySelectorAll('[data-open="' + slug + '"]').forEach(function (anchor) {
+                anchor.href = link;
+            });
+        } catch (error) {
+            frame.hidden = true;
+            fallback.hidden = false;
+            fallback.textContent = 'The live example could not be loaded in this browser. ' +
+                'The builder itself will still work — it shows the same preview as you type.';
+        }
+    }
+
+    Object.keys(DEMOS).forEach(mount);
+</script>
+</body>
+</html>

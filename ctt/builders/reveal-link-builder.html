@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guess &amp; Reveal Link Builder</title>
+<meta name="description" content="Build a guess-then-reveal activity and get a link you can embed anywhere. Nothing to host.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #preview-frame { width: 100%; min-height: 500px; border: 0; background: #fff;
+                   border-radius: var(--ct-radius-lg); }
+  .rb-item {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+  .rb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--ct-sp-3); }
+  .rb-opt { display: grid; grid-template-columns: auto 1fr auto; gap: var(--ct-sp-2); align-items: center; }
+  .rb-opt input[type="radio"] { width: 18px; height: 18px; accent-color: var(--ct-accent); }
+  .rb-opt .rb-pct { width: 84px; }
+  .rb-meter { font-variant-numeric: tabular-nums; }
+  .rb-typehead { display: flex; gap: var(--ct-sp-2); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">GR</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Guess &amp; Reveal Link Builder</h1>
+      <p class="ct-toolbar__sub">Make them commit to an answer before they see the truth.</p>
+    </div>
+    <span class="ct-badge ct-badge--accent">Hosted edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How this works
+        </button>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-field">
+          <label class="ct-label" for="deck-title">Activity name</label>
+          <input class="ct-input" id="deck-title" type="text" value="Graduate job myths">
+          <span class="ct-hint">Shown on the opening screen and used as the page title.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="deck-intro">Opening screen</label>
+          <textarea class="ct-textarea" id="deck-intro" rows="3">Have a guess at each question before you see the answer. Being wrong is the point — it is what makes the real number stick.</textarea>
+          <span class="ct-hint">Leave this empty to drop students straight into the first question.</span>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Brand colours</span>
+          <span class="ct-hint">Tints are worked out from the main colour and darkened until the text on them stays readable.</span>
+          <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+            <div class="ct-colour">
+              <input type="color" id="color-primary" value="#496DDB">
+              <label class="ct-colour__label" for="color-primary">Main colour &mdash; buttons, the real answer, focus rings</label>
+            </div>
+            <div class="ct-colour">
+              <input type="color" id="color-card" value="#ffffff">
+              <label class="ct-colour__label" for="color-card">Card background</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-check" for="transparent-bg">
+            <input type="checkbox" id="transparent-bg" checked>
+            Let the host page&rsquo;s own background show through
+          </label>
+          <div class="ct-colour ct-colour--off" id="page-bg-wrap" style="margin-top: var(--ct-sp-2);">
+            <input type="color" id="color-page" value="#F7F6F8" disabled>
+            <label class="ct-colour__label" for="color-page">Background behind the card</label>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="card-height">Card height</label>
+          <input class="ct-range" id="card-height" type="range" min="300" max="800" step="20" value="460">
+          <span class="ct-hint" id="height-readout"></span>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Behaviour</span>
+          <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+            <label class="ct-check" for="opt-verdict">
+              <input type="checkbox" id="opt-verdict" checked>
+              Tell them whether they were close
+            </label>
+            <label class="ct-check" for="opt-summary">
+              <input type="checkbox" id="opt-summary" checked>
+              Show a results screen at the end
+            </label>
+            <label class="ct-check" for="opt-copyout">
+              <input type="checkbox" id="opt-copyout">
+              Give them their answers as text to copy
+            </label>
+          </div>
+          <span class="ct-hint">The copy box is how this feeds a Pathway: they paste it into the
+          reflection or evidence field, and TargetConnect records it.</span>
+        </div>
+
+        <div class="ct-field" id="outro-field">
+          <label class="ct-label" for="deck-outro">Closing note on the results screen</label>
+          <textarea class="ct-textarea" id="deck-outro" rows="2"></textarea>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div id="content-builder">
+          <div class="ct-row" style="justify-content: space-between;">
+            <h3 class="ct-card__title">Questions</h3>
+            <button class="ct-btn ct-btn--sm" type="button" id="add-item-btn">Add question</button>
+          </div>
+          <div id="items-container"></div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="import-link">Editing a link you made earlier?</label>
+          <textarea class="ct-textarea ct-input--mono" id="import-link" rows="3"
+                    placeholder="Paste the full link here and press Load"></textarea>
+          <div class="ct-row" style="margin-top: var(--ct-sp-2);">
+            <button class="ct-btn ct-btn--sm" type="button" id="import-btn">Load these questions</button>
+          </div>
+          <span class="ct-hint">The questions live inside the link itself, so pasting one back in brings all its content with it.</span>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="runtime-base">Address of the activity page</label>
+          <input class="ct-input ct-input--mono" id="runtime-base" type="text" spellcheck="false">
+          <span class="ct-hint" id="runtime-hint">Working out where the activity page is&hellip;</span>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#embed-output" data-ct-copy-label="Embed code copied">
+          Copy embed code
+        </button>
+      </div>
+
+      <iframe id="preview-frame" title="Preview of the activity"></iframe>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="embed-output">Embed code &mdash; paste this into TargetConnect or SharePoint</label>
+        <textarea class="ct-codebox" id="embed-output" readonly spellcheck="false" rows="4"></textarea>
+      </div>
+
+      <div class="ct-field">
+        <div class="ct-row" style="justify-content: space-between; align-items: baseline;">
+          <label class="ct-label" for="link-output">Or just the link, to share directly</label>
+          <button class="ct-btn ct-btn--quiet ct-btn--sm" type="button"
+                  data-ct-copy="#link-output" data-ct-copy-label="Link copied">Copy link</button>
+        </div>
+        <textarea class="ct-codebox" id="link-output" readonly spellcheck="false" rows="4"></textarea>
+        <span class="ct-hint rb-meter" id="length-readout"></span>
+      </div>
+
+      <div class="ct-note" id="length-warning" hidden>
+        <span class="ct-note__icon" aria-hidden="true">!</span>
+        <div id="length-warning-text"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How this works</h2>
+
+    <p>Telling a student that most vacancies are never advertised does very little.
+    Making them guess the number first, watching them land on 20%, and then showing
+    them the real figure does a great deal. That gap between what they expected and
+    what is true is the whole activity.</p>
+
+    <p>The activity page itself is hosted once, here. Your questions are not stored
+    anywhere &mdash; they are squashed down and packed into the link. When someone opens
+    it, their browser unpacks them. That is why the link is so long, and why there is
+    nothing for you to upload.</p>
+
+    <h3>The three question types</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>Guess a number.</b> A slider, then a scale showing how far off they were.
+      Best for statistics, percentages, salaries, timescales.</li>
+      <li><b>Pick an option.</b> Multiple choice. You can also fill in what proportion
+      of people picked each one &mdash; from your own survey data &mdash; and it draws bars.</li>
+      <li><b>Rate it out of five.</b> Shows a piece of text, they score it, then you
+      reveal the score you would give and why. Best for judging a sample interview
+      answer, CV line, or email.</li>
+    </ul>
+
+    <h3>Using it in a Pathway</h3>
+    <p>Nothing here is sent anywhere, so the activity cannot report a score back to
+    TargetConnect on its own. Tick <b>Give them their answers as text to copy</b> and
+    the results screen produces a plain block of text. Pair the embed with a reflection
+    or evidence field in the same activity and ask students to paste it in &mdash;
+    TargetConnect does the recording, and you get something to mark.</p>
+
+    <h3>Worth knowing</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>The widget never changes height.</b> Everything happens inside one fixed box,
+      so nothing on the page below it shifts as students work through. That matters in
+      TargetConnect, where a growing embed slides down over the Submit button.</li>
+      <li><b>Nothing is stored.</b> The part of the link after the <span class="ct-mono">#</span>
+      never leaves the browser, so your questions are never sent to this server and never
+      appear in any log here.</li>
+      <li><b>To change a question later</b>, paste your link back into the box at the
+      bottom left, edit it, and swap the link over.</li>
+      <li><b>Keep the whole link.</b> If it gets cut short in an email or a text box, it
+      will not open. The page will say so rather than showing half an activity.</li>
+      <li><b>It needs this site to be up.</b> The page is served from here, so if this
+      server is down the embed shows an empty box.</li>
+      <li><b>Cite your figures.</b> Each question has a source line. A revealed statistic
+      with no source invites an argument you will lose.</li>
+    </ul>
+
+    <h3>Running your own copy</h3>
+    <p>Both this builder and the activity page are plain HTML files with no server
+    behind them, so they will sit on any hosting that serves static files &mdash;
+    Kinsta, GitHub Pages, SharePoint, a university web server, anything. There is
+    nothing to install and no database.</p>
+
+    <p>Copy this folder structure across, keeping the shape:</p>
+    <pre class="ct-codebox" style="white-space: pre; padding: var(--ct-sp-3);">brand/ct.css
+brand/ct.js
+builders/reveal-link-builder.html
+w/reveal/index.html</pre>
+
+    <p>The builder looks for a copy of the activity page alongside itself when it
+    loads. If it finds one, your links point at your own hosting and you are entirely
+    independent. If it does not, they point back at the original. Either way the
+    address it settled on is shown at the bottom of the settings, and you can type a
+    different one in.</p>
+
+    <p>If you only want the activity page and not the builder, that single file is
+    all you need &mdash; build links here and change the address to yours.</p>
+  </div>
+</div>
+
+<script>
+    /* ====================================================================
+       Where the activity page lives.
+
+       This builder is meant to be copied onto other people's hosting, so
+       it works this out rather than assuming. If a copy of the activity
+       page is sitting next to it in the usual layout, that copy is used,
+       which keeps a copied folder entirely self-sufficient. If not, links
+       point back at the original.
+    ==================================================================== */
+    const FALLBACK_BASE = 'https://emaitch.co.uk/ctt/w/reveal/';
+
+    async function resolveRuntimeBase() {
+        const field = document.getElementById('runtime-base');
+        const hint = document.getElementById('runtime-hint');
+
+        if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+            field.value = FALLBACK_BASE;
+            hint.textContent = 'This page is not being served by a web server, so links point at ' +
+                               'the original copy. Put it on hosting to use your own.';
+            return;
+        }
+
+        let candidate;
+        try {
+            candidate = new URL('../w/reveal/', location.href).href;
+        } catch (error) {
+            field.value = FALLBACK_BASE;
+            return;
+        }
+
+        try {
+            const response = await fetch(candidate, { method: 'HEAD' });
+            if (!response.ok) { throw new Error('not-there'); }
+            field.value = candidate;
+            hint.textContent = 'Found a copy of the activity page alongside this builder, so your ' +
+                               'links will point at your own hosting.';
+        } catch (error) {
+            field.value = FALLBACK_BASE;
+            hint.textContent = 'No copy of the activity page found alongside this builder, so links ' +
+                               'point at the original. Copy the w/reveal folder across to use your own.';
+        }
+    }
+
+    let itemCount = 0;
+    let previewTimeout;
+
+    /* --- Packing the activity into a link ---------------------------- */
+
+    function bytesToBase64url(bytes) {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) { binary += String.fromCharCode(bytes[i]); }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function bytesFromBase64url(s) {
+        s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) { s += '='; }
+        const binary = atob(s);
+        const out = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) { out[i] = binary.charCodeAt(i); }
+        return out;
+    }
+
+    async function encodePayload(payload) {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        if (typeof CompressionStream === 'undefined') {
+            return 'j=' + bytesToBase64url(bytes);
+        }
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        const packed = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+        return 'd=' + bytesToBase64url(packed);
+    }
+
+    async function decodeFragment(fragment) {
+        const params = new URLSearchParams(fragment);
+        if (params.has('j')) {
+            return JSON.parse(new TextDecoder().decode(bytesFromBase64url(params.get('j'))));
+        }
+        if (!params.has('d')) { throw new Error('nothing-to-read'); }
+        const ds = new DecompressionStream('deflate-raw');
+        const writer = ds.writable.getWriter();
+        writer.write(bytesFromBase64url(params.get('d')));
+        writer.close();
+        const bytes = new Uint8Array(await new Response(ds.readable).arrayBuffer());
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    /* --- The question editors ----------------------------------------
+       gatherItems finds each editor by .item-card and each control by its
+       data-field name, so renaming either breaks the output silently.
+    ------------------------------------------------------------------ */
+
+    function escapeAttr(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escapeText(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function field(id, label, control, hint) {
+        return '<div class="ct-field"><label class="ct-label" for="' + id + '">' + label + '</label>' +
+               control + (hint ? '<span class="ct-hint">' + hint + '</span>' : '') + '</div>';
+    }
+
+    function numberInput(id, key, value, fallback, extra) {
+        return '<input id="' + id + '" type="number" class="ct-input" data-field="' + key + '" ' +
+               (extra || '') + ' value="' + escapeAttr(value === undefined ? fallback : value) + '">';
+    }
+
+    function optionRow(id, index, option, pct, checked) {
+        return '<div class="rb-opt" data-opt>' +
+            '<input type="radio" name="correct-' + id + '" data-correct value="' + index + '" ' +
+              (checked ? 'checked' : '') + ' aria-label="Option ' + (index + 1) + ' is the true answer">' +
+            '<input type="text" class="ct-input" data-opt-text value="' + escapeAttr(option) + '" ' +
+              'placeholder="Option ' + (index + 1) + '">' +
+            '<input type="number" class="ct-input rb-pct" data-opt-pct min="0" max="100" ' +
+              'value="' + escapeAttr(pct === undefined || pct === null ? '' : pct) + '" ' +
+              'placeholder="%" aria-label="Percentage who picked option ' + (index + 1) + '">' +
+        '</div>';
+    }
+
+    function typeBlockHtml(id, type, preset) {
+        if (type === 'number') {
+            return '<div class="rb-grid">' +
+                field('f' + id + '-min', 'Lowest', numberInput('f' + id + '-min', 'min', preset.min, 0)) +
+                field('f' + id + '-max', 'Highest', numberInput('f' + id + '-max', 'max', preset.max, 100)) +
+                field('f' + id + '-step', 'Steps of', numberInput('f' + id + '-step', 'step', preset.step, 1, 'min="0.01" step="any"')) +
+            '</div>' +
+            '<div class="rb-grid">' +
+                field('f' + id + '-answer', 'True answer', numberInput('f' + id + '-answer', 'answer', preset.answer, 70, 'step="any"')) +
+                field('f' + id + '-tol', 'Count as close within', numberInput('f' + id + '-tol', 'tol', preset.tol, 10, 'min="0" step="any"')) +
+                field('f' + id + '-start', 'Slider starts at', numberInput('f' + id + '-start', 'start', preset.start, 50, 'step="any"')) +
+            '</div>' +
+            '<div class="rb-grid">' +
+                field('f' + id + '-prefix', 'Before the number',
+                    '<input id="f' + id + '-prefix" type="text" class="ct-input" data-field="prefix" maxlength="8" ' +
+                    'value="' + escapeAttr(preset.prefix) + '" placeholder="&pound;">') +
+                field('f' + id + '-suffix', 'After the number',
+                    '<input id="f' + id + '-suffix" type="text" class="ct-input" data-field="suffix" maxlength="8" ' +
+                    'value="' + escapeAttr(preset.suffix) + '" placeholder="%">') +
+            '</div>';
+        }
+
+        if (type === 'choice') {
+            const options = (preset.options && preset.options.length ? preset.options : ['', '', '', '']);
+            const pct = preset.pct || [];
+            const answer = preset.answer === undefined ? 0 : preset.answer;
+            let rows = '';
+            options.forEach(function (option, i) {
+                rows += optionRow(id, i, option, pct[i], i === answer);
+            });
+            return '<div class="ct-field">' +
+                '<span class="ct-label">Options</span>' +
+                '<span class="ct-hint">Mark the true one with the circle. The % column is optional &mdash; ' +
+                'fill it in from your own survey and the reveal draws bars showing how others answered.</span>' +
+                '<div class="ct-stack-2" data-opts style="margin-top: var(--ct-sp-2);">' + rows + '</div>' +
+                '<div class="ct-row" style="margin-top: var(--ct-sp-2);">' +
+                  '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-add-opt>Add option</button>' +
+                  '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-drop-opt>Remove last</button>' +
+                '</div>' +
+            '</div>';
+        }
+
+        return field('f' + id + '-labels', 'Labels for the five points',
+            '<input id="f' + id + '-labels" type="text" class="ct-input" data-field="labels" ' +
+            'value="' + escapeAttr((preset.labels || ['Poor', 'Weak', 'OK', 'Good', 'Excellent']).join(', ')) + '">',
+            'Separated by commas. Two to eight of them.') +
+        '<div class="rb-grid">' +
+            field('f' + id + '-answer', 'Your rating (position)',
+                numberInput('f' + id + '-answer', 'answer',
+                    preset.answer === undefined ? 3 : preset.answer + 1, 3, 'min="1" max="8"')) +
+            field('f' + id + '-tol', 'Count as close within',
+                numberInput('f' + id + '-tol', 'tol', preset.tol, 1, 'min="0"'),
+                'Points either side.') +
+        '</div>';
+    }
+
+    function renderTypeBlock(id) {
+        const card = document.getElementById('item-' + id);
+        const preset = card.presetForType || {};
+        card.querySelector('[data-typeblock]').innerHTML = typeBlockHtml(id, card.dataset.type, preset);
+    }
+
+    function addItem(preset) {
+        preset = preset || {};
+        itemCount++;
+        const id = itemCount;
+        const type = preset.type === 'choice' || preset.type === 'scale' ? preset.type : 'number';
+
+        const card = document.createElement('div');
+        // item-card is what gatherItems looks for; controls are found by data-field.
+        card.className = 'item-card rb-item';
+        card.id = 'item-' + id;
+        card.dataset.type = type;
+        card.presetForType = preset;
+
+        card.innerHTML =
+            '<div class="rb-typehead">' +
+              '<span class="ct-section-label">Question ' + id + '</span>' +
+              '<div class="ct-row">' +
+                '<select class="ct-select ct-btn--sm" data-type aria-label="Question type" style="width:auto;">' +
+                  '<option value="number"' + (type === 'number' ? ' selected' : '') + '>Guess a number</option>' +
+                  '<option value="choice"' + (type === 'choice' ? ' selected' : '') + '>Pick an option</option>' +
+                  '<option value="scale"'  + (type === 'scale'  ? ' selected' : '') + '>Rate it out of five</option>' +
+                '</select>' +
+                '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-remove="' + id + '">Remove</button>' +
+              '</div>' +
+            '</div>' +
+            field('f' + id + '-tag', 'Topic tag',
+                '<input id="f' + id + '-tag" type="text" class="ct-input" data-field="tag" ' +
+                'value="' + escapeAttr(preset.tag) + '" placeholder="e.g. Applications">') +
+            field('f' + id + '-q', 'Question',
+                '<textarea id="f' + id + '-q" class="ct-textarea" data-field="q" ' +
+                'placeholder="What students are asked to guess">' + escapeText(preset.q) + '</textarea>') +
+            field('f' + id + '-stim', 'Text to show them first (optional)',
+                '<textarea id="f' + id + '-stim" class="ct-textarea" rows="3" data-field="stim" ' +
+                'placeholder="A sample answer, CV line or email to judge">' + escapeText(preset.stim) + '</textarea>') +
+            '<div data-typeblock></div>' +
+            field('f' + id + '-reveal', 'What to say when the answer is revealed',
+                '<textarea id="f' + id + '-reveal" class="ct-textarea" rows="4" data-field="reveal" ' +
+                'placeholder="Why the real answer is what it is, and what to do about it. Leave a blank line between paragraphs.">' +
+                escapeText(preset.reveal) + '</textarea>') +
+            field('f' + id + '-source', 'Source (optional)',
+                '<input id="f' + id + '-source" type="text" class="ct-input" data-field="source" ' +
+                'value="' + escapeAttr(preset.source) + '" placeholder="e.g. Graduate Outcomes 2024">');
+
+        document.getElementById('items-container').appendChild(card);
+        renderTypeBlock(id);
+    }
+
+    function gatherItems() {
+        const items = [];
+        document.querySelectorAll('.item-card').forEach(function (card) {
+            const type = card.dataset.type;
+            const out = { type: type };
+
+            card.querySelectorAll('[data-field]').forEach(function (input) {
+                const key = input.getAttribute('data-field');
+                const raw = input.value.trim();
+                if (raw === '') { return; }
+                if (input.type === 'number') { out[key] = Number(raw); }
+                else { out[key] = raw; }
+            });
+
+            if (type === 'choice') {
+                const options = [];
+                const pct = [];
+                let answer = 0;
+                let anyPct = false;
+                card.querySelectorAll('[data-opt]').forEach(function (row) {
+                    const value = row.querySelector('[data-opt-text]').value.trim();
+                    if (!value) { return; }
+                    if (row.querySelector('[data-correct]').checked) { answer = options.length; }
+                    const share = row.querySelector('[data-opt-pct]').value.trim();
+                    if (share !== '') { anyPct = true; }
+                    options.push(value);
+                    pct.push(share === '' ? 0 : Number(share));
+                });
+                out.options = options;
+                out.answer = answer;
+                if (anyPct) { out.pct = pct; }
+            } else if (type === 'scale') {
+                out.labels = String(out.labels || '').split(',')
+                    .map(function (s) { return s.trim(); })
+                    .filter(function (s) { return s !== ''; });
+                // Shown to the operator counting from one; stored counting from zero.
+                out.answer = Math.max((out.answer || 1) - 1, 0);
+            }
+
+            if (out.q) { items.push(out); }
+        });
+        return items;
+    }
+
+    function buildPayload() {
+        const transparent = document.getElementById('transparent-bg').checked;
+        return {
+            v: 1,
+            title: document.getElementById('deck-title').value.trim(),
+            intro: document.getElementById('deck-intro').value.trim(),
+            outro: document.getElementById('deck-outro').value.trim(),
+            opts: {
+                verdict: document.getElementById('opt-verdict').checked,
+                summary: document.getElementById('opt-summary').checked,
+                copyOut: document.getElementById('opt-copyout').checked
+            },
+            theme: {
+                primary: document.getElementById('color-primary').value,
+                cardBg:  document.getElementById('color-card').value,
+                pageBg:  transparent ? 'transparent' : document.getElementById('color-page').value,
+                height:  parseInt(document.getElementById('card-height').value, 10)
+            },
+            items: gatherItems()
+        };
+    }
+
+    /* --- Output ------------------------------------------------------- */
+
+    function describeLength(length) {
+        const readout = document.getElementById('length-readout');
+        const warning = document.getElementById('length-warning');
+        const warningText = document.getElementById('length-warning-text');
+
+        readout.textContent = length.toLocaleString() + ' characters long.';
+
+        if (length > 8000) {
+            warning.hidden = false;
+            warning.className = 'ct-note ct-note--warning';
+            warningText.textContent =
+                'This link is very long. Most systems cope, but some text boxes trim long links, ' +
+                'and a trimmed link will not open. Test it where you plan to use it, or split the ' +
+                'activity into two shorter ones.';
+        } else if (length > 4000) {
+            warning.hidden = false;
+            warning.className = 'ct-note';
+            warningText.textContent =
+                'This link is getting long. It should be fine, but it is worth pasting it into ' +
+                'your site and checking it opens before you rely on it.';
+        } else {
+            warning.hidden = true;
+        }
+    }
+
+    function currentBase() {
+        let base = document.getElementById('runtime-base').value.trim() || FALLBACK_BASE;
+        base = base.split('#')[0].split('?')[0];
+        return base.endsWith('/') ? base : base + '/';
+    }
+
+    async function updateOutput() {
+        const payload = buildPayload();
+        const embedOutput = document.getElementById('embed-output');
+        const linkOutput = document.getElementById('link-output');
+
+        if (!payload.items.length) {
+            linkOutput.value = '';
+            embedOutput.value = '';
+            document.getElementById('length-readout').textContent = 'Add a question to get a link.';
+            document.getElementById('length-warning').hidden = true;
+            return;
+        }
+
+        const fragment = await encodePayload(payload);
+        const base = currentBase();
+        const link = base + '#' + fragment;
+        // The card is exactly theme.height tall, sitting inside 10px of body padding.
+        const frameHeight = payload.theme.height + 24;
+        const title = payload.title || 'Guess and reveal';
+
+        linkOutput.value = link;
+        embedOutput.value =
+            '<iframe src="' + escapeAttr(link) + '"\n' +
+            '        title="' + escapeAttr(title) + '"\n' +
+            '        width="100%" height="' + frameHeight + '"\n' +
+            '        style="border:0; max-width:710px;" loading="lazy"></iframe>';
+
+        describeLength(link.length);
+
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(function () {
+            // A hash change alone will not reload a frame, so nudge the query too.
+            document.getElementById('preview-frame').src =
+                base + '?r=' + Date.now() + '#' + fragment;
+            document.getElementById('preview-frame').style.height = frameHeight + 'px';
+        }, 350);
+    }
+
+    /* --- Loading an existing link back in ----------------------------- */
+
+    async function importLink() {
+        const raw = document.getElementById('import-link').value.trim();
+        if (!raw) { return; }
+
+        const hashAt = raw.indexOf('#');
+        const fragment = hashAt >= 0 ? raw.slice(hashAt + 1)
+                                     : raw.replace(/^[^?]*\??/, '');
+
+        let payload;
+        try {
+            payload = await decodeFragment(fragment);
+        } catch (error) {
+            alert('That link could not be read. Make sure you have pasted the whole thing, ' +
+                  'including everything after the # sign.');
+            return;
+        }
+
+        document.getElementById('deck-title').value = payload.title || '';
+        document.getElementById('deck-intro').value = payload.intro || '';
+        document.getElementById('deck-outro').value = payload.outro || '';
+
+        const opts = payload.opts || {};
+        document.getElementById('opt-verdict').checked = opts.verdict !== false;
+        document.getElementById('opt-summary').checked = opts.summary !== false;
+        document.getElementById('opt-copyout').checked = opts.copyOut === true;
+
+        const theme = payload.theme || {};
+        if (theme.primary) { document.getElementById('color-primary').value = theme.primary; }
+        if (theme.cardBg)  { document.getElementById('color-card').value = theme.cardBg; }
+        if (theme.height)  { document.getElementById('card-height').value = theme.height; }
+
+        const transparent = theme.pageBg === 'transparent' || !theme.pageBg;
+        document.getElementById('transparent-bg').checked = transparent;
+        if (!transparent) { document.getElementById('color-page').value = theme.pageBg; }
+        syncPageBg();
+        syncHeightReadout();
+
+        document.getElementById('items-container').innerHTML = '';
+        itemCount = 0;
+        (payload.items || []).forEach(function (item) { addItem(item); });
+        if (!itemCount) { addItem(); }
+
+        document.getElementById('import-link').value = '';
+        updateOutput();
+    }
+
+    /* --- Wiring ------------------------------------------------------- */
+
+    function syncPageBg() {
+        const transparent = document.getElementById('transparent-bg').checked;
+        document.getElementById('color-page').disabled = transparent;
+        document.getElementById('page-bg-wrap').classList.toggle('ct-colour--off', transparent);
+    }
+
+    function syncHeightReadout() {
+        const value = document.getElementById('card-height').value;
+        document.getElementById('height-readout').textContent =
+            value + ' pixels. The box never grows, so make it tall enough for your longest reveal.';
+    }
+
+    function syncSummaryFields() {
+        const on = document.getElementById('opt-summary').checked;
+        document.getElementById('outro-field').hidden = !on;
+        document.getElementById('opt-copyout').disabled = !on;
+    }
+
+    const container = document.getElementById('items-container');
+
+    container.addEventListener('click', function (event) {
+        const remove = event.target.closest('[data-remove]');
+        if (remove) {
+            document.getElementById('item-' + remove.getAttribute('data-remove')).remove();
+            updateOutput();
+            return;
+        }
+
+        const add = event.target.closest('[data-add-opt]');
+        if (add) {
+            const card = add.closest('.item-card');
+            const list = card.querySelector('[data-opts]');
+            const id = card.id.replace('item-', '');
+            if (list.children.length >= 8) { return; }
+            list.insertAdjacentHTML('beforeend', optionRow(id, list.children.length, '', '', false));
+            updateOutput();
+            return;
+        }
+
+        const drop = event.target.closest('[data-drop-opt]');
+        if (drop) {
+            const list = drop.closest('.item-card').querySelector('[data-opts]');
+            if (list.children.length > 2) { list.lastElementChild.remove(); }
+            updateOutput();
+        }
+    });
+
+    container.addEventListener('change', function (event) {
+        const select = event.target.closest('[data-type]');
+        if (!select) { updateOutput(); return; }
+        const card = select.closest('.item-card');
+        card.dataset.type = select.value;
+        card.presetForType = {};                 // a fresh set of fields for the new type
+        renderTypeBlock(card.id.replace('item-', ''));
+        updateOutput();
+    });
+
+    container.addEventListener('input', updateOutput);
+
+    document.getElementById('add-item-btn').addEventListener('click', function () {
+        addItem();
+        updateOutput();
+    });
+    document.getElementById('import-btn').addEventListener('click', importLink);
+    document.getElementById('transparent-bg').addEventListener('change', function () {
+        syncPageBg();
+        updateOutput();
+    });
+    document.getElementById('card-height').addEventListener('input', function () {
+        syncHeightReadout();
+        updateOutput();
+    });
+    document.getElementById('opt-summary').addEventListener('change', function () {
+        syncSummaryFields();
+        updateOutput();
+    });
+
+    ['deck-title', 'deck-intro', 'deck-outro', 'color-primary', 'color-card', 'color-page',
+     'opt-verdict', 'opt-copyout', 'runtime-base']
+        .forEach(function (id) {
+            const node = document.getElementById(id);
+            node.addEventListener('input', updateOutput);
+            node.addEventListener('change', updateOutput);
+        });
+
+    /* --- Something to look at on first load --------------------------- */
+
+    addItem({
+        type: 'number',
+        tag: 'The hidden job market',
+        q: 'What share of graduate vacancies are never publicly advertised?',
+        min: 0, max: 100, step: 5, start: 50, answer: 70, tol: 10, suffix: '%',
+        reveal: 'Estimates put it around 70%. Most roles are filled through referrals, ' +
+                'speculative approaches and repeat placements before anyone writes a job advert.\n\n' +
+                'This is why scrolling job boards feels like hard work for little return. The ' +
+                'time you spend talking to people in the sector is not a distraction from the ' +
+                'search — for most of the market, it is the search.',
+        source: 'Widely cited industry estimate; treat as indicative'
+    });
+
+    addItem({
+        type: 'choice',
+        tag: 'CVs',
+        q: 'How long does a recruiter spend on a CV the first time they see it?',
+        options: ['About 7 seconds', 'About 30 seconds', 'About 2 minutes', 'About 5 minutes'],
+        answer: 0,
+        pct: [22, 41, 27, 10],
+        reveal: 'Around seven seconds on the first pass. They are not reading it, they are ' +
+                'scanning for a reason to keep it.\n\n' +
+                'That is why the top third of page one has to do the heavy lifting, and why ' +
+                'burying your best evidence on page two costs you the interview.'
+    });
+
+    addItem({
+        type: 'scale',
+        tag: 'Interview answers',
+        q: 'How strong is this answer to "What is your greatest weakness?"',
+        stim: '"I would say I am a bit of a perfectionist. I really care about getting things ' +
+              'right, so sometimes I spend longer on things than I need to."',
+        labels: ['Poor', 'Weak', 'OK', 'Good', 'Excellent'],
+        answer: 1, tol: 1,
+        reveal: 'A two. It is the most predictable answer in the room, and it dodges the ' +
+                'question by dressing a strength up as a flaw.\n\n' +
+                'What interviewers are actually testing is self-awareness. Name a real ' +
+                'limitation, then spend most of the answer on what you have done about it and ' +
+                'what changed as a result.'
+    });
+
+    syncPageBg();
+    syncHeightReadout();
+    syncSummaryFields();
+    resolveRuntimeBase().then(updateOutput);
+</script>
+</body>
+</html>

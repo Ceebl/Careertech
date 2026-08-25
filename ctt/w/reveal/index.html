@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess and reveal</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="A guess-then-reveal activity. The questions travel in the link, so nothing is stored on the server.">
+<style>
+    /* ---------------------------------------------------------------
+       Self-contained on purpose. This page is embedded in other
+       people's sites, so it links to no shared stylesheet and uses no
+       ct- classes. Colours arrive from the link and are written onto
+       :root by the script below.
+    --------------------------------------------------------------- */
+    :root {
+        --primary:      #496DDB;
+        --on-primary:   #ffffff;
+        --card-bg:      #ffffff;
+        --page-bg:      transparent;
+        --text-main:    #1C1A22;
+        --text-muted:   #635C6E;
+        --border-color: #E6E3EA;
+        --tint:         #EAEFFC;
+        --tint-text:    #2A46A0;
+        --good:         #1B7A4B;
+        --good-tint:    #E7F4EC;
+        --miss:         #8A5312;
+        --miss-tint:    #FAF0E3;
+        --stage-h:      440px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--page-bg);
+        margin: 0;
+        padding: 10px;
+        color: var(--text-main);
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .wrap { width: 100%; max-width: 680px; margin: 0 auto; }
+
+    /* The whole activity lives inside one box of a fixed height, and the
+       panels swap over inside it. Nothing below the widget ever moves,
+       which matters in hosts that put a Submit button underneath. */
+    .card {
+        background: var(--card-bg);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        height: var(--stage-h);
+        padding: 24px 26px 18px;
+        display: flex; flex-direction: column;
+    }
+
+    .card__body { flex: 1 1 auto; overflow-y: auto; scrollbar-width: thin; }
+    .card__body::-webkit-scrollbar { width: 6px; }
+    .card__body::-webkit-scrollbar-track { background: transparent; }
+    .card__body::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+    .card__foot {
+        flex: none; margin-top: 16px; padding-top: 14px;
+        border-top: 1px solid var(--border-color);
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+
+    /* --- Type --- */
+    .tag {
+        display: inline-block; background: var(--tint); color: var(--tint-text);
+        padding: 6px 14px; border-radius: 30px;
+        font-size: 0.75rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 1px;
+        margin-bottom: 14px; max-width: 100%;
+    }
+    .tag:empty { display: none; }
+
+    .qtext { font-size: 1.35rem; font-weight: 800; line-height: 1.35; margin: 0 0 16px; }
+    .ptitle { font-size: 1.45rem; font-weight: 800; line-height: 1.3; margin: 0 0 12px; }
+
+    .stim {
+        margin: 0 0 18px; padding: 14px 16px;
+        background: var(--tint); border-left: 4px solid var(--primary);
+        border-radius: 0 10px 10px 0;
+        font-size: 0.98rem; line-height: 1.55;
+    }
+    .stim p { margin: 0 0 10px; }
+    .stim p:last-child { margin-bottom: 0; }
+
+    .prose p { font-size: 0.98rem; line-height: 1.6; margin: 0 0 12px; color: var(--text-main); }
+    .prose p:last-child { margin-bottom: 0; }
+
+    .source { margin: 14px 0 0; font-size: 0.82rem; color: var(--text-muted); }
+
+    /* --- Buttons --- */
+    .btn {
+        font-family: inherit; font-weight: 700; font-size: 0.9rem;
+        padding: 11px 18px; border-radius: 8px; cursor: pointer;
+        background: var(--card-bg); color: var(--text-main);
+        border: 2px solid var(--border-color);
+        transition: border-color .15s ease, background-color .15s ease;
+    }
+    .btn:hover:not(:disabled) { border-color: var(--text-main); }
+    .btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn--primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+    .btn--primary:hover:not(:disabled) { filter: brightness(0.93); border-color: var(--primary); }
+
+    .foot-actions { display: flex; gap: 8px; flex: none; }
+
+    /* --- Progress --- */
+    .progress { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .progress__text { font-size: 0.82rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; }
+    .pbar { width: 90px; height: 6px; border-radius: 3px; background: var(--border-color); overflow: hidden; }
+    .pbar span { display: block; height: 100%; background: var(--primary); border-radius: 3px;
+                 transition: width .3s ease; }
+
+    /* --- Choice input --- */
+    .opts { display: flex; flex-direction: column; gap: 8px; }
+    .opt {
+        display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
+        font-family: inherit; font-size: 0.98rem; line-height: 1.45; font-weight: 500;
+        padding: 12px 14px; border-radius: 10px; cursor: pointer;
+        background: var(--card-bg); color: var(--text-main);
+        border: 2px solid var(--border-color);
+        transition: border-color .15s ease, background-color .15s ease;
+    }
+    .opt:hover { border-color: var(--text-muted); }
+    .opt:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .opt[aria-checked="true"] { border-color: var(--primary); background: var(--tint); }
+    .opt__key {
+        flex: none; width: 26px; height: 26px; border-radius: 7px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; font-weight: 800;
+        background: var(--tint); color: var(--tint-text);
+    }
+    .opt[aria-checked="true"] .opt__key { background: var(--primary); color: var(--on-primary); }
+
+    /* --- Scale input --- */
+    .scale { display: flex; gap: 8px; }
+    .scale__btn {
+        flex: 1 1 0; min-width: 0; font-family: inherit; cursor: pointer;
+        padding: 12px 4px 10px; border-radius: 10px;
+        background: var(--card-bg); color: var(--text-main);
+        border: 2px solid var(--border-color);
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        transition: border-color .15s ease, background-color .15s ease;
+    }
+    .scale__btn:hover { border-color: var(--text-muted); }
+    .scale__btn:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .scale__btn[aria-checked="true"] { border-color: var(--primary); background: var(--tint); }
+    .scale__num { font-size: 1.15rem; font-weight: 800; }
+    .scale__lbl { font-size: 0.68rem; font-weight: 600; color: var(--text-muted);
+                  text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+    .scale__btn[aria-checked="true"] .scale__lbl { color: var(--tint-text); }
+
+    /* --- Number input --- */
+    .numread { text-align: center; margin: 4px 0 14px; }
+    .numread__value { font-size: 2.4rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+    .numread__hint { display: block; margin-top: 6px; font-size: 0.82rem; color: var(--text-muted); }
+
+    input[type="range"] {
+        width: 100%; margin: 0; accent-color: var(--primary);
+        height: 28px; background: transparent; cursor: pointer;
+    }
+    input[type="range"]:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; }
+
+    .ends { display: flex; justify-content: space-between; font-size: 0.78rem;
+            color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+    /* --- Verdict --- */
+    .verdict {
+        display: inline-block; padding: 7px 14px; border-radius: 8px;
+        font-size: 0.85rem; font-weight: 800; margin-bottom: 14px;
+    }
+    .verdict--good { background: var(--good-tint); color: var(--good); }
+    .verdict--miss { background: var(--miss-tint); color: var(--miss); }
+
+    /* --- Number reveal --- */
+    .numviz { margin: 6px 0 20px; }
+    .numviz__lane { position: relative; height: 22px; }
+    .mkr {
+        position: absolute; transform: translateX(-50%); white-space: nowrap;
+        font-size: 0.8rem; font-weight: 700; color: var(--text-muted);
+    }
+    .mkr b { font-weight: 800; color: var(--text-main); }
+    .mkr--real b { color: var(--primary); }
+    .track {
+        position: relative; height: 8px; border-radius: 4px;
+        background: var(--border-color); margin: 2px 0;
+    }
+    .dot {
+        position: absolute; top: 50%; width: 16px; height: 16px; border-radius: 50%;
+        transform: translate(-50%, -50%); border: 3px solid var(--card-bg);
+    }
+    .dot--you  { background: var(--text-muted); }
+    .dot--real { background: var(--primary); }
+
+    /* --- Choice reveal --- */
+    .bars { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+    .bar__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+                 font-size: 0.9rem; line-height: 1.4; margin-bottom: 5px; }
+    .bar__label { font-weight: 600; }
+    .bar__pct { font-weight: 800; color: var(--text-muted); white-space: nowrap;
+                font-variant-numeric: tabular-nums; }
+    .bar__track { height: 8px; border-radius: 4px; background: var(--border-color); overflow: hidden; }
+    .bar__fill { display: block; height: 100%; background: var(--text-muted); border-radius: 4px; }
+    .bar--real .bar__label { font-weight: 800; color: var(--primary); }
+    .bar--real .bar__fill { background: var(--primary); }
+    .bar__note { font-size: 0.7rem; font-weight: 800; color: var(--text-muted);
+                 text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
+
+    /* --- Summary --- */
+    .bigscore { font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; margin: 0 0 14px; }
+    .bigscore small { font-size: 1rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0; }
+    .sumlist { list-style: none; padding: 0; margin: 18px 0 0; display: flex; flex-direction: column; gap: 10px; }
+    .sumlist li { padding: 12px 14px; background: var(--tint); border-radius: 10px; font-size: 0.9rem; line-height: 1.5; }
+    .sumlist b { display: block; margin-bottom: 3px; font-weight: 800; }
+    .sumlist span { color: var(--text-muted); }
+
+    .copyout { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+    .copyout label { display: block; font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; }
+    .copyout textarea {
+        width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.8rem; line-height: 1.5; padding: 12px;
+        border: 2px solid var(--border-color); border-radius: 10px;
+        background: var(--card-bg); color: var(--text-main); resize: vertical;
+    }
+    .copyout textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+    .copyout .btn { margin-top: 10px; }
+
+    /* --- Message shown when a link will not open --- */
+    .notice {
+        max-width: 680px; margin: 0 auto; padding: 30px;
+        background: var(--card-bg); border: 2px solid var(--border-color);
+        border-radius: 16px; line-height: 1.6;
+    }
+    .notice h1 { font-size: 1.2rem; margin: 0 0 10px; }
+    .notice p { margin: 0 0 10px; color: var(--text-muted); }
+    .notice p:last-child { margin-bottom: 0; }
+
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+
+    @media (max-width: 520px) {
+        .card { padding: 18px 18px 14px; }
+        .qtext { font-size: 1.15rem; }
+        .numread__value { font-size: 2rem; }
+        .scale__lbl { display: none; }
+        .pbar { width: 56px; }
+        .btn { padding: 11px 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+    }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="widget" hidden>
+    <div class="card">
+        <div class="card__body" id="stage">
+
+            <section id="panel-intro" hidden>
+                <h1 class="ptitle" id="intro-title"></h1>
+                <div class="prose" id="intro-body"></div>
+            </section>
+
+            <section id="panel-q" hidden>
+                <span class="tag" id="q-tag"></span>
+                <p class="qtext" id="q-text"></p>
+                <blockquote class="stim" id="q-stim" hidden></blockquote>
+                <div id="input-area"></div>
+                <div id="reveal-area" hidden>
+                    <div class="verdict" id="verdict" hidden></div>
+                    <div id="reveal-visual"></div>
+                    <div class="prose" id="reveal-body"></div>
+                    <p class="source" id="reveal-source" hidden></p>
+                </div>
+            </section>
+
+            <section id="panel-summary" hidden>
+                <h1 class="ptitle" id="summary-title">How you did</h1>
+                <p class="bigscore" id="score"></p>
+                <div class="prose" id="outro-body"></div>
+                <ul class="sumlist" id="sumlist"></ul>
+                <div class="copyout" id="copyout" hidden>
+                    <label for="copy-text" id="copy-label">Copy this into your reflection</label>
+                    <textarea id="copy-text" readonly rows="7" spellcheck="false"></textarea>
+                    <button class="btn" id="btn-copy" type="button">Copy to clipboard</button>
+                </div>
+            </section>
+
+        </div>
+
+        <div class="card__foot">
+            <div class="progress">
+                <div class="pbar" aria-hidden="true"><span id="pbar-fill" style="width:0%"></span></div>
+                <span class="progress__text" id="progress-text"></span>
+            </div>
+            <div class="foot-actions">
+                <button class="btn" id="btn-back" type="button" hidden>Back</button>
+                <button class="btn btn--primary" id="btn-main" type="button">Start</button>
+            </div>
+        </div>
+    </div>
+
+    <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+</div>
+
+<div class="notice" id="notice" hidden>
+    <h1 id="notice-title">Nothing to show</h1>
+    <p id="notice-body"></p>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ====================================================================
+       Reading the activity out of the link.
+
+       Everything the widget shows travels in the address, after the "#".
+       A "#" fragment never leaves the browser, so the questions are never
+       sent to this server and never appear in any log here.
+
+         #d=...   payload as JSON, deflate-compressed, then base64url
+         #j=...   payload as JSON, base64url only (uncompressed fallback)
+
+       The same names are accepted in the query string, for content
+       systems that strip fragments out of a URL.
+    ==================================================================== */
+
+    var MAX_ITEMS   = 30;
+    var MAX_OPTIONS = 8;
+    var MAX_FIELD   = 2000;
+
+    var items = [];
+    var opts = { verdict: true, summary: true, copyOut: false };
+    var answers = [];     // what the student picked, per item
+    var revealed = [];    // whether they have seen the answer yet
+    var idx = -1;         // -1 is the intro panel, items.length is the summary
+    var hasIntro = false;
+    var payloadTitle = '';
+
+    var el = function (id) { return document.getElementById(id); };
+    var mainBtn = el('btn-main');
+    var backBtn = el('btn-back');
+    var liveEl  = el('live');
+
+    /* --- Unpacking the link ------------------------------------------ */
+
+    function bytesFromBase64url(s) {
+        s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) { s += '='; }
+        var binary = atob(s);
+        var out = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) { out[i] = binary.charCodeAt(i); }
+        return out;
+    }
+
+    function inflate(bytes) {
+        if (typeof DecompressionStream === 'undefined') {
+            return Promise.reject(new Error('no-decompression'));
+        }
+        var ds = new DecompressionStream('deflate-raw');
+        var writer = ds.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        return new Response(ds.readable).arrayBuffer().then(function (buf) {
+            return new Uint8Array(buf);
+        });
+    }
+
+    function paramsFromLocation() {
+        var fromHash = new URLSearchParams(location.hash.replace(/^#/, ''));
+        if (fromHash.has('d') || fromHash.has('j')) { return fromHash; }
+        return new URLSearchParams(location.search);
+    }
+
+    function decodeJson(bytes) {
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    // Wrapped in a resolved promise so that a damaged link, which makes atob
+    // throw where it stands, comes back as a rejection the catch below can
+    // turn into a message rather than escaping as an uncaught error.
+    function readPayload() {
+        return Promise.resolve().then(function () {
+            var params = paramsFromLocation();
+            if (params.has('d')) {
+                return inflate(bytesFromBase64url(params.get('d'))).then(decodeJson);
+            }
+            if (params.has('j')) {
+                return decodeJson(bytesFromBase64url(params.get('j')));
+            }
+            return null;
+        });
+    }
+
+    /* --- Tidying up whatever the link contained ---------------------- */
+
+    function text(value) {
+        if (value === null || value === undefined) { return ''; }
+        return String(value).slice(0, MAX_FIELD);
+    }
+
+    function num(value, fallback) {
+        var n = Number(value);
+        return isFinite(n) ? n : fallback;
+    }
+
+    function clamp(value, low, high) {
+        return Math.min(Math.max(value, low), high);
+    }
+
+    function isHexColour(value) {
+        return typeof value === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value);
+    }
+
+    function hexToRgb(hex) {
+        var h = hex.replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        if (h.length < 6) { return null; }
+        return {
+            r: parseInt(h.substr(0, 2), 16),
+            g: parseInt(h.substr(2, 2), 16),
+            b: parseInt(h.substr(4, 2), 16)
+        };
+    }
+
+    function rgbToCss(c) {
+        return 'rgb(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ')';
+    }
+
+    function blend(fg, bg, alpha) {
+        return {
+            r: fg.r * alpha + bg.r * (1 - alpha),
+            g: fg.g * alpha + bg.g * (1 - alpha),
+            b: fg.b * alpha + bg.b * (1 - alpha)
+        };
+    }
+
+    function luminance(c) {
+        var channel = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    }
+
+    function contrast(a, b) {
+        var la = luminance(a), lb = luminance(b);
+        var light = Math.max(la, lb), dark = Math.min(la, lb);
+        return (light + 0.05) / (dark + 0.05);
+    }
+
+    function readableOn(fg, bg) {
+        var candidate = fg;
+        for (var step = 0; step < 20 && contrast(candidate, bg) < 4.5; step++) {
+            candidate = blend(candidate, { r: 0, g: 0, b: 0 }, 0.85);
+        }
+        return contrast(candidate, bg) >= 4.5 ? candidate : { r: 0, g: 0, b: 0 };
+    }
+
+    function applyTheme(theme) {
+        if (!theme || typeof theme !== 'object') { theme = {}; }
+        var root = document.documentElement.style;
+        var map = {
+            primary:   '--primary',
+            cardBg:    '--card-bg',
+            pageBg:    '--page-bg',
+            textMain:  '--text-main',
+            textMuted: '--text-muted',
+            border:    '--border-color'
+        };
+        Object.keys(map).forEach(function (key) {
+            if (isHexColour(theme[key])) { root.setProperty(map[key], theme[key]); }
+        });
+        if (theme.pageBg === 'transparent') { root.setProperty('--page-bg', 'transparent'); }
+
+        var height = parseInt(theme.height, 10);
+        if (height >= 280 && height <= 1200) { root.setProperty('--stage-h', height + 'px'); }
+
+        // Tints are worked out from the main colour, and any text sitting on
+        // them is darkened until it clears 4.5:1 whatever colour was chosen.
+        if (isHexColour(theme.primary)) {
+            var rgb = hexToRgb(theme.primary);
+            if (rgb) {
+                var tint = blend(rgb, { r: 255, g: 255, b: 255 }, 0.13);
+                root.setProperty('--tint', rgbToCss(tint));
+                root.setProperty('--tint-text', rgbToCss(readableOn(rgb, tint)));
+                root.setProperty('--on-primary',
+                    contrast({ r: 255, g: 255, b: 255 }, rgb) >= 4.5 ? '#ffffff' : '#1C1A22');
+            }
+        }
+    }
+
+    function cleanItems(raw) {
+        if (!Array.isArray(raw)) { return []; }
+        return raw.slice(0, MAX_ITEMS).map(function (item) {
+            if (!item || typeof item !== 'object') { item = {}; }
+            var type = item.type === 'choice' || item.type === 'scale' ? item.type : 'number';
+            var out = {
+                type:   type,
+                tag:    text(item.tag),
+                q:      text(item.q),
+                stim:   text(item.stim),
+                reveal: text(item.reveal),
+                source: text(item.source)
+            };
+
+            if (type === 'number') {
+                out.min = num(item.min, 0);
+                out.max = num(item.max, 100);
+                if (out.max <= out.min) { out.max = out.min + 100; }
+                out.step   = Math.max(num(item.step, 1), 0.0001);
+                out.start  = clamp(num(item.start, (out.min + out.max) / 2), out.min, out.max);
+                out.answer = clamp(num(item.answer, out.max), out.min, out.max);
+                out.tol    = Math.max(num(item.tol, (out.max - out.min) * 0.1), 0);
+                out.prefix = text(item.prefix).slice(0, 8);
+                out.suffix = text(item.suffix).slice(0, 8);
+            } else if (type === 'choice') {
+                out.options = (Array.isArray(item.options) ? item.options : [])
+                    .slice(0, MAX_OPTIONS).map(text).filter(function (o) { return o !== ''; });
+                out.answer = clamp(num(item.answer, 0), 0, Math.max(out.options.length - 1, 0));
+                out.pct = Array.isArray(item.pct) && item.pct.length === out.options.length
+                    ? item.pct.map(function (p) { return clamp(num(p, 0), 0, 100); })
+                    : null;
+            } else {
+                out.labels = (Array.isArray(item.labels) ? item.labels : [])
+                    .slice(0, MAX_OPTIONS).map(text);
+                if (out.labels.length < 2) { out.labels = ['1', '2', '3', '4', '5']; }
+                out.answer = clamp(num(item.answer, 1), 0, out.labels.length - 1);
+                out.tol    = Math.max(num(item.tol, 0), 0);
+            }
+            return out;
+        }).filter(function (item) {
+            if (!item.q) { return false; }
+            return item.type !== 'choice' || item.options.length >= 2;
+        });
+    }
+
+    /* --- Small rendering helpers ------------------------------------- */
+
+    function make(tag, className, content) {
+        var node = document.createElement(tag);
+        if (className) { node.className = className; }
+        if (content !== undefined) { node.textContent = content; }   // never innerHTML
+        return node;
+    }
+
+    function paragraphs(into, value) {
+        into.textContent = '';
+        String(value).split(/\n+/).forEach(function (line) {
+            if (!line.trim()) { return; }
+            into.appendChild(make('p', null, line));
+        });
+    }
+
+    function announce(message) {
+        liveEl.textContent = message;
+    }
+
+    function formatNumber(item, value) {
+        return item.prefix + (Math.round(value * 100) / 100).toLocaleString() + item.suffix;
+    }
+
+    /* --- Reading back what the student answered ---------------------- */
+
+    function displayAnswer(item, value) {
+        if (value === null || value === undefined) { return 'no answer'; }
+        if (item.type === 'number') { return formatNumber(item, value); }
+        if (item.type === 'choice') { return item.options[value] || 'no answer'; }
+        return (value + 1) + ' - ' + item.labels[value];
+    }
+
+    function displayTruth(item) {
+        if (item.type === 'number') { return formatNumber(item, item.answer); }
+        if (item.type === 'choice') { return item.options[item.answer]; }
+        return (item.answer + 1) + ' - ' + item.labels[item.answer];
+    }
+
+    function isClose(item, value) {
+        if (value === null || value === undefined) { return false; }
+        if (item.type === 'choice') { return value === item.answer; }
+        return Math.abs(value - item.answer) <= item.tol;
+    }
+
+    /* --- The input controls ------------------------------------------ */
+
+    function buildNumberInput(item, area) {
+        var read = make('div', 'numread');
+        var value = make('div', 'numread__value');
+        read.appendChild(value);
+        read.appendChild(make('span', 'numread__hint',
+            'Drag to your best guess, then lock it in.'));
+
+        var input = document.createElement('input');
+        input.type = 'range';
+        input.min = item.min;
+        input.max = item.max;
+        input.step = item.step;
+        input.value = answers[idx] === null ? item.start : answers[idx];
+        input.setAttribute('aria-label', item.q);
+
+        function sync() {
+            answers[idx] = Number(input.value);
+            value.textContent = formatNumber(item, answers[idx]);
+            input.setAttribute('aria-valuetext', value.textContent);
+        }
+        input.addEventListener('input', sync);
+
+        var ends = make('div', 'ends');
+        ends.appendChild(make('span', null, formatNumber(item, item.min)));
+        ends.appendChild(make('span', null, formatNumber(item, item.max)));
+
+        area.appendChild(read);
+        area.appendChild(input);
+        area.appendChild(ends);
+        sync();
+    }
+
+    function buildOptionGroup(item, area, nodes, onPick) {
+        var group = make('div', item.type === 'choice' ? 'opts' : 'scale');
+        group.setAttribute('role', 'radiogroup');
+        group.setAttribute('aria-label', item.q);
+
+        function select(i) {
+            answers[idx] = i;
+            nodes.forEach(function (node, n) {
+                var on = n === i;
+                node.setAttribute('aria-checked', on ? 'true' : 'false');
+                node.tabIndex = on ? 0 : -1;
+            });
+            onPick();
+        }
+
+        nodes.forEach(function (node, i) {
+            node.setAttribute('role', 'radio');
+            node.setAttribute('aria-checked', 'false');
+            node.tabIndex = i === 0 ? 0 : -1;
+            node.addEventListener('click', function () { select(i); node.focus(); });
+            node.addEventListener('keydown', function (event) {
+                var step = 0;
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') { step = 1; }
+                if (event.key === 'ArrowLeft'  || event.key === 'ArrowUp')   { step = -1; }
+                if (!step) { return; }
+                event.preventDefault();
+                var next = (i + step + nodes.length) % nodes.length;
+                select(next);
+                nodes[next].focus();
+            });
+            group.appendChild(node);
+        });
+
+        area.appendChild(group);
+        if (answers[idx] !== null) { select(answers[idx]); }
+    }
+
+    function buildChoiceInput(item, area, onPick) {
+        buildOptionGroup(item, area, item.options.map(function (option, i) {
+            var button = make('button', 'opt');
+            button.type = 'button';
+            button.appendChild(make('span', 'opt__key', String.fromCharCode(65 + i)));
+            button.appendChild(make('span', null, option));
+            return button;
+        }), onPick);
+    }
+
+    function buildScaleInput(item, area, onPick) {
+        buildOptionGroup(item, area, item.labels.map(function (label, i) {
+            var button = make('button', 'scale__btn');
+            button.type = 'button';
+            button.appendChild(make('span', 'scale__num', String(i + 1)));
+            button.appendChild(make('span', 'scale__lbl', label));
+            button.setAttribute('aria-label', (i + 1) + '. ' + label);
+            return button;
+        }), onPick);
+    }
+
+    /* --- The reveal visuals ------------------------------------------ */
+
+    function position(item, value) {
+        return clamp((value - item.min) / (item.max - item.min) * 100, 0, 100);
+    }
+
+    function marker(className, lead, value, left) {
+        var mark = make('span', className);
+        mark.appendChild(make('b', null, lead));
+        mark.appendChild(make('span', null, value));
+        mark.style.left = left + '%';
+        return mark;
+    }
+
+    // Each marker is centred on its own value, so one sitting near either end
+    // hangs past the edge of the card. Measured once the lane is on the page
+    // and nudged back in, which keeps it over its dot wherever there is room.
+    function tuckIn(lane) {
+        var mark = lane.firstChild;
+        var laneBox = lane.getBoundingClientRect();
+        var markBox = mark.getBoundingClientRect();
+        var shift = 0;
+        if (markBox.left < laneBox.left) { shift = laneBox.left - markBox.left; }
+        else if (markBox.right > laneBox.right) { shift = laneBox.right - markBox.right; }
+        if (shift) {
+            mark.style.transform = 'translateX(calc(-50% + ' + Math.round(shift) + 'px))';
+        }
+    }
+
+    function buildNumberReveal(item, into) {
+        var yours = answers[idx];
+        var viz = make('div', 'numviz');
+
+        var top = make('div', 'numviz__lane');
+        top.appendChild(marker('mkr', 'You said ', formatNumber(item, yours), position(item, yours)));
+
+        var track = make('div', 'track');
+        var youDot = make('span', 'dot dot--you');
+        youDot.style.left = position(item, yours) + '%';
+        var realDot = make('span', 'dot dot--real');
+        realDot.style.left = position(item, item.answer) + '%';
+        track.appendChild(youDot);
+        track.appendChild(realDot);
+
+        var bottom = make('div', 'numviz__lane');
+        bottom.style.marginTop = '8px';
+        bottom.appendChild(marker('mkr mkr--real', 'Actually ', formatNumber(item, item.answer),
+            position(item, item.answer)));
+
+        var ends = make('div', 'ends');
+        ends.style.marginTop = '6px';
+        ends.appendChild(make('span', null, formatNumber(item, item.min)));
+        ends.appendChild(make('span', null, formatNumber(item, item.max)));
+
+        viz.appendChild(top);
+        viz.appendChild(track);
+        viz.appendChild(bottom);
+        viz.appendChild(ends);
+        into.appendChild(viz);
+        tuckIn(top);
+        tuckIn(bottom);
+    }
+
+    function buildChoiceReveal(item, into) {
+        var bars = make('div', 'bars');
+        item.options.forEach(function (option, i) {
+            var row = make('div', 'bar' + (i === item.answer ? ' bar--real' : ''));
+
+            var head = make('div', 'bar__head');
+            var left = make('span', 'bar__label', option);
+            head.appendChild(left);
+
+            var right = make('span', 'bar__pct');
+            if (i === answers[idx]) { head.appendChild(make('span', 'bar__note', 'Your answer')); }
+            if (item.pct) {
+                right.textContent = item.pct[i] + '%';
+                head.appendChild(right);
+            }
+            row.appendChild(head);
+
+            if (item.pct) {
+                var track = make('div', 'bar__track');
+                var fill = make('span', 'bar__fill');
+                fill.style.width = item.pct[i] + '%';
+                track.appendChild(fill);
+                row.appendChild(track);
+            }
+            bars.appendChild(row);
+        });
+        into.appendChild(bars);
+
+        if (item.pct) {
+            var caption = make('p', 'source', 'Bars show how other people answered.');
+            caption.style.margin = '-8px 0 16px';
+            into.appendChild(caption);
+        }
+    }
+
+    function buildScaleReveal(item, into) {
+        var row = make('div', 'scale');
+        row.style.marginBottom = '18px';
+        item.labels.forEach(function (label, i) {
+            var cell = make('div', 'scale__btn');
+            cell.style.cursor = 'default';
+            if (i === item.answer) {
+                cell.style.borderColor = 'var(--primary)';
+                cell.style.background = 'var(--tint)';
+            }
+            cell.appendChild(make('span', 'scale__num', String(i + 1)));
+            cell.appendChild(make('span', 'scale__lbl',
+                i === item.answer
+                    ? (i === answers[idx] ? 'Both' : 'Ours')
+                    : (i === answers[idx] ? 'Yours' : label)));
+            row.appendChild(cell);
+        });
+        into.appendChild(row);
+    }
+
+    /* --- Panels ------------------------------------------------------- */
+
+    function showPanel(name) {
+        ['intro', 'q', 'summary'].forEach(function (key) {
+            el('panel-' + key).hidden = key !== name;
+        });
+        el('stage').scrollTop = 0;
+    }
+
+    function setProgress() {
+        var pct = 0;
+        if (idx >= items.length) {
+            pct = 100;
+        } else if (idx >= 0) {
+            pct = (idx + (revealed[idx] ? 1 : 0)) / items.length * 100;
+        }
+        el('pbar-fill').style.width = pct + '%';
+
+        if (idx < 0) {
+            el('progress-text').textContent = items.length + (items.length === 1 ? ' question' : ' questions');
+        } else if (idx >= items.length) {
+            el('progress-text').textContent = 'Finished';
+        } else {
+            el('progress-text').textContent = (idx + 1) + ' of ' + items.length;
+        }
+    }
+
+    function renderQuestion() {
+        var item = items[idx];
+        showPanel('q');
+
+        el('q-tag').textContent = item.tag;
+        el('q-text').textContent = item.q;
+
+        var stim = el('q-stim');
+        stim.hidden = !item.stim;
+        if (item.stim) { paragraphs(stim, item.stim); }
+
+        var area = el('input-area');
+        area.textContent = '';
+        area.hidden = false;
+        el('reveal-area').hidden = true;
+
+        var onPick = function () { mainBtn.disabled = false; };
+
+        if (item.type === 'number') {
+            buildNumberInput(item, area);
+            mainBtn.disabled = false;
+        } else if (item.type === 'choice') {
+            buildChoiceInput(item, area, onPick);
+            mainBtn.disabled = answers[idx] === null;
+        } else {
+            buildScaleInput(item, area, onPick);
+            mainBtn.disabled = answers[idx] === null;
+        }
+
+        mainBtn.textContent = 'Lock in my answer';
+        backBtn.hidden = idx === 0 && !hasIntro;
+        setProgress();
+
+        if (revealed[idx]) {
+            renderReveal(true);
+        } else {
+            announce('Question ' + (idx + 1) + ' of ' + items.length + '. ' + item.q);
+            reportHeight();
+        }
+    }
+
+    function renderReveal(silent) {
+        var item = items[idx];
+        revealed[idx] = true;
+
+        el('input-area').hidden = true;
+        el('reveal-area').hidden = false;
+
+        var close = isClose(item, answers[idx]);
+        var verdict = el('verdict');
+        verdict.hidden = !opts.verdict;
+        if (opts.verdict) {
+            var exact = item.type === 'choice'
+                ? close
+                : Math.abs(answers[idx] - item.answer) < item.step / 2;
+            verdict.className = 'verdict ' + (close ? 'verdict--good' : 'verdict--miss');
+            verdict.textContent = close ? (exact ? 'Spot on' : 'Close') : 'Not quite';
+        }
+
+        var visual = el('reveal-visual');
+        visual.textContent = '';
+        if (item.type === 'number') { buildNumberReveal(item, visual); }
+        else if (item.type === 'choice') { buildChoiceReveal(item, visual); }
+        else { buildScaleReveal(item, visual); }
+
+        paragraphs(el('reveal-body'), item.reveal);
+
+        var source = el('reveal-source');
+        source.hidden = !item.source;
+        source.textContent = item.source ? 'Source: ' + item.source : '';
+
+        var last = idx === items.length - 1;
+        mainBtn.disabled = last && !opts.summary;
+        mainBtn.textContent = last ? (opts.summary ? 'See your results' : 'Finished') : 'Next question';
+        backBtn.hidden = idx === 0 && !hasIntro;
+        setProgress();
+
+        if (!silent) {
+            announce((opts.verdict ? verdict.textContent + '. ' : '') +
+                     'The answer is ' + displayTruth(item) + '. ' + item.reveal);
+        }
+        el('stage').scrollTop = 0;
+        reportHeight();
+    }
+
+    function summaryText() {
+        var lines = [];
+        if (payloadTitle) { lines.push(payloadTitle, ''); }
+        items.forEach(function (item, i) {
+            lines.push((i + 1) + '. ' + item.q);
+            lines.push('   I guessed: ' + displayAnswer(item, answers[i]));
+            lines.push('   Actually: ' + displayTruth(item));
+            lines.push('');
+        });
+        return lines.join('\n').trim();
+    }
+
+    function renderSummary() {
+        showPanel('summary');
+
+        var closeCount = items.reduce(function (total, item, i) {
+            return total + (isClose(item, answers[i]) ? 1 : 0);
+        }, 0);
+
+        var score = el('score');
+        score.hidden = !opts.verdict;
+        if (opts.verdict) {
+            score.textContent = String(closeCount);
+            score.appendChild(make('small', null, ' of ' + items.length + ' close'));
+        }
+
+        var list = el('sumlist');
+        list.textContent = '';
+        items.forEach(function (item, i) {
+            var li = document.createElement('li');
+            li.appendChild(make('b', null, item.q));
+            li.appendChild(make('span', null,
+                'You guessed ' + displayAnswer(item, answers[i]) + ' · actually ' + displayTruth(item)));
+            list.appendChild(li);
+        });
+
+        if (opts.copyOut) {
+            el('copyout').hidden = false;
+            el('copy-text').value = summaryText();
+        }
+
+        mainBtn.disabled = false;
+        mainBtn.textContent = 'Start again';
+        backBtn.hidden = false;
+        setProgress();
+        announce('Finished.' + (opts.verdict ? ' ' + closeCount + ' of ' + items.length + ' close.' : ''));
+        reportHeight();
+    }
+
+    function renderIntro() {
+        showPanel('intro');
+        mainBtn.disabled = false;
+        mainBtn.textContent = 'Start';
+        backBtn.hidden = true;
+        setProgress();
+        reportHeight();
+    }
+
+    function render() {
+        if (idx < 0) { renderIntro(); }
+        else if (idx >= items.length) { renderSummary(); }
+        else { renderQuestion(); }
+    }
+
+    /* --- Buttons ------------------------------------------------------ */
+
+    mainBtn.addEventListener('click', function () {
+        if (idx < 0) { idx = 0; render(); return; }
+
+        if (idx >= items.length) {                      // start again
+            answers  = items.map(function () { return null; });
+            revealed = items.map(function () { return false; });
+            idx = hasIntro ? -1 : 0;
+            render();
+            return;
+        }
+
+        if (!revealed[idx]) { renderReveal(false); return; }
+
+        idx += 1;
+        render();
+    });
+
+    backBtn.addEventListener('click', function () {
+        if (idx <= (hasIntro ? -1 : 0)) { return; }
+        idx = Math.min(idx, items.length) - 1;
+        render();
+    });
+
+    el('btn-copy').addEventListener('click', function () {
+        var field = el('copy-text');
+        var button = el('btn-copy');
+        var done = function () {
+            button.textContent = 'Copied';
+            setTimeout(function () { button.textContent = 'Copy to clipboard'; }, 2000);
+        };
+        var fallback = function () {
+            try { document.execCommand('copy'); done(); } catch (e) { /* copy it by hand */ }
+        };
+        field.focus();
+        field.select();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(field.value).then(done, fallback);
+        } else {
+            fallback();
+        }
+    });
+
+    /* --- Telling the host page how tall we are ----------------------- */
+
+    function reportHeight() {
+        if (window.parent === window) { return; }
+        // Measured from the visible box rather than the document, which never
+        // reports smaller than the frame it is sitting in.
+        var box = el('widget').hidden ? el('notice') : el('widget');
+        var height = Math.ceil(box.getBoundingClientRect().height) + 20;
+        try {
+            window.parent.postMessage({ type: 'reveal:height', height: height }, '*');
+        } catch (e) { /* host page may not accept messages; nothing to do */ }
+    }
+
+    window.addEventListener('resize', reportHeight);
+
+    /* --- Showing a message instead of the activity ------------------- */
+
+    function showNotice(title, body) {
+        el('widget').hidden = true;
+        el('notice-title').textContent = title;
+        el('notice-body').textContent = body;
+        el('notice').hidden = false;
+        reportHeight();
+    }
+
+    /* --- Start -------------------------------------------------------- */
+
+    readPayload().then(function (payload) {
+        if (!payload) {
+            showNotice('No questions in this link',
+                'This page shows a guess-and-reveal activity that is built into the link that ' +
+                'opens it. The link that brought you here does not contain any questions. ' +
+                'Whoever shared it can rebuild it with the guess and reveal link builder.');
+            return;
+        }
+
+        items = cleanItems(payload.items);
+        if (!items.length) {
+            showNotice('No questions in this link',
+                'The link opened correctly but did not contain any questions.');
+            return;
+        }
+
+        if (payload.opts && typeof payload.opts === 'object') {
+            opts.verdict = payload.opts.verdict !== false;
+            opts.summary = payload.opts.summary !== false;
+            opts.copyOut = payload.opts.copyOut === true;
+        }
+
+        applyTheme(payload.theme);
+        payloadTitle = text(payload.title);
+        if (payloadTitle) { document.title = payloadTitle; }
+
+        var intro = text(payload.intro);
+        hasIntro = !!(intro || payloadTitle);
+        if (hasIntro) {
+            el('intro-title').textContent = payloadTitle || 'Before you start';
+            paragraphs(el('intro-body'), intro ||
+                'Have a guess at each question before you see the answer. Guessing first is the ' +
+                'point — being wrong is what makes the real number stick.');
+        }
+
+        if (payload.outro) { paragraphs(el('outro-body'), text(payload.outro)); }
+        if (payload.copyLabel) { el('copy-label').textContent = text(payload.copyLabel); }
+
+        answers  = items.map(function () { return null; });
+        revealed = items.map(function () { return false; });
+        idx = hasIntro ? -1 : 0;
+
+        el('widget').hidden = false;
+        render();
+    }).catch(function (error) {
+        if (error && error.message === 'no-decompression') {
+            showNotice('This browser is too old for this link',
+                'The questions are packed into the link in a way this browser cannot unpack. ' +
+                'Opening the page in an up-to-date browser will fix it.');
+            return;
+        }
+        showNotice('This link is damaged',
+            'The questions in the link could not be read. It was most likely cut short when it ' +
+            'was copied or pasted. Ask whoever shared it to send the full link again.');
+    });
+})();
+</script>
+</body>
+</html>
