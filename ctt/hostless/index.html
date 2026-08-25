@@ -158,6 +158,31 @@
 
     <article class="ct-card ct-card--flush hl-tool">
       <div class="hl-tool__text">
+        <h3 class="hl-tool__name">Do&rsquo;s &amp; Don&rsquo;ts</h3>
+        <p class="hl-tool__what">
+          A grid of statements. Students decide for themselves whether each one is good
+          practice or a mistake, then tap to find out. A list of rules gets skimmed; a
+          card you have to commit to does not.
+        </p>
+        <ul class="hl-uses">
+          <li>Interview conduct, application etiquette, employer emails</li>
+          <li>Placement and workplace behaviour</li>
+          <li>Anything you would otherwise write as a bulleted list of rules</li>
+        </ul>
+        <div class="hl-tool__actions">
+          <a class="ct-btn ct-btn--primary" href="../builders/dosdonts-link-builder.html">Build it</a>
+          <a class="ct-btn" href="#" data-open="dosdonts" target="_blank" rel="noopener">Open the example</a>
+        </div>
+      </div>
+      <div class="hl-demo">
+        <span class="hl-demo__label">Live example &mdash; try it</span>
+        <iframe data-demo="dosdonts" height="450" title="Example do's and don'ts grid" loading="lazy"></iframe>
+        <p class="hl-demo__fallback" data-fallback="dosdonts" hidden></p>
+      </div>
+    </article>
+
+    <article class="ct-card ct-card--flush hl-tool">
+      <div class="hl-tool__text">
         <h3 class="hl-tool__name">Flip Cards</h3>
         <p class="hl-tool__what">
           A deck of cards with a prompt on the front and the answer on the back. The
@@ -266,6 +291,40 @@
                             'question by dressing a strength up as a flaw.\n\n' +
                             'Name a real limitation, then spend most of the answer on what you did ' +
                             'about it and what changed.'
+                }
+            ]
+        },
+
+        dosdonts: {
+            v: 1,
+            title: 'Interview do’s & don’ts',
+            intro: 'Decide for yourself first, then tap to see if you were right.',
+            labels: { yes: 'DO', no: 'DON’T', hint: 'Tap to reveal' },
+            theme: { primary: '#496DDB', cardBg: '#ffffff', pageBg: 'transparent',
+                     doColour: '#10b981', dontColour: '#ef4444', tileH: 150, cols: 2 },
+            items: [
+                {
+                    type: 'dont',
+                    statement: 'Use the exact same CV for every application.',
+                    explanation: 'Tailor it. The same CV everywhere reads as “I applied to two ' +
+                                 'hundred of these”, because you did.'
+                },
+                {
+                    type: 'do',
+                    statement: 'Send a polite follow-up email after an interview.',
+                    explanation: 'It puts your name back in front of them while they are still deciding.'
+                },
+                {
+                    type: 'do',
+                    statement: 'Ask a question at the end, even if you know the answer.',
+                    explanation: 'Not asking anything reads as not caring. Ask what good looks like ' +
+                                 'in the first six months.'
+                },
+                {
+                    type: 'dont',
+                    statement: 'Say you have no weaknesses when asked.',
+                    explanation: 'It fails the actual test, which is self-awareness. Name something ' +
+                                 'real and say what you did about it.'
                 }
             ]
         },

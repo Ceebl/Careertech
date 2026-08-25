@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Do&rsquo;s and don&rsquo;ts</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="A do's and don'ts flip grid. The cards travel in the link, so nothing is stored on the server.">
+<style>
+    /* ---------------------------------------------------------------
+       Self-contained on purpose. This page is embedded in other
+       people's sites, so it links to no shared stylesheet and uses no
+       ct- classes. Colours arrive from the link and are written onto
+       :root by the script below.
+    --------------------------------------------------------------- */
+    :root {
+        --primary:      #496DDB;
+        --card-bg:      #ffffff;
+        --page-bg:      transparent;
+        --text-main:    #0f172a;
+        --text-muted:   #64748b;
+        --hint:         #94a3b8;
+        --border-color: #e2e8f0;
+        --do:           #0b855c;
+        --dont:         #ca3a3a;
+        --tile-h:       180px;
+        --cols:         2;
+        --gap:          20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--page-bg);
+        margin: 0;
+        padding: 10px;
+        color: var(--text-main);
+        -webkit-text-size-adjust: 100%;
+    }
+
+    .wrap { width: 100%; max-width: 900px; margin: 0 auto; }
+
+    /* --- Header --- */
+    .head { text-align: center; margin-bottom: 25px; }
+    .head:empty { display: none; }
+    .head h1 { margin: 0 0 10px; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.01em; color: var(--text-main); }
+    .head h1:empty { display: none; }
+    .head p { margin: 0; color: var(--text-muted); font-size: 1rem; line-height: 1.5; }
+    .head p:empty { display: none; }
+
+    /* --- Grid --- */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+        gap: var(--gap);
+        width: 100%;
+    }
+
+    /* A real button, so it is reachable by keyboard and announced as
+       something you can press. The browser's own button styling is
+       stripped back rather than inherited. */
+    .tile {
+        perspective: 1000px;
+        height: var(--tile-h);
+        cursor: pointer;
+        padding: 0; margin: 0; border: 0; background: none;
+        font-family: inherit; text-align: inherit;
+        border-radius: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .tile:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+
+    .tile__inner {
+        display: block; width: 100%; height: 100%; position: relative;
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+    }
+    .tile[aria-pressed="true"] .tile__inner { transform: rotateY(180deg); }
+
+    .tile__face {
+        position: absolute; width: 100%; height: 100%;
+        backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        border-radius: 12px; padding: 20px;
+        display: flex; flex-direction: column;
+        justify-content: center; align-items: center; text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .tile__front {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        transition: border-color 0.2s;
+    }
+    .tile:hover .tile__front { border-color: var(--primary); }
+
+    .tile__stmt { font-size: 1.1rem; font-weight: 700; line-height: 1.35; color: var(--text-main); }
+
+    .tile__hint {
+        font-size: 0.8rem; color: var(--hint); margin-top: 15px;
+        text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;
+    }
+
+    .tile__back { transform: rotateY(180deg); color: #ffffff; padding: 20px 26px; overflow-y: auto; }
+    .tile__back--do   { background: var(--do); }
+    .tile__back--dont { background: var(--dont); }
+
+    .tile__icon {
+        font-size: 1.6rem; font-weight: 800; margin-bottom: 10px;
+        letter-spacing: -0.01em; line-height: 1.1;
+    }
+    .tile__exp { font-size: 0.95rem; line-height: 1.45; font-weight: 500; color: #ffffff; }
+
+    /* --- Message shown when a link will not open --- */
+    .notice {
+        max-width: 680px; margin: 0 auto; padding: 30px;
+        background: var(--card-bg); border: 2px solid var(--border-color);
+        border-radius: 16px; line-height: 1.6;
+    }
+    .notice h1 { font-size: 1.2rem; margin: 0 0 10px; }
+    .notice p { margin: 0 0 10px; color: var(--text-muted); }
+    .notice p:last-child { margin-bottom: 0; }
+
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+
+    /* One column once the tiles would be too narrow to read. */
+    @media (max-width: 560px) {
+        :root { --gap: 14px; }
+        .grid { grid-template-columns: minmax(0, 1fr); }
+        .head h1 { font-size: 1.45rem; }
+        .tile__stmt { font-size: 1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .tile__inner { transition: none; }
+        .tile__front { transition: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="widget" hidden>
+    <div class="head" id="head">
+        <h1 id="title"></h1>
+        <p id="intro"></p>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="sr-only" id="live" role="status" aria-live="polite"></p>
+</div>
+
+<div class="notice" id="notice" hidden>
+    <h1 id="notice-title">Nothing to show</h1>
+    <p id="notice-body"></p>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ====================================================================
+       Reading the grid out of the link.
+
+       Everything the widget shows travels in the address, after the "#".
+       A "#" fragment never leaves the browser, so the card content is
+       never sent to this server and never appears in any log here.
+
+         #d=...   payload as JSON, deflate-compressed, then base64url
+         #j=...   payload as JSON, base64url only (uncompressed fallback)
+
+       The same names are accepted in the query string, for content
+       systems that strip fragments out of a URL.
+    ==================================================================== */
+
+    var MAX_ITEMS = 40;
+    var MAX_FIELD = 2000;
+
+    var labels = { yes: 'DO', no: "DON'T", hint: 'Tap to reveal' };
+
+    var el = function (id) { return document.getElementById(id); };
+    var liveEl = el('live');
+
+    /* --- Unpacking the link ------------------------------------------ */
+
+    function bytesFromBase64url(s) {
+        s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) { s += '='; }
+        var binary = atob(s);
+        var out = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i++) { out[i] = binary.charCodeAt(i); }
+        return out;
+    }
+
+    function inflate(bytes) {
+        if (typeof DecompressionStream === 'undefined') {
+            return Promise.reject(new Error('no-decompression'));
+        }
+        var ds = new DecompressionStream('deflate-raw');
+        var writer = ds.writable.getWriter();
+        // A damaged link rejects on the writing side as well as the reading
+        // side. The failure is handled off the readable below, so these two
+        // are silenced to keep an unhandled rejection out of the console.
+        writer.write(bytes).catch(function () {});
+        writer.close().catch(function () {});
+        if (writer.closed) { writer.closed.catch(function () {}); }
+        return new Response(ds.readable).arrayBuffer().then(function (buf) {
+            return new Uint8Array(buf);
+        });
+    }
+
+    function paramsFromLocation() {
+        var fromHash = new URLSearchParams(location.hash.replace(/^#/, ''));
+        if (fromHash.has('d') || fromHash.has('j')) { return fromHash; }
+        return new URLSearchParams(location.search);
+    }
+
+    function decodeJson(bytes) {
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    // Wrapped in a resolved promise so that a damaged link, which makes atob
+    // throw where it stands, comes back as a rejection the catch below can
+    // turn into a message rather than escaping as an uncaught error.
+    function readPayload() {
+        return Promise.resolve().then(function () {
+            var params = paramsFromLocation();
+            if (params.has('d')) {
+                return inflate(bytesFromBase64url(params.get('d'))).then(decodeJson);
+            }
+            if (params.has('j')) {
+                return decodeJson(bytesFromBase64url(params.get('j')));
+            }
+            return null;
+        });
+    }
+
+    /* --- Tidying up whatever the link contained ---------------------- */
+
+    function text(value) {
+        if (value === null || value === undefined) { return ''; }
+        return String(value).slice(0, MAX_FIELD);
+    }
+
+    function num(value, fallback) {
+        var n = Number(value);
+        return isFinite(n) ? n : fallback;
+    }
+
+    function isHexColour(value) {
+        return typeof value === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(value);
+    }
+
+    function hexToRgb(hex) {
+        var h = hex.replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        if (h.length < 6) { return null; }
+        return {
+            r: parseInt(h.substr(0, 2), 16),
+            g: parseInt(h.substr(2, 2), 16),
+            b: parseInt(h.substr(4, 2), 16)
+        };
+    }
+
+    function rgbToCss(c) {
+        return 'rgb(' + Math.round(c.r) + ',' + Math.round(c.g) + ',' + Math.round(c.b) + ')';
+    }
+
+    function blend(fg, bg, alpha) {
+        return {
+            r: fg.r * alpha + bg.r * (1 - alpha),
+            g: fg.g * alpha + bg.g * (1 - alpha),
+            b: fg.b * alpha + bg.b * (1 - alpha)
+        };
+    }
+
+    function luminance(c) {
+        var channel = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    }
+
+    function contrast(a, b) {
+        var la = luminance(a), lb = luminance(b);
+        var light = Math.max(la, lb), dark = Math.min(la, lb);
+        return (light + 0.05) / (dark + 0.05);
+    }
+
+    // The back of a tile carries white text, and the greens and reds people
+    // reach for first are usually too light to read it. The colour is
+    // darkened a step at a time until white clears 4.5:1 on it, which keeps
+    // the hue the operator chose while making the words legible.
+    function deepenForWhite(rgb) {
+        var white = { r: 255, g: 255, b: 255 };
+        var candidate = rgb;
+        for (var step = 0; step < 24 && contrast(white, candidate) < 4.5; step++) {
+            candidate = blend(candidate, { r: 0, g: 0, b: 0 }, 0.92);
+        }
+        return candidate;
+    }
+
+    function applyTheme(theme) {
+        if (!theme || typeof theme !== 'object') { theme = {}; }
+        var root = document.documentElement.style;
+        var map = {
+            primary:   '--primary',
+            cardBg:    '--card-bg',
+            pageBg:    '--page-bg',
+            textMain:  '--text-main',
+            textMuted: '--text-muted',
+            border:    '--border-color'
+        };
+        Object.keys(map).forEach(function (key) {
+            if (isHexColour(theme[key])) { root.setProperty(map[key], theme[key]); }
+        });
+        if (theme.pageBg === 'transparent') { root.setProperty('--page-bg', 'transparent'); }
+
+        [['doColour', '--do'], ['dontColour', '--dont']].forEach(function (pair) {
+            if (!isHexColour(theme[pair[0]])) { return; }
+            var rgb = hexToRgb(theme[pair[0]]);
+            if (rgb) { root.setProperty(pair[1], rgbToCss(deepenForWhite(rgb))); }
+        });
+
+        var height = parseInt(theme.tileH, 10);
+        if (height >= 120 && height <= 480) { root.setProperty('--tile-h', height + 'px'); }
+
+        var cols = parseInt(theme.cols, 10);
+        if (cols >= 1 && cols <= 4) { root.setProperty('--cols', String(cols)); }
+    }
+
+    function cleanItems(raw) {
+        if (!Array.isArray(raw)) { return []; }
+        return raw.slice(0, MAX_ITEMS).map(function (item) {
+            if (!item || typeof item !== 'object') { item = {}; }
+            return {
+                yes: item.type !== 'dont',
+                statement: text(item.statement),
+                explanation: text(item.explanation)
+            };
+        }).filter(function (item) {
+            return item.statement !== '';
+        });
+    }
+
+    /* --- Drawing the grid -------------------------------------------- */
+
+    function make(tag, className, content) {
+        var node = document.createElement(tag);
+        if (className) { node.className = className; }
+        if (content !== undefined) { node.textContent = content; }   // never innerHTML
+        return node;
+    }
+
+    function buildTile(item, index, total) {
+        var tile = make('button', 'tile');
+        tile.type = 'button';
+        tile.setAttribute('aria-pressed', 'false');
+
+        var inner = make('span', 'tile__inner');
+
+        var front = make('span', 'tile__face tile__front');
+        front.appendChild(make('span', 'tile__stmt', item.statement));
+        front.appendChild(make('span', 'tile__hint', labels.hint));
+
+        var back = make('span', 'tile__face tile__back tile__back--' + (item.yes ? 'do' : 'dont'));
+        var verdict = item.yes ? labels.yes : labels.no;
+        back.appendChild(make('span', 'tile__icon', (item.yes ? '✅ ' : '❌ ') + verdict));
+        back.appendChild(make('span', 'tile__exp', item.explanation));
+
+        // Only the face in view is exposed, so a screen reader is not read
+        // both sides of the card at once.
+        back.setAttribute('aria-hidden', 'true');
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        tile.appendChild(inner);
+
+        function describe(open) {
+            tile.setAttribute('aria-label',
+                'Card ' + (index + 1) + ' of ' + total + '. ' + item.statement + ' ' +
+                (open ? verdict + '. ' + item.explanation : 'Activate to reveal the answer.'));
+        }
+        describe(false);
+
+        tile.addEventListener('click', function () {
+            var open = tile.getAttribute('aria-pressed') !== 'true';
+            tile.setAttribute('aria-pressed', open ? 'true' : 'false');
+            front.setAttribute('aria-hidden', open ? 'true' : 'false');
+            back.setAttribute('aria-hidden', open ? 'false' : 'true');
+            describe(open);
+            liveEl.textContent = open
+                ? verdict + '. ' + item.explanation
+                : item.statement + '. Hidden again.';
+        });
+
+        return tile;
+    }
+
+    function render(items) {
+        var grid = el('grid');
+        grid.textContent = '';
+        items.forEach(function (item, index) {
+            grid.appendChild(buildTile(item, index, items.length));
+        });
+    }
+
+    /* --- Telling the host page how tall we are ----------------------- */
+
+    function reportHeight() {
+        if (window.parent === window) { return; }
+        // Measured from the visible box rather than the document, which never
+        // reports smaller than the frame it is sitting in.
+        var box = el('widget').hidden ? el('notice') : el('widget');
+        var height = Math.ceil(box.getBoundingClientRect().height) + 20;
+        try {
+            window.parent.postMessage({ type: 'dosdonts:height', height: height }, '*');
+        } catch (e) { /* host page may not accept messages; nothing to do */ }
+    }
+
+    window.addEventListener('resize', reportHeight);
+
+    /* --- Showing a message instead of the grid ----------------------- */
+
+    function showNotice(title, body) {
+        el('widget').hidden = true;
+        el('notice-title').textContent = title;
+        el('notice-body').textContent = body;
+        el('notice').hidden = false;
+        reportHeight();
+    }
+
+    /* --- Start -------------------------------------------------------- */
+
+    readPayload().then(function (payload) {
+        if (!payload) {
+            showNotice('No cards in this link',
+                'This page shows a do’s and don’ts grid that is built into the link that ' +
+                'opens it. The link that brought you here does not contain any cards. Whoever ' +
+                'shared it can rebuild it with the do’s and don’ts link builder.');
+            return;
+        }
+
+        var items = cleanItems(payload.items);
+        if (!items.length) {
+            showNotice('No cards in this link',
+                'The link opened correctly but did not contain any cards.');
+            return;
+        }
+
+        if (payload.labels && typeof payload.labels === 'object') {
+            if (payload.labels.yes)  { labels.yes  = text(payload.labels.yes).slice(0, 40); }
+            if (payload.labels.no)   { labels.no   = text(payload.labels.no).slice(0, 40); }
+            if (payload.labels.hint !== undefined) { labels.hint = text(payload.labels.hint).slice(0, 40); }
+        }
+
+        applyTheme(payload.theme);
+
+        var title = text(payload.title);
+        var intro = text(payload.intro);
+        el('title').textContent = title;
+        el('intro').textContent = intro;
+        if (!title && !intro) { el('head').hidden = true; }
+        if (title) { document.title = title; }
+
+        render(items);
+        el('widget').hidden = false;
+        reportHeight();
+    }).catch(function (error) {
+        if (error && error.message === 'no-decompression') {
+            showNotice('This browser is too old for this link',
+                'The cards are packed into the link in a way this browser cannot unpack. ' +
+                'Opening the page in an up-to-date browser will fix it.');
+            return;
+        }
+        showNotice('This link is damaged',
+            'The card content in the link could not be read. It was most likely cut short ' +
+            'when it was copied or pasted. Ask whoever shared it to send the full link again.');
+    });
+})();
+</script>
+</body>
+</html>

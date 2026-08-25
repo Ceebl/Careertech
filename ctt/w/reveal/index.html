@@ -370,8 +370,12 @@
         }
         var ds = new DecompressionStream('deflate-raw');
         var writer = ds.writable.getWriter();
-        writer.write(bytes);
-        writer.close();
+        // A damaged link rejects on the writing side as well as the reading
+        // side. The failure is handled off the readable below, so these two
+        // are silenced to keep an unhandled rejection out of the console.
+        writer.write(bytes).catch(function () {});
+        writer.close().catch(function () {});
+        if (writer.closed) { writer.closed.catch(function () {}); }
         return new Response(ds.readable).arrayBuffer().then(function (buf) {
             return new Uint8Array(buf);
         });

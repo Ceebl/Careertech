@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Do&rsquo;s &amp; Don&rsquo;ts Link Builder</title>
+<meta name="description" content="Build a do's and don'ts flip grid and get a link you can embed anywhere. Nothing to host.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #preview-frame { width: 100%; min-height: 420px; border: 0; background: #fff;
+                   border-radius: var(--ct-radius-lg); }
+  .dd-item {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+  .dd-item[data-type="do"]   { border-left: 4px solid var(--ct-success); }
+  .dd-item[data-type="dont"] { border-left: 4px solid var(--ct-danger); }
+  .dd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--ct-sp-3); }
+  .dd-head { display: flex; gap: var(--ct-sp-2); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .dd-meter { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">DD</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Do&rsquo;s &amp; Don&rsquo;ts Link Builder</h1>
+      <p class="ct-toolbar__sub">A grid of cards that flip to good practice or common mistake.</p>
+    </div>
+    <span class="ct-badge ct-badge--accent">Hosted edition</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How this works
+        </button>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-field">
+          <label class="ct-label" for="grid-title">Heading</label>
+          <input class="ct-input" id="grid-title" type="text" value="Do&rsquo;s &amp; Don&rsquo;ts">
+          <span class="ct-hint">Leave both this and the line below empty to show the cards on their own.</span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="grid-intro">Line underneath</label>
+          <textarea class="ct-textarea" id="grid-intro" rows="2">Click the cards below to reveal if the statement is a good practice or a common mistake.</textarea>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Brand colours</span>
+          <span class="ct-hint">The two verdict colours are darkened automatically until the white
+          text on them is readable. Pick the shade you want &mdash; it will be adjusted only if it has to be.</span>
+          <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+            <div class="ct-colour">
+              <input type="color" id="color-primary" value="#496DDB">
+              <label class="ct-colour__label" for="color-primary">Main colour &mdash; card outline on hover, focus rings</label>
+            </div>
+            <div class="ct-colour">
+              <input type="color" id="color-do" value="#10b981">
+              <label class="ct-colour__label" for="color-do">Behind a DO</label>
+            </div>
+            <div class="ct-colour">
+              <input type="color" id="color-dont" value="#ef4444">
+              <label class="ct-colour__label" for="color-dont">Behind a DON&rsquo;T</label>
+            </div>
+            <div class="ct-colour">
+              <input type="color" id="color-card" value="#ffffff">
+              <label class="ct-colour__label" for="color-card">Card background before it is flipped</label>
+            </div>
+          </div>
+          <div class="ct-note" id="contrast-note" style="margin-top: var(--ct-sp-3);" hidden>
+            <span class="ct-note__icon" aria-hidden="true">i</span>
+            <div id="contrast-note-text"></div>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-check" for="transparent-bg">
+            <input type="checkbox" id="transparent-bg" checked>
+            Let the host page&rsquo;s own background show through
+          </label>
+          <div class="ct-colour ct-colour--off" id="page-bg-wrap" style="margin-top: var(--ct-sp-2);">
+            <input type="color" id="color-page" value="#F7F6F8" disabled>
+            <label class="ct-colour__label" for="color-page">Background behind the grid</label>
+          </div>
+        </div>
+
+        <div class="dd-grid">
+          <div class="ct-field">
+            <label class="ct-label" for="grid-cols">Cards across</label>
+            <select class="ct-select" id="grid-cols">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+            <span class="ct-hint">Drops to one on a phone.</span>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="tile-height">Card height</label>
+            <input class="ct-range" id="tile-height" type="range" min="120" max="360" step="10" value="180">
+            <span class="ct-hint" id="height-readout"></span>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Wording on the cards</span>
+          <div class="dd-grid" style="margin-top: var(--ct-sp-2);">
+            <div class="ct-field">
+              <label class="ct-label" for="label-do">Good one</label>
+              <input class="ct-input" id="label-do" type="text" value="DO" maxlength="40">
+            </div>
+            <div class="ct-field">
+              <label class="ct-label" for="label-dont">Bad one</label>
+              <input class="ct-input" id="label-dont" type="text" value="DON&rsquo;T" maxlength="40">
+            </div>
+            <div class="ct-field">
+              <label class="ct-label" for="label-hint">Prompt on the front</label>
+              <input class="ct-input" id="label-hint" type="text" value="Tap to reveal" maxlength="40">
+            </div>
+          </div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div id="content-builder">
+          <div class="ct-row" style="justify-content: space-between;">
+            <h3 class="ct-card__title">Cards</h3>
+            <div class="ct-row">
+              <button class="ct-btn ct-btn--sm" type="button" id="add-do-btn">Add a DO</button>
+              <button class="ct-btn ct-btn--sm" type="button" id="add-dont-btn">Add a DON&rsquo;T</button>
+            </div>
+          </div>
+          <p class="ct-hint" id="balance-readout" style="margin-top: var(--ct-sp-2);"></p>
+          <div id="items-container"></div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="import-link">Editing a link you made earlier?</label>
+          <textarea class="ct-textarea ct-input--mono" id="import-link" rows="3"
+                    placeholder="Paste the full link here and press Load"></textarea>
+          <div class="ct-row" style="margin-top: var(--ct-sp-2);">
+            <button class="ct-btn ct-btn--sm" type="button" id="import-btn">Load these cards</button>
+          </div>
+          <span class="ct-hint">The cards live inside the link itself, so pasting one back in brings all its content with it.</span>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-label" for="runtime-base">Address of the grid page</label>
+          <input class="ct-input ct-input--mono" id="runtime-base" type="text" spellcheck="false">
+          <span class="ct-hint" id="runtime-hint">Working out where the grid page is&hellip;</span>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#embed-output" data-ct-copy-label="Embed code copied">
+          Copy embed code
+        </button>
+      </div>
+
+      <iframe id="preview-frame" title="Preview of the do's and don'ts grid"></iframe>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-5);">
+        <label class="ct-label" for="embed-output">Embed code &mdash; paste this into TargetConnect or SharePoint</label>
+        <textarea class="ct-codebox" id="embed-output" readonly spellcheck="false" rows="4"></textarea>
+      </div>
+
+      <div class="ct-field">
+        <div class="ct-row" style="justify-content: space-between; align-items: baseline;">
+          <label class="ct-label" for="link-output">Or just the link, to share directly</label>
+          <button class="ct-btn ct-btn--quiet ct-btn--sm" type="button"
+                  data-ct-copy="#link-output" data-ct-copy-label="Link copied">Copy link</button>
+        </div>
+        <textarea class="ct-codebox" id="link-output" readonly spellcheck="false" rows="4"></textarea>
+        <span class="ct-hint dd-meter" id="length-readout"></span>
+      </div>
+
+      <div class="ct-note" id="length-warning" hidden>
+        <span class="ct-note__icon" aria-hidden="true">!</span>
+        <div id="length-warning-text"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How this works</h2>
+
+    <p>A grid of statements. Students read one, decide for themselves whether it is good
+    practice or a mistake, then tap to find out. The deciding is the activity &mdash; a
+    list of rules gets skimmed, a card you have to commit to does not.</p>
+
+    <p>The grid page itself is hosted once, here. Your cards are not stored anywhere
+    &mdash; they are squashed down and packed into the link. When someone opens it, their
+    browser unpacks them. That is why the link is so long, and why there is nothing for
+    you to upload.</p>
+
+    <h3>Writing good cards</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>Mix them up.</b> If the first three are all DOs, students stop reading and
+      start pattern-matching. The builder keeps a count for you.</li>
+      <li><b>Make the wrong ones tempting.</b> A DON&rsquo;T that is obviously silly teaches
+      nothing. The good ones are things students genuinely believe.</li>
+      <li><b>Keep the front short.</b> It is a card, not a paragraph. The explanation on
+      the back is where the detail goes.</li>
+    </ul>
+
+    <h3>Worth knowing</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>The grid never changes height.</b> Flipping a card swaps its two faces in
+      place, so nothing on the page below it shifts. That matters in TargetConnect, where
+      a growing embed slides down over the Submit button.</li>
+      <li><b>Verdict colours are checked for you.</b> The usual bright green and red are
+      too light for white text &mdash; they land around 2.5:1 and 3.8:1 against the 4.5:1
+      that readable text needs. Whatever you pick is darkened just enough to pass, keeping
+      the colour you chose.</li>
+      <li><b>Nothing is stored.</b> The part of the link after the <span class="ct-mono">#</span>
+      never leaves the browser, so your cards are never sent to this server and never
+      appear in any log here.</li>
+      <li><b>To change a card later</b>, paste your link back into the box at the bottom
+      left, edit it, and swap the link over.</li>
+      <li><b>Keep the whole link.</b> If it gets cut short in an email or a text box, it
+      will not open. The page will say so rather than showing half a grid.</li>
+      <li><b>It needs this site to be up.</b> The page is served from here, so if this
+      server is down the embed shows an empty box.</li>
+    </ul>
+
+    <h3>Running your own copy</h3>
+    <p>Both this builder and the grid page are plain HTML files with no server behind
+    them, so they will sit on any hosting that serves static files &mdash; Kinsta, GitHub
+    Pages, SharePoint, a university web server, anything. There is nothing to install, no
+    database, and nothing loaded from anywhere else at all.</p>
+
+    <p>Copy this folder structure across, keeping the shape:</p>
+    <pre class="ct-codebox" style="white-space: pre; padding: var(--ct-sp-3);">brand/ct.css
+brand/ct.js
+builders/dosdonts-link-builder.html
+w/dosdonts/index.html</pre>
+
+    <p>The builder looks for a copy of the grid page alongside itself when it loads. If it
+    finds one, your links point at your own hosting and you are entirely independent. If it
+    does not, they point back at the original. Either way the address it settled on is shown
+    at the bottom of the settings, and you can type a different one in.</p>
+  </div>
+</div>
+
+<script>
+    /* ====================================================================
+       Where the grid page lives.
+
+       This builder is meant to be copied onto other people's hosting, so
+       it works this out rather than assuming. If a copy of the grid page
+       is sitting next to it in the usual layout, that copy is used, which
+       keeps a copied folder entirely self-sufficient. If not, links point
+       back at the original.
+    ==================================================================== */
+    const FALLBACK_BASE = 'https://emaitch.co.uk/ctt/w/dosdonts/';
+
+    async function resolveRuntimeBase() {
+        const field = document.getElementById('runtime-base');
+        const hint = document.getElementById('runtime-hint');
+
+        if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+            field.value = FALLBACK_BASE;
+            hint.textContent = 'This page is not being served by a web server, so links point at ' +
+                               'the original copy. Put it on hosting to use your own.';
+            return;
+        }
+
+        let candidate;
+        try {
+            candidate = new URL('../w/dosdonts/', location.href).href;
+        } catch (error) {
+            field.value = FALLBACK_BASE;
+            return;
+        }
+
+        try {
+            const response = await fetch(candidate, { method: 'HEAD' });
+            if (!response.ok) { throw new Error('not-there'); }
+            field.value = candidate;
+            hint.textContent = 'Found a copy of the grid page alongside this builder, so your ' +
+                               'links will point at your own hosting.';
+        } catch (error) {
+            field.value = FALLBACK_BASE;
+            hint.textContent = 'No copy of the grid page found alongside this builder, so links ' +
+                               'point at the original. Copy the w/dosdonts folder across to use your own.';
+        }
+    }
+
+    let itemCount = 0;
+    let previewTimeout;
+
+    /* --- Packing the grid into a link -------------------------------- */
+
+    function bytesToBase64url(bytes) {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) { binary += String.fromCharCode(bytes[i]); }
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function bytesFromBase64url(s) {
+        s = String(s).replace(/-/g, '+').replace(/_/g, '/');
+        while (s.length % 4) { s += '='; }
+        const binary = atob(s);
+        const out = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) { out[i] = binary.charCodeAt(i); }
+        return out;
+    }
+
+    async function encodePayload(payload) {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        if (typeof CompressionStream === 'undefined') {
+            return 'j=' + bytesToBase64url(bytes);
+        }
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        const packed = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+        return 'd=' + bytesToBase64url(packed);
+    }
+
+    async function decodeFragment(fragment) {
+        const params = new URLSearchParams(fragment);
+        if (params.has('j')) {
+            return JSON.parse(new TextDecoder().decode(bytesFromBase64url(params.get('j'))));
+        }
+        if (!params.has('d')) { throw new Error('nothing-to-read'); }
+        const ds = new DecompressionStream('deflate-raw');
+        const writer = ds.writable.getWriter();
+        writer.write(bytesFromBase64url(params.get('d')));
+        writer.close();
+        const bytes = new Uint8Array(await new Response(ds.readable).arrayBuffer());
+        return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    /* --- Contrast, mirrored from the grid page ------------------------ */
+
+    function hexToRgb(hex) {
+        let h = String(hex).replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        if (h.length < 6) { return null; }
+        return {
+            r: parseInt(h.substr(0, 2), 16),
+            g: parseInt(h.substr(2, 2), 16),
+            b: parseInt(h.substr(4, 2), 16)
+        };
+    }
+
+    function luminance(c) {
+        const channel = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    }
+
+    function contrastWithWhite(c) {
+        return 1.05 / (luminance(c) + 0.05);
+    }
+
+    /* --- The card editors --------------------------------------------
+       gatherItems finds each editor by .item-card and each control by its
+       data-field name, so renaming either breaks the output silently.
+    ------------------------------------------------------------------ */
+
+    function escapeAttr(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escapeText(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function addItem(preset) {
+        preset = preset || {};
+        itemCount++;
+        const id = itemCount;
+        const type = preset.type === 'dont' ? 'dont' : 'do';
+
+        const card = document.createElement('div');
+        // item-card is what gatherItems looks for; controls by data-field.
+        card.className = 'item-card dd-item';
+        card.id = 'item-' + id;
+        card.dataset.type = type;
+
+        card.innerHTML =
+            '<div class="dd-head">' +
+              '<span class="ct-section-label">Card ' + id + '</span>' +
+              '<div class="ct-row">' +
+                '<select class="ct-select ct-btn--sm" data-type aria-label="Is this a do or a don\'t?" style="width:auto;">' +
+                  '<option value="do"' + (type === 'do' ? ' selected' : '') + '>DO &mdash; good practice</option>' +
+                  '<option value="dont"' + (type === 'dont' ? ' selected' : '') + '>DON&rsquo;T &mdash; a mistake</option>' +
+                '</select>' +
+                '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-remove="' + id + '">Remove</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-s">Front of the card</label>' +
+              '<textarea id="f' + id + '-s" class="ct-textarea" rows="2" data-field="statement" ' +
+              'placeholder="e.g. Arrive ten minutes early.">' + escapeText(preset.statement) + '</textarea>' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-e">Back of the card</label>' +
+              '<textarea id="f' + id + '-e" class="ct-textarea" rows="3" data-field="explanation" ' +
+              'placeholder="Why it is a good idea, or what to do instead.">' + escapeText(preset.explanation) + '</textarea>' +
+            '</div>';
+
+        document.getElementById('items-container').appendChild(card);
+    }
+
+    function gatherItems() {
+        const items = [];
+        document.querySelectorAll('.item-card').forEach(function (card) {
+            const out = { type: card.dataset.type };
+            card.querySelectorAll('[data-field]').forEach(function (input) {
+                const raw = input.value.trim();
+                if (raw !== '') { out[input.getAttribute('data-field')] = raw; }
+            });
+            if (out.statement) { items.push(out); }
+        });
+        return items;
+    }
+
+    function buildPayload() {
+        const transparent = document.getElementById('transparent-bg').checked;
+        return {
+            v: 1,
+            title: document.getElementById('grid-title').value.trim(),
+            intro: document.getElementById('grid-intro').value.trim(),
+            labels: {
+                yes:  document.getElementById('label-do').value.trim(),
+                no:   document.getElementById('label-dont').value.trim(),
+                hint: document.getElementById('label-hint').value
+            },
+            theme: {
+                primary:    document.getElementById('color-primary').value,
+                cardBg:     document.getElementById('color-card').value,
+                pageBg:     transparent ? 'transparent' : document.getElementById('color-page').value,
+                doColour:   document.getElementById('color-do').value,
+                dontColour: document.getElementById('color-dont').value,
+                tileH:      parseInt(document.getElementById('tile-height').value, 10),
+                cols:       parseInt(document.getElementById('grid-cols').value, 10)
+            },
+            items: gatherItems()
+        };
+    }
+
+    /* --- Output ------------------------------------------------------- */
+
+    function describeLength(length) {
+        const readout = document.getElementById('length-readout');
+        const warning = document.getElementById('length-warning');
+        const warningText = document.getElementById('length-warning-text');
+
+        readout.textContent = length.toLocaleString() + ' characters long.';
+
+        if (length > 8000) {
+            warning.hidden = false;
+            warning.className = 'ct-note ct-note--warning';
+            warningText.textContent =
+                'This link is very long. Most systems cope, but some text boxes trim long links, ' +
+                'and a trimmed link will not open. Test it where you plan to use it, or split the ' +
+                'grid into two shorter ones.';
+        } else if (length > 4000) {
+            warning.hidden = false;
+            warning.className = 'ct-note';
+            warningText.textContent =
+                'This link is getting long. It should be fine, but it is worth pasting it into ' +
+                'your site and checking it opens before you rely on it.';
+        } else {
+            warning.hidden = true;
+        }
+    }
+
+    function describeBalance(items) {
+        const dos = items.filter(function (i) { return i.type === 'do'; }).length;
+        const donts = items.length - dos;
+        const readout = document.getElementById('balance-readout');
+        if (!items.length) {
+            readout.textContent = 'No cards yet.';
+            return;
+        }
+        let note = dos + (dos === 1 ? ' DO' : ' DOs') + ' and ' + donts +
+                   (donts === 1 ? ' DON’T' : ' DON’Ts') + '.';
+        if (!dos || !donts) {
+            note += ' All one kind — students will spot that and stop deciding.';
+        }
+        readout.textContent = note;
+    }
+
+    function describeContrast(payload) {
+        const note = document.getElementById('contrast-note');
+        const text = document.getElementById('contrast-note-text');
+        const adjusted = [];
+        [['doColour', 'the DO colour'], ['dontColour', 'the DON’T colour']].forEach(function (pair) {
+            const rgb = hexToRgb(payload.theme[pair[0]]);
+            if (rgb && contrastWithWhite(rgb) < 4.5) { adjusted.push(pair[1]); }
+        });
+        if (!adjusted.length) { note.hidden = true; return; }
+        note.hidden = false;
+        note.className = 'ct-note';
+        text.textContent = 'Darkened ' + adjusted.join(' and ') + ' on the cards so the white text ' +
+            'stays readable. The preview shows exactly what students will see.';
+    }
+
+    function currentBase() {
+        let base = document.getElementById('runtime-base').value.trim() || FALLBACK_BASE;
+        base = base.split('#')[0].split('?')[0];
+        return base.endsWith('/') ? base : base + '/';
+    }
+
+    /* The preview frame is the real grid page, and it posts its own height
+       back as it draws. That measurement beats any arithmetic here, because
+       the heading can wrap to a second line and change the total. It is only
+       trusted when it matches the layout currently being previewed, so a
+       stale number from the previous render is never baked into the embed. */
+    let measured = { height: 0, signature: '' };
+
+    window.addEventListener('message', function (event) {
+        if (!event.data || event.data.type !== 'dosdonts:height') { return; }
+        const height = parseInt(event.data.height, 10);
+        if (!(height > 0)) { return; }
+        measured = { height: height, signature: previewSignature };
+        updateOutput();
+    });
+
+    let previewSignature = '';
+
+    function signatureOf(payload) {
+        return [payload.items.length, payload.theme.cols, payload.theme.tileH,
+                payload.title, payload.intro].join('|');
+    }
+
+    function frameHeight(payload) {
+        const signature = signatureOf(payload);
+        if (measured.height && measured.signature === signature) {
+            // A host narrower than the preview can wrap the heading onto one
+            // more line, so a little slack is left rather than a scrollbar.
+            return measured.height + (payload.intro ? 28 : 8);
+        }
+        const rows = Math.max(Math.ceil(payload.items.length / payload.theme.cols), 1);
+        const heading = (payload.title ? 48 : 0) + (payload.intro ? 49 : 0) + (payload.title || payload.intro ? 25 : 0);
+        // heading block + rows of tiles + the 20px gaps between them + body padding
+        return heading + rows * payload.theme.tileH + (rows - 1) * 20 + 24;
+    }
+
+    async function updateOutput() {
+        const payload = buildPayload();
+        const embedOutput = document.getElementById('embed-output');
+        const linkOutput = document.getElementById('link-output');
+
+        describeBalance(payload.items);
+        describeContrast(payload);
+
+        if (!payload.items.length) {
+            linkOutput.value = '';
+            embedOutput.value = '';
+            document.getElementById('length-readout').textContent = 'Add a card to get a link.';
+            document.getElementById('length-warning').hidden = true;
+            return;
+        }
+
+        const fragment = await encodePayload(payload);
+        const base = currentBase();
+        const link = base + '#' + fragment;
+        const height = frameHeight(payload);
+        const title = payload.title || 'Do’s and don’ts';
+
+        linkOutput.value = link;
+        embedOutput.value =
+            '<iframe src="' + escapeAttr(link) + '"\n' +
+            '        title="' + escapeAttr(title) + '"\n' +
+            '        width="100%" height="' + height + '"\n' +
+            '        style="border:0; max-width:930px;" loading="lazy"></iframe>';
+
+        describeLength(link.length);
+
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(function () {
+            // A hash change alone will not reload a frame, so nudge the query too.
+            const frame = document.getElementById('preview-frame');
+            previewSignature = signatureOf(payload);
+            frame.src = base + '?r=' + Date.now() + '#' + fragment;
+            frame.style.height = height + 'px';
+        }, 350);
+    }
+
+    /* --- Loading an existing link back in ----------------------------- */
+
+    async function importLink() {
+        const raw = document.getElementById('import-link').value.trim();
+        if (!raw) { return; }
+
+        const hashAt = raw.indexOf('#');
+        const fragment = hashAt >= 0 ? raw.slice(hashAt + 1)
+                                     : raw.replace(/^[^?]*\??/, '');
+
+        let payload;
+        try {
+            payload = await decodeFragment(fragment);
+        } catch (error) {
+            alert('That link could not be read. Make sure you have pasted the whole thing, ' +
+                  'including everything after the # sign.');
+            return;
+        }
+
+        document.getElementById('grid-title').value = payload.title || '';
+        document.getElementById('grid-intro').value = payload.intro || '';
+
+        const labels = payload.labels || {};
+        if (labels.yes)  { document.getElementById('label-do').value = labels.yes; }
+        if (labels.no)   { document.getElementById('label-dont').value = labels.no; }
+        if (labels.hint !== undefined) { document.getElementById('label-hint').value = labels.hint; }
+
+        const theme = payload.theme || {};
+        if (theme.primary)    { document.getElementById('color-primary').value = theme.primary; }
+        if (theme.cardBg)     { document.getElementById('color-card').value = theme.cardBg; }
+        if (theme.doColour)   { document.getElementById('color-do').value = theme.doColour; }
+        if (theme.dontColour) { document.getElementById('color-dont').value = theme.dontColour; }
+        if (theme.tileH)      { document.getElementById('tile-height').value = theme.tileH; }
+        if (theme.cols)       { document.getElementById('grid-cols').value = theme.cols; }
+
+        const transparent = theme.pageBg === 'transparent' || !theme.pageBg;
+        document.getElementById('transparent-bg').checked = transparent;
+        if (!transparent) { document.getElementById('color-page').value = theme.pageBg; }
+        syncPageBg();
+        syncHeightReadout();
+
+        document.getElementById('items-container').innerHTML = '';
+        itemCount = 0;
+        (payload.items || []).forEach(function (item) { addItem(item); });
+        if (!itemCount) { addItem(); }
+
+        document.getElementById('import-link').value = '';
+        updateOutput();
+    }
+
+    /* --- Wiring ------------------------------------------------------- */
+
+    function syncPageBg() {
+        const transparent = document.getElementById('transparent-bg').checked;
+        document.getElementById('color-page').disabled = transparent;
+        document.getElementById('page-bg-wrap').classList.toggle('ct-colour--off', transparent);
+    }
+
+    function syncHeightReadout() {
+        const value = document.getElementById('tile-height').value;
+        document.getElementById('height-readout').textContent =
+            value + ' pixels. Tall enough for your longest explanation.';
+    }
+
+    const container = document.getElementById('items-container');
+
+    container.addEventListener('click', function (event) {
+        const remove = event.target.closest('[data-remove]');
+        if (!remove) { return; }
+        document.getElementById('item-' + remove.getAttribute('data-remove')).remove();
+        updateOutput();
+    });
+
+    container.addEventListener('change', function (event) {
+        const select = event.target.closest('[data-type]');
+        if (select) { select.closest('.item-card').dataset.type = select.value; }
+        updateOutput();
+    });
+
+    container.addEventListener('input', updateOutput);
+
+    document.getElementById('add-do-btn').addEventListener('click', function () {
+        addItem({ type: 'do' });
+        updateOutput();
+    });
+    document.getElementById('add-dont-btn').addEventListener('click', function () {
+        addItem({ type: 'dont' });
+        updateOutput();
+    });
+    document.getElementById('import-btn').addEventListener('click', importLink);
+    document.getElementById('transparent-bg').addEventListener('change', function () {
+        syncPageBg();
+        updateOutput();
+    });
+    document.getElementById('tile-height').addEventListener('input', function () {
+        syncHeightReadout();
+        updateOutput();
+    });
+
+    ['grid-title', 'grid-intro', 'grid-cols', 'label-do', 'label-dont', 'label-hint',
+     'color-primary', 'color-card', 'color-page', 'color-do', 'color-dont', 'runtime-base']
+        .forEach(function (id) {
+            const node = document.getElementById(id);
+            node.addEventListener('input', updateOutput);
+            node.addEventListener('change', updateOutput);
+        });
+
+    /* --- Something to look at on first load --------------------------- */
+
+    addItem({
+        type: 'dont',
+        statement: 'Use the exact same CV for every application.',
+        explanation: 'Tailor it to the job description. The same CV everywhere reads as ' +
+                     '“I applied to two hundred of these”, because you did.'
+    });
+    addItem({
+        type: 'do',
+        statement: 'Send a polite follow-up email after an interview.',
+        explanation: 'It shows continued interest and professionalism, and it puts your ' +
+                     'name back in front of them while they are still deciding.'
+    });
+    addItem({
+        type: 'do',
+        statement: 'Ask a question at the end, even if you think you know the answer.',
+        explanation: 'Not asking anything reads as not caring. Ask about the team, the ' +
+                     'first six months, or what good looks like in the role.'
+    });
+    addItem({
+        type: 'dont',
+        statement: 'Say you have no weaknesses when asked.',
+        explanation: 'It fails the actual test, which is self-awareness. Name something ' +
+                     'real, then spend the answer on what you did about it.'
+    });
+
+    syncPageBg();
+    syncHeightReadout();
+    resolveRuntimeBase().then(updateOutput);
+</script>
+</body>
+</html>
