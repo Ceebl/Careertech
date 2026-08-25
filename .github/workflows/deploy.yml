@@ -40,7 +40,10 @@ jobs:
             DATA_DIR=/srv/careertech/data
             DOMAIN=emaitch.co.uk
             # Folders that are not published as static sites.
-            EXCLUDE=".github api infra"
+            # targetconnect-probe is internal research notes and must never be
+            # served. Listing it here also makes step 2 delete the copy that
+            # earlier deploys already published.
+            EXCLUDE=".github api infra targetconnect-probe"
 
             echo "::: fetching repo"
             sudo rm -rf "$TMP"

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vacancies List Widget Maker</title>
-<meta name="description" content="Build a responsive job board widget from your TargetConnect vacancies feed.">
+<meta name="description" content="Build a responsive job board widget from your vacancies feed.">
 <link rel="stylesheet" href="../../brand/ct.css">
 <script src="../../brand/ct.js"></script>
 <style>
@@ -53,15 +53,15 @@
           <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
           </svg>
-          <div><b>Required TargetConnect setup.</b> In your Vacancies RSS settings, tick
+          <div><b>Required feed setup.</b> In your Vacancies RSS settings, tick
           <i>Show field name</i> for Type of Opportunity, Employer Name, Details and
           Expiry Date.</div>
         </div>
 
         <div class="ct-field">
-          <label class="ct-label" for="rss-url">TargetConnect RSS link</label>
+          <label class="ct-label" for="rss-url">Vacancies RSS link</label>
           <input class="ct-input" type="url" id="rss-url"
-                 placeholder="https://yourlink.targetconnect.net/rss/vacancies/...">
+                 placeholder="https://your-careers-platform/rss/vacancies/...">
         </div>
 
         <div class="ct-note">
@@ -126,7 +126,7 @@
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
           </svg>
               <div><b>Finding your opportunity types.</b> Tabs match on the Opportunity
-              Types you define. In TargetConnect go to <span class="ct-mono">Maintenance
+              Types you define. In your careers platform go to <span class="ct-mono">Maintenance
               &rsaquo; Manage Lists &rsaquo; Job Related Lists &rsaquo; Opportunity types</span>
               and read the Description column. Matching ignores capitalisation.</div>
             </div>
@@ -196,7 +196,7 @@
     <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
             data-ct-modal-close aria-label="Close">Close</button>
     <h2 id="api-modal-title">Going past the 10-item limit</h2>
-    <p>This widget uses a free service called RSS2JSON to turn the TargetConnect feed
+    <p>This widget uses a free service called RSS2JSON to turn the feed
     into clean data. Anonymous requests are capped at 10 items to save their bandwidth.</p>
     <ol style="padding-left: 1.2rem; line-height: 1.8;">
       <li>Sign up for a free account at <a href="https://rss2json.com/" target="_blank" rel="noopener">rss2json.com</a>.</li>
@@ -209,7 +209,7 @@
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
           </svg>
       <div>You can restrict the key on the RSS2JSON site so it only works on your own
-      GitHub Pages and TargetConnect addresses.</div>
+      GitHub Pages and careers platform addresses.</div>
     </div>
   </div>
 </div>

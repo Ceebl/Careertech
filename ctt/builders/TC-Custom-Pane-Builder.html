@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Custom Pane Maker</title>
-<meta name="description" content="Build responsive, tag-targeted banners for TargetConnect custom panes.">
+<meta name="description" content="Build responsive, tag-targeted banners for careers platform custom panes.">
 <link rel="stylesheet" href="../../brand/ct.css">
 <script src="../../brand/ct.js"></script>
 <style>
@@ -89,7 +89,7 @@
     <div class="ct-toolbar__mark" aria-hidden="true">CP</div>
     <div class="ct-toolbar__titles">
       <h1 class="ct-toolbar__title">Custom Pane Maker</h1>
-      <p class="ct-toolbar__sub">Targeted banners for TargetConnect panes.</p>
+      <p class="ct-toolbar__sub">Targeted banners for careers platform panes.</p>
     </div>
     <span class="ct-badge ct-badge--accent">Universal edition</span>
     <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
@@ -250,7 +250,7 @@
       <div class="ct-field" style="margin-top: var(--ct-sp-5);">
         <label class="ct-label" for="code-output">Generated code</label>
         <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
-        <span class="ct-hint">Paste this into the HTML editor of a TargetConnect custom pane.</span>
+        <span class="ct-hint">Paste this into the HTML editor of a custom pane.</span>
       </div>
     </section>
 
@@ -264,7 +264,7 @@
     <h2 id="help-title">How to use the Custom Pane Maker</h2>
     <p>This builds responsive HTML banners with Velocity logic, so students see
     different content based on their tags. Every template uses table-based layout,
-    which stops TargetConnect&rsquo;s own CSS from breaking the buttons.</p>
+    which stops the platform&rsquo;s own CSS from breaking the buttons.</p>
 
     <h3>1. Audience rules</h3>
     <p>The tool writes <b>IF / ELSE IF / ELSE</b> logic. Rules are checked in order and
@@ -273,7 +273,7 @@
       <li><b>Target tags</b> are comma separated and behave as AND. Typing
       <span class="ct-mono">Business School, Final Year</span> means a student needs
       <b>both</b> tags.</li>
-      <li>Aim for about 15 rule groups at most, for TargetConnect&rsquo;s sake.</li>
+      <li>Aim for about 15 rule groups at most, for the platform&rsquo;s sake.</li>
     </ul>
 
     <div class="ct-note ct-note--warning">
@@ -281,7 +281,7 @@
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
           </svg>
       <div><b>Tag checks are case sensitive.</b> Type them exactly as they appear in
-      TargetConnect &mdash; <span class="ct-mono">Business</span> will not match
+      your platform &mdash; <span class="ct-mono">Business</span> will not match
       <span class="ct-mono">business</span>.</div>
     </div>
 
@@ -300,7 +300,7 @@
     headline blank if you would rather show nothing.</p>
 
     <h3>4. Buttons and links</h3>
-    <p>Up to three buttons each. The dropdown covers the common internal TargetConnect
+    <p>Up to three buttons each. The dropdown covers the common internal platform
     pages; choose <i>Custom URL</i> to enter your own.</p>
 
     <h3>5. Using the code</h3>
@@ -625,7 +625,7 @@
             let vCode = "\n";
             allUsedTags.forEach(tag => { vCode += `#set($${safeVarName(tag)} = false)\n`; });
             
-            // Safety wrapper to prevent TargetConnect silent crashing
+            // Safety wrapper to stop the platform silently crashing
             vCode += `\n\n#if($user.Tags)\n  #foreach($tag in $user.Tags)\n`;
             Array.from(allUsedTags).forEach((tag, index) => {
                 const statement = index === 0 ? "#if" : "#elseif";

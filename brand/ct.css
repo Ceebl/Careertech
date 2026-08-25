@@ -344,10 +344,14 @@
 .ct-page p { margin: 0 0 var(--ct-sp-4); }
 .ct-page p:last-child { margin-bottom: 0; }
 
-.ct-page a,
-.ct-root a { color: var(--ct-accent-text); text-decoration-thickness: 1px; text-underline-offset: 2px; }
-.ct-page a:hover,
-.ct-root a:hover { color: var(--ct-accent); }
+/* An anchor styled as a button is excluded here. This rule carries a class
+   and an element, so it outranks .ct-btn--primary's own colour and would
+   otherwise paint the link colour over a filled button - dark blue text on
+   a blue fill, at about 1.8:1. */
+.ct-page a:not(.ct-btn),
+.ct-root a:not(.ct-btn) { color: var(--ct-accent-text); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.ct-page a:not(.ct-btn):hover,
+.ct-root a:not(.ct-btn):hover { color: var(--ct-accent); }
 
 .ct-page code, .ct-root code,
 .ct-page pre,  .ct-root pre { font-family: var(--ct-font-mono); font-size: 0.9em; }

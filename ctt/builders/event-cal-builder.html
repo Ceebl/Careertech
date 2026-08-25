@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Event Calendar Maker</title>
-<meta name="description" content="Build a branded, interactive calendar that reads your TargetConnect events feed.">
+<meta name="description" content="Build a branded, interactive calendar that reads your events feed.">
 <link rel="stylesheet" href="../../brand/ct.css">
 <script src="../../brand/ct.js"></script>
 <style>
@@ -48,16 +48,16 @@
           <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 12H9.1v-1.8h1.8V14zm0-3.1H9.1V6h1.8v4.9z"/>
           </svg>
-          <div><b>Required TargetConnect setup.</b> In your RSS settings, tick
+          <div><b>Required feed setup.</b> In your RSS settings, tick
           <i>Show field name</i> for Title, Event Type, Brief Description, Location,
           Closest Future Date and End Date. Without those the calendar cannot read
           your events.</div>
         </div>
 
         <div class="ct-field">
-          <label class="ct-label" for="rss-url">TargetConnect RSS link</label>
+          <label class="ct-label" for="rss-url">Events RSS link</label>
           <input class="ct-input" type="url" id="rss-url"
-                 placeholder="https://yourlink.targetconnect.net/rss/...">
+                 placeholder="https://your-careers-platform/rss/...">
           <span class="ct-hint">The public feed address from your RSS settings.</span>
         </div>
 
