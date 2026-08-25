@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CareerTech Tools</title>
 <meta name="description" content="Free, self-contained tools and widget builders for careers services.">
+<script>
+  /* Some static hosts serve a folder without redirecting to add the trailing
+     slash. When that happens the browser treats the last path segment as a
+     file, so every relative path on the page resolves one level too high -
+     the stylesheet 404s and the links point outside this folder. Putting the
+     slash back fixes all of them at once. Runs before the stylesheet so a
+     wrong address never gets as far as painting.
+
+     Only a final segment with no dot in it is treated as a folder, so
+     .../index.html is left exactly as it is. */
+  (function () {
+    var path = location.pathname;
+    if (path.charAt(path.length - 1) === '/') { return; }
+    if (path.lastIndexOf('.') > path.lastIndexOf('/')) { return; }
+    location.replace(path + '/' + location.search + location.hash);
+  })();
+</script>
 <link rel="stylesheet" href="../brand/ct.css">
 <script src="../brand/ct.js"></script>
 <style>
