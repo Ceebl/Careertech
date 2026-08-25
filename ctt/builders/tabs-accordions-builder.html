@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tabs &amp; Accordions Builder</title>
+<meta name="description" content="Build expanding sections that never change height, for pasting straight into a pathway activity. No JavaScript, nothing to host.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #live-preview { display: block; padding: var(--ct-sp-5); min-height: 240px; }
+  .tb-item {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+  .tb-head { display: flex; gap: var(--ct-sp-2); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .tb-meter { font-variant-numeric: tabular-nums; }
+  .tb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ct-sp-3); }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">TA</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Tabs &amp; Accordions Builder</h1>
+      <p class="ct-toolbar__sub">Expanding sections that never change height.</p>
+    </div>
+    <span class="ct-badge ct-badge--accent">Nothing to host</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How this works
+        </button>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-note">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+          <div><b>Why these exist:</b> a normal accordion grows the page when it opens, and in
+          some careers platforms the activity container is measured once at load &mdash; so the
+          grown content spills over the Submit button underneath. Everything built here keeps
+          exactly the same height however much the student clicks.</div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="pattern">Pattern</label>
+          <select class="ct-select" id="pattern">
+            <option value="tabs">Horizontal tabs &mdash; a few short parallel sections</option>
+            <option value="acc" selected>Swap-in-place accordion &mdash; headings down the side</option>
+            <option value="scroll">Real accordions in a scroll box &mdash; no style block needed</option>
+          </select>
+          <span class="ct-hint" id="pattern-hint"></span>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="brand">Brand colour</label>
+          <div class="ct-colour">
+            <input type="color" id="brand" value="#0d9488">
+            <span class="ct-colour__label">Headings, selected section, borders</span>
+          </div>
+          <span class="ct-hint" id="contrast-readout"></span>
+        </div>
+
+        <div class="ct-field" id="heading-field">
+          <label class="ct-check" for="repeat-heading">
+            <input type="checkbox" id="repeat-heading" checked>
+            Repeat each section name as a heading inside its panel
+          </label>
+        </div>
+
+        <div class="tb-grid" id="scroll-only" hidden>
+          <div class="ct-field">
+            <label class="ct-label" for="box-height">Box height</label>
+            <input class="ct-range" id="box-height" type="range" min="180" max="520" step="20" value="280">
+            <span class="ct-hint" id="height-readout"></span>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="hint-text">Caption under the box</label>
+            <input class="ct-input" id="hint-text" type="text" value="Scroll inside the box for more questions.">
+          </div>
+        </div>
+
+        <div class="ct-field" id="firstopen-field" hidden>
+          <label class="ct-check" for="first-open">
+            <input type="checkbox" id="first-open" checked>
+            Start with the first section open
+          </label>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div id="content-builder">
+          <div class="ct-row" style="justify-content: space-between;">
+            <h3 class="ct-card__title">Sections</h3>
+            <button class="ct-btn ct-btn--sm" type="button" id="add-item-btn">Add section</button>
+          </div>
+          <p class="ct-hint" id="count-readout" style="margin-top: var(--ct-sp-2);"></p>
+          <div id="items-container"></div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-check" for="fresh">
+            <input type="checkbox" id="fresh">
+            Give this block a new identity
+          </label>
+          <span class="ct-hint">Each block gets its own name so two on the same page never
+          interfere. Tick this only to regenerate it &mdash; for instance if you pasted the
+          same code twice by mistake.</span>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#code-output" data-ct-copy-label="Code copied">
+          Copy HTML
+        </button>
+      </div>
+
+      <div class="ct-stage" id="live-preview"></div>
+
+      <p class="ct-hint" id="stability-readout" style="margin-top: var(--ct-sp-3);"></p>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-4);">
+        <label class="ct-label" for="code-output">Generated code</label>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false" rows="10"></textarea>
+        <span class="ct-hint tb-meter" id="length-readout"></span>
+      </div>
+
+      <div class="ct-note">
+        <span class="ct-note__icon" aria-hidden="true">i</span>
+        <div>Paste this into your platform&rsquo;s source or HTML view &mdash; the
+        <span class="ct-mono">&lt;/&gt;</span> button in most editors. Pasting it into the
+        normal typing view will show the code as text instead of running it.</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How this works</h2>
+
+    <p>This is not the accordion failing to reflow. Browsers always push content down when a
+    section opens, and that part is reliable. What appears to happen in some careers platforms
+    is that the activity content sits in a container whose height is measured once when the
+    page loads, with the Submit button placed directly after it. The container is fixed at,
+    say, 900px, Submit sits at 900px, and the moment your content grows past that it spills
+    out and renders over the button.</p>
+
+    <p>That is inferred from how it renders rather than from digging through the platform, so
+    treat it as a working theory &mdash; but it predicts the behaviour accurately.</p>
+
+    <h3>The rule that fixes it</h3>
+    <p><b>Do not let your content change its own height after the page loads.</b> If the total
+    height never changes, none of this can happen &mdash; and you can still have things expand,
+    collapse and swap over.</p>
+
+    <p>The trick behind the first two patterns is one line: hide panels with
+    <span class="ct-mono">visibility: hidden</span>, never
+    <span class="ct-mono">display: none</span>. <span class="ct-mono">display: none</span>
+    takes the element out of the layout entirely, so the container shrinks and grows as you
+    click, which is exactly what causes the problem.
+    <span class="ct-mono">visibility: hidden</span> keeps the element&rsquo;s space reserved
+    and just makes it invisible. Every panel is stacked in a single CSS grid cell
+    (<span class="ct-mono">grid-area: 1/1</span>) with all but one hidden that way, so the
+    container is permanently as tall as your longest panel whichever one is showing.</p>
+
+    <p>The third pattern takes a different route: genuine
+    <span class="ct-mono">&lt;details&gt;</span> accordions inside a fixed-height box with
+    <span class="ct-mono">overflow-y: auto</span>. They expand into the box&rsquo;s own scroll
+    area instead of into the page. Open all of them at once and the box still does not budge.</p>
+
+    <h3>No JavaScript anywhere</h3>
+    <p>The first two are built from radio buttons and labels, so they are keyboard-navigable
+    for free &mdash; arrow keys move between sections &mdash; and screen readers announce them
+    sensibly. The third uses the browser&rsquo;s own
+    <span class="ct-mono">&lt;details&gt;</span> element. Nothing here needs a script, which is
+    what lets it survive the security filters that strip scripts out of most platforms.</p>
+
+    <h3>Two things this does for you</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>Every block gets a unique name.</b> Written by hand, these patterns use fixed ids,
+      so two on one page fight over the same radio group and clicking one changes the other.
+      Here the ids, the group name and every single CSS class carry a random per-block token,
+      so you can paste as many as you like into one activity. Generate each separately rather
+      than copying one block twice and editing the text.</li>
+      <li><b>Colours are checked for contrast.</b> The selected section is white text on your
+      brand colour, and a lot of pleasant-looking greens and blues are too light to carry white
+      text. Whatever you pick is darkened just enough to clear 4.5:1, keeping the hue.</li>
+    </ul>
+
+    <h3>Worth knowing</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>The first two need a style block.</b> There is no way to express
+      <span class="ct-mono">:checked</span> as an inline style, and that is the mechanism the
+      whole thing runs on. Some platform vendors advise against style blocks in activities, so
+      factor in your own institution&rsquo;s position.</li>
+      <li><b>The real risk with a style block is CSS escaping</b> and affecting the rest of the
+      platform page. Every rule generated here is scoped under this block&rsquo;s own unique
+      class so that cannot happen. If you write anything of your own, keep that discipline
+      &mdash; never write a bare <span class="ct-mono">button {}</span> or
+      <span class="ct-mono">.card {}</span> rule inside an activity.</li>
+      <li><b>If you want to avoid style blocks entirely</b>, the scroll box is the pattern to
+      use &mdash; height and overflow are ordinary properties. An embedded iframe from your own
+      web server is the other route.</li>
+      <li><b>Keep the focus outlines.</b> They are how keyboard users see where they are, and
+      they are easy to strip out by accident when restyling.</li>
+      <li><b>Your body text can contain HTML</b> &mdash; paragraphs, lists, links, bold. The
+      section names are plain text and are escaped for you.</li>
+      <li><b>Test it in UAT first</b>, as ever.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+    /* ====================================================================
+       Building the block.
+
+       Output has to stand entirely on its own, because it gets pasted into
+       someone else's page and never comes back here. No JavaScript, no
+       external stylesheet, no font, no image.
+
+       Everything - the ids, the radio group name, and every class - is
+       prefixed with a per-block token. Written by hand these patterns use
+       fixed names, which is why two of them on one page interfere: the
+       radios end up in the same group, and the CSS of one matches the
+       markup of the other.
+    ==================================================================== */
+
+    const PATTERN_HINTS = {
+        tabs:   'Buttons across the top. Best for three or four short parallel sections.',
+        acc:    'Headings down the left, content on the right. The closest thing to a normal accordion.',
+        scroll: 'Genuine expanding sections inside a fixed box. The only pattern that needs no style block.'
+    };
+
+    let token = freshToken();
+
+    function freshToken() {
+        return 'cx' + Math.random().toString(36).slice(2, 7);
+    }
+
+    function escapeText(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(value) { return escapeText(value); }
+
+    /* --- Colour, kept readable --------------------------------------- */
+
+    function hexToRgb(hex) {
+        let h = String(hex).replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        return { r: parseInt(h.substr(0, 2), 16), g: parseInt(h.substr(2, 2), 16), b: parseInt(h.substr(4, 2), 16) };
+    }
+
+    function toHex(c) {
+        const p = function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); };
+        return '#' + p(c.r) + p(c.g) + p(c.b);
+    }
+
+    function blend(fg, bg, alpha) {
+        return { r: fg.r * alpha + bg.r * (1 - alpha),
+                 g: fg.g * alpha + bg.g * (1 - alpha),
+                 b: fg.b * alpha + bg.b * (1 - alpha) };
+    }
+
+    function luminance(c) {
+        const ch = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+    }
+
+    function contrast(a, b) {
+        const la = luminance(a), lb = luminance(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    const WHITE = { r: 255, g: 255, b: 255 };
+    const BLACK = { r: 0, g: 0, b: 0 };
+
+    // The selected section carries white text on the brand colour, so the
+    // brand is darkened a step at a time until white clears 4.5:1 on it.
+    function deepenForWhite(rgb) {
+        let c = rgb;
+        for (let i = 0; i < 24 && contrast(WHITE, c) < 4.5; i++) { c = blend(c, BLACK, 0.92); }
+        return c;
+    }
+
+    function palette(pickedHex) {
+        const picked = hexToRgb(pickedHex);
+        const brand = deepenForWhite(picked);
+        return {
+            picked: picked,
+            adjusted: contrast(WHITE, picked) < 4.5,
+            brand: toHex(brand),
+            brandDark: toHex(blend(brand, BLACK, 0.82)),
+            tint: toHex(blend(brand, WHITE, 0.06)),
+            tint2: toHex(blend(brand, WHITE, 0.16)),
+            hover: toHex(blend(brand, WHITE, 0.45))
+        };
+    }
+
+    /* --- Shared pieces of the generated block ------------------------ */
+
+    function baseVars(t, c) {
+        return '.' + t + '{\n' +
+'  --ink:#111827; --muted:#4b5563; --line:#e4e4ee;\n' +
+'  --brand:' + c.brand + '; --brand-dark:' + c.brandDark + '; --tint:' + c.tint + '; --tint-2:' + c.tint2 + ';\n' +
+'  --focus:#f59e0b;\n' +
+'  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;\n' +
+'  color:var(--ink); line-height:1.6; margin:0 0 8px;\n' +
+'}\n' +
+'.' + t + ' *{box-sizing:border-box}\n' +
+'.' + t + ' .vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}\n';
+    }
+
+    function panelRules(t) {
+        return '.' + t + ' .panel{grid-area:1/1;visibility:hidden;padding:22px 24px}\n' +
+'.' + t + ' .panel > :first-child{margin-top:0}\n' +
+'.' + t + ' .panel > :last-child{margin-bottom:0}\n' +
+'.' + t + ' .panel h4{margin:0 0 10px;font-size:1.1rem;color:var(--brand-dark)}\n' +
+'.' + t + ' .panel ul{margin:10px 0;padding-left:22px}\n' +
+'.' + t + ' .panel li{margin:5px 0}\n';
+    }
+
+    // Builds a comma-separated selector list, one line per section, so the
+    // rule grows with however many sections the operator adds.
+    function each(items, build) {
+        return items.map(function (item, i) { return build(i + 1); }).join(',\n');
+    }
+
+    function panelBody(item, repeatHeading) {
+        const heading = repeatHeading ? '<h4>' + escapeText(item.label) + '</h4>\n' : '';
+        return heading + (item.body || '');
+    }
+
+    /* --- Pattern 1: horizontal tabs ---------------------------------- */
+
+    function tabsCode(t, c, items, opts) {
+        const css = baseVars(t, c) +
+'\n.' + t + ' .bar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}\n' +
+'.' + t + ' .btn{\n' +
+'  display:inline-block;padding:11px 20px;border:1.5px solid var(--line);border-radius:8px;\n' +
+'  background:var(--tint);color:var(--muted);font-weight:600;font-size:.95rem;\n' +
+'  cursor:pointer;transition:background .15s,color .15s,border-color .15s;\n' +
+'}\n' +
+'.' + t + ' .btn:hover{background:var(--tint-2);color:var(--brand-dark);border-color:' + c.hover + '}\n' +
+'\n/* the constant-height stack: all panels share one grid cell */\n' +
+'.' + t + ' .stack{display:grid;border:1.5px solid var(--line);border-top:4px solid var(--brand);border-radius:10px;background:#fff}\n' +
+panelRules(t) +
+'\n/* selected state */\n' +
+each(items, function (n) { return '.' + t + ' .r' + n + ':checked ~ .stack .p' + n; }) + '{visibility:visible}\n' +
+each(items, function (n) { return '.' + t + ' .r' + n + ':checked ~ .bar .b' + n; }) + '{background:var(--brand);border-color:var(--brand);color:#fff}\n' +
+'\n/* keyboard focus - do not remove, this is how keyboard users see where they are */\n' +
+each(items, function (n) { return '.' + t + ' .r' + n + ':focus-visible ~ .bar .b' + n; }) + '{outline:3px solid var(--focus);outline-offset:2px}\n' +
+'\n@media (max-width:520px){\n' +
+'  .' + t + ' .bar{flex-direction:column;gap:6px}\n' +
+'  .' + t + ' .btn{width:100%;text-align:center}\n' +
+'  .' + t + ' .panel{padding:18px}\n' +
+'}\n';
+
+        const radios = items.map(function (item, i) {
+            return '<input type="radio" name="' + t + '" id="' + t + '-' + (i + 1) + '" class="vh r' + (i + 1) + '"' +
+                   (i === 0 ? ' checked' : '') + '>';
+        }).join('\n');
+
+        const bar = items.map(function (item, i) {
+            return '<label class="btn b' + (i + 1) + '" for="' + t + '-' + (i + 1) + '">' + escapeText(item.label) + '</label>';
+        }).join('\n');
+
+        const panels = items.map(function (item, i) {
+            return '<div class="panel p' + (i + 1) + '">\n' + panelBody(item, opts.repeatHeading) + '\n</div>';
+        }).join('\n');
+
+        return '<!-- HORIZONTAL TABS - constant height, no JavaScript.\n' +
+               '     Every rule is scoped under .' + t + ', which is unique to this block,\n' +
+               '     so it cannot affect the rest of the page or another block like it. -->\n' +
+               '<div class="' + t + '">\n<style>\n' + css + '</style>\n\n' +
+               radios + '\n\n<div class="bar">\n' + bar + '\n</div>\n\n' +
+               '<div class="stack">\n' + panels + '\n</div>\n</div>';
+    }
+
+    /* --- Pattern 2: swap-in-place accordion --------------------------- */
+
+    function accCode(t, c, items, opts) {
+        const css = baseVars(t, c) +
+'\n.' + t + ' .wrap{display:grid;grid-template-columns:minmax(180px,240px) 1fr;gap:16px;align-items:start}\n' +
+'.' + t + ' .heads{display:flex;flex-direction:column;gap:8px}\n' +
+'.' + t + ' .head{\n' +
+'  display:flex;align-items:center;gap:10px;padding:13px 16px;\n' +
+'  border:1.5px solid var(--line);border-radius:8px;background:var(--tint);\n' +
+'  color:var(--muted);font-weight:600;font-size:.95rem;cursor:pointer;\n' +
+'  transition:background .15s,color .15s,border-color .15s;\n' +
+'}\n' +
+'.' + t + ' .head:hover{background:var(--tint-2);color:var(--brand-dark);border-color:' + c.hover + '}\n' +
+'.' + t + ' .head::before{\n' +
+'  content:"";flex:none;width:9px;height:9px;\n' +
+'  border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;\n' +
+'  transform:rotate(-45deg);transition:transform .2s;\n' +
+'}\n' +
+'\n/* the constant-height stack: all panels share one grid cell */\n' +
+'.' + t + ' .stack{display:grid;border:1.5px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:#fff}\n' +
+panelRules(t) +
+'\n/* selected state */\n' +
+each(items, function (n) { return '.' + t + ' .a' + n + ':checked ~ .wrap .stack .p' + n; }) + '{visibility:visible}\n' +
+each(items, function (n) { return '.' + t + ' .a' + n + ':checked ~ .wrap .heads .h' + n; }) + '{background:var(--brand);border-color:var(--brand);color:#fff}\n' +
+each(items, function (n) { return '.' + t + ' .a' + n + ':checked ~ .wrap .heads .h' + n + '::before'; }) + '{transform:rotate(45deg)}\n' +
+'\n/* keyboard focus - do not remove */\n' +
+each(items, function (n) { return '.' + t + ' .a' + n + ':focus-visible ~ .wrap .heads .h' + n; }) + '{outline:3px solid var(--focus);outline-offset:2px}\n' +
+'\n@media (max-width:640px){\n' +
+'  .' + t + ' .wrap{grid-template-columns:1fr;gap:12px}\n' +
+'  .' + t + ' .panel{padding:18px}\n' +
+'}\n';
+
+        const radios = items.map(function (item, i) {
+            return '<input type="radio" name="' + t + '" id="' + t + '-' + (i + 1) + '" class="vh a' + (i + 1) + '"' +
+                   (i === 0 ? ' checked' : '') + '>';
+        }).join('\n');
+
+        const heads = items.map(function (item, i) {
+            return '<label class="head h' + (i + 1) + '" for="' + t + '-' + (i + 1) + '">' + escapeText(item.label) + '</label>';
+        }).join('\n');
+
+        const panels = items.map(function (item, i) {
+            return '<div class="panel p' + (i + 1) + '">\n' + panelBody(item, opts.repeatHeading) + '\n</div>';
+        }).join('\n');
+
+        return '<!-- SWAP-IN-PLACE ACCORDION - constant height, no JavaScript.\n' +
+               '     The panel area is always as tall as the LONGEST section, so opening a\n' +
+               '     section never moves the page. Every rule is scoped under .' + t + ',\n' +
+               '     which is unique to this block. -->\n' +
+               '<div class="' + t + '">\n<style>\n' + css + '</style>\n\n' +
+               radios + '\n\n<div class="wrap">\n<div class="heads">\n' + heads + '\n</div>\n' +
+               '<div class="stack">\n' + panels + '\n</div>\n</div>\n</div>';
+    }
+
+    /* --- Pattern 3: real accordions in a scroll box ------------------- */
+
+    function scrollCode(t, c, items, opts) {
+        const css = baseVars(t, c) +
+'\n.' + t + ' .box{\n' +
+'  height:' + opts.boxHeight + 'px; overflow-y:auto; padding:6px 18px;\n' +
+'  border:1.5px solid var(--line); border-top:4px solid var(--brand);\n' +
+'  border-radius:10px 10px 0 0; background:#fff;\n' +
+'}\n' +
+'/* caption bar attached to the box, so it never depends on the page background */\n' +
+'.' + t + ' .hint{\n' +
+'  margin:0; padding:9px 18px; font-size:.85rem; color:var(--muted);\n' +
+'  background:var(--tint); border:1.5px solid var(--line); border-top:0;\n' +
+'  border-radius:0 0 10px 10px;\n' +
+'}\n' +
+'\n.' + t + ' details{border-bottom:1px solid var(--line)}\n' +
+'.' + t + ' details:last-child{border-bottom:0}\n' +
+'.' + t + ' summary{\n' +
+'  display:flex; align-items:center; gap:11px; padding:15px 2px;\n' +
+'  font-weight:600; color:var(--brand-dark); cursor:pointer; list-style:none;\n' +
+'}\n' +
+'.' + t + ' summary::-webkit-details-marker{display:none}\n' +
+'.' + t + ' summary::before{\n' +
+'  content:""; flex:none; width:9px; height:9px;\n' +
+'  border-right:2.5px solid currentColor; border-bottom:2.5px solid currentColor;\n' +
+'  transform:rotate(-45deg); transition:transform .2s;\n' +
+'}\n' +
+'.' + t + ' details[open] > summary::before{transform:rotate(45deg)}\n' +
+'.' + t + ' summary:hover{color:var(--brand)}\n' +
+'.' + t + ' summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}\n' +
+'.' + t + ' .body{padding:0 0 16px 20px;color:var(--muted)}\n' +
+'.' + t + ' .body > :first-child{margin-top:0}\n' +
+'.' + t + ' .body > :last-child{margin-bottom:0}\n' +
+'.' + t + ' .body ul{margin:8px 0;padding-left:22px}\n' +
+'.' + t + ' .body li{margin:5px 0}\n' +
+'\n@media (max-width:520px){\n' +
+'  .' + t + ' .box{height:' + (opts.boxHeight + 40) + 'px;padding:6px 14px}\n' +
+'}\n';
+
+        const blocks = items.map(function (item, i) {
+            return '<details' + (i === 0 && opts.firstOpen ? ' open' : '') + '>\n' +
+                   '<summary>' + escapeText(item.label) + '</summary>\n' +
+                   '<div class="body">' + (item.body || '') + '</div>\n</details>';
+        }).join('\n\n');
+
+        const hint = opts.hintText
+            ? '\n<p class="hint">' + escapeText(opts.hintText) + '</p>'
+            : '';
+
+        return '<!-- REAL ACCORDIONS IN A FIXED-HEIGHT SCROLL BOX - constant height, no JavaScript.\n' +
+               '     Genuine <details> elements, but contained. They expand into the scroll area\n' +
+               '     instead of into the page, so nothing below ever moves. Scoped under\n' +
+               '     .' + t + ', which is unique to this block. -->\n' +
+               '<div class="' + t + '">\n<style>\n' + css + '</style>\n\n' +
+               '<div class="box">\n' + blocks + '\n</div>' + hint + '\n</div>';
+    }
+
+    const PATTERNS = { tabs: tabsCode, acc: accCode, scroll: scrollCode };
+
+    /* --- The section editors ------------------------------------------
+       gatherItems finds each editor by .item-card and each control by its
+       data-field name, so renaming either breaks the output silently.
+    ------------------------------------------------------------------ */
+
+    let itemCount = 0;
+
+    function addItem(preset) {
+        preset = preset || {};
+        itemCount++;
+        const id = itemCount;
+        const card = document.createElement('div');
+        card.className = 'item-card tb-item';
+        card.id = 'item-' + id;
+        card.innerHTML =
+            '<div class="tb-head">' +
+              '<span class="ct-section-label">Section ' + id + '</span>' +
+              '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-remove="' + id + '">Remove</button>' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-l">Section name</label>' +
+              '<input id="f' + id + '-l" type="text" class="ct-input" data-field="label" ' +
+              'value="' + escapeAttr(preset.label) + '" placeholder="e.g. Before the interview">' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-b">Content</label>' +
+              '<textarea id="f' + id + '-b" class="ct-textarea" rows="5" data-field="body" ' +
+              'placeholder="HTML is allowed here - &lt;p&gt;, &lt;ul&gt;, &lt;a&gt;, &lt;strong&gt;">' +
+              escapeText(preset.body) + '</textarea>' +
+            '</div>';
+        document.getElementById('items-container').appendChild(card);
+    }
+
+    function gatherItems() {
+        const items = [];
+        document.querySelectorAll('.item-card').forEach(function (card) {
+            const out = {};
+            card.querySelectorAll('[data-field]').forEach(function (input) {
+                out[input.getAttribute('data-field')] = input.value.trim();
+            });
+            if (out.label) { items.push(out); }
+        });
+        return items;
+    }
+
+    /* --- Output ------------------------------------------------------- */
+
+    function describeContrast(c) {
+        const readout = document.getElementById('contrast-readout');
+        const ratio = contrast(WHITE, hexToRgb(c.brand));
+        readout.textContent = c.adjusted
+            ? 'Darkened to ' + c.brand + ' so the white text on the selected section stays readable, at ' +
+              ratio.toFixed(1) + ':1. The preview shows exactly what students will see.'
+            : 'White text on this colour is ' + ratio.toFixed(1) + ':1, comfortably readable.';
+    }
+
+    function syncPatternFields(pattern) {
+        document.getElementById('pattern-hint').textContent = PATTERN_HINTS[pattern];
+        document.getElementById('scroll-only').hidden = pattern !== 'scroll';
+        document.getElementById('firstopen-field').hidden = pattern !== 'scroll';
+        document.getElementById('heading-field').hidden = pattern === 'scroll';
+    }
+
+    function generate() {
+        const pattern = document.getElementById('pattern').value;
+        const c = palette(document.getElementById('brand').value);
+        const items = gatherItems();
+
+        syncPatternFields(pattern);
+        describeContrast(c);
+
+        const count = document.getElementById('count-readout');
+        count.textContent = items.length
+            ? items.length + (items.length === 1 ? ' section.' : ' sections.') +
+              (items.length === 1 ? ' Add at least one more — a single section has nothing to switch to.' : '')
+            : 'Add a section to get some code.';
+
+        const boxHeight = parseInt(document.getElementById('box-height').value, 10);
+        document.getElementById('height-readout').textContent = boxHeight + ' pixels tall.';
+
+        if (!items.length) {
+            document.getElementById('code-output').value = '';
+            document.getElementById('live-preview').innerHTML = '';
+            document.getElementById('length-readout').textContent = '';
+            document.getElementById('stability-readout').textContent = '';
+            return;
+        }
+
+        const code = PATTERNS[pattern](token, c, items, {
+            repeatHeading: document.getElementById('repeat-heading').checked,
+            boxHeight: boxHeight,
+            firstOpen: document.getElementById('first-open').checked,
+            hintText: document.getElementById('hint-text').value.trim()
+        });
+
+        document.getElementById('code-output').value = code;
+        document.getElementById('live-preview').innerHTML = code;
+        document.getElementById('length-readout').textContent =
+            code.length.toLocaleString() + ' characters. Block name: ' + token;
+
+        measureStability();
+    }
+
+    /* The claim this whole tool rests on is that the height never changes.
+       Rather than assert it, the preview is measured with each section
+       selected in turn and the readout reports what was found. */
+    function measureStability() {
+        const root = document.querySelector('#live-preview > div');
+        const readout = document.getElementById('stability-readout');
+        if (!root) { readout.textContent = ''; return; }
+
+        const heights = [];
+        const radios = root.querySelectorAll('input[type="radio"]');
+        if (radios.length) {
+            const wasChecked = root.querySelector('input[type="radio"]:checked');
+            radios.forEach(function (radio) {
+                radio.checked = true;
+                heights.push(Math.round(root.getBoundingClientRect().height));
+            });
+            if (wasChecked) { wasChecked.checked = true; }
+        } else {
+            const blocks = root.querySelectorAll('details');
+            heights.push(Math.round(root.getBoundingClientRect().height));
+            blocks.forEach(function (d) { d.open = true; });
+            heights.push(Math.round(root.getBoundingClientRect().height));
+            blocks.forEach(function (d, i) { d.open = i === 0 && document.getElementById('first-open').checked; });
+        }
+
+        const min = Math.min.apply(null, heights), max = Math.max.apply(null, heights);
+        readout.textContent = min === max
+            ? 'Measured ' + max + 'px tall with every section open in turn — the height never changes, ' +
+              'so nothing below it can be covered.'
+            : 'Height varied between ' + min + 'px and ' + max + 'px. That should not happen — ' +
+              'please report it.';
+    }
+
+    /* --- Wiring ------------------------------------------------------- */
+
+    const container = document.getElementById('items-container');
+
+    container.addEventListener('click', function (event) {
+        const remove = event.target.closest('[data-remove]');
+        if (!remove) { return; }
+        document.getElementById('item-' + remove.getAttribute('data-remove')).remove();
+        generate();
+    });
+    container.addEventListener('input', generate);
+
+    document.getElementById('add-item-btn').addEventListener('click', function () {
+        addItem();
+        generate();
+    });
+
+    document.getElementById('fresh').addEventListener('change', function (event) {
+        if (!event.target.checked) { return; }
+        token = freshToken();
+        event.target.checked = false;
+        generate();
+    });
+
+    ['pattern', 'brand', 'repeat-heading', 'box-height', 'hint-text', 'first-open']
+        .forEach(function (id) {
+            const node = document.getElementById(id);
+            node.addEventListener('input', generate);
+            node.addEventListener('change', generate);
+        });
+
+    /* --- Something to look at on first load --------------------------- */
+
+    addItem({
+        label: 'Before the interview',
+        body: '<p>Research the organisation properly and re-read the job description the night before.</p>\n' +
+              '<ul><li>Find three things about the organisation you can refer to</li>' +
+              '<li>Prepare examples using the STAR structure</li>' +
+              '<li>Plan your route and allow extra time</li></ul>'
+    });
+    addItem({
+        label: 'On the day',
+        body: '<p>Arrive around ten minutes early and bring a copy of your CV.</p>\n' +
+              '<ul><li>Silence your phone before you go in</li>' +
+              '<li>Take a moment before answering - a pause is fine</li>' +
+              '<li>Have two questions ready to ask them</li></ul>'
+    });
+    addItem({
+        label: 'Afterwards',
+        body: '<p>Write down what you were asked while it is still fresh. It is the single most ' +
+              'useful thing you can do for your next interview.</p>\n' +
+              '<ul><li>Note anything that caught you out</li>' +
+              '<li>Ask for feedback whatever the outcome</li></ul>'
+    });
+
+    generate();
+</script>
+</body>
+</html>

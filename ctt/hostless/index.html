@@ -188,6 +188,33 @@
         </div>
       </article>
 
+      <article class="ct-card ct-card--flush hl-tool">
+        <div class="hl-tool__text">
+          <h3 class="hl-tool__name">Tabs &amp; Accordions</h3>
+          <p class="hl-tool__what">
+            Expanding sections that never change height. A normal accordion grows the page
+            when it opens, and where the activity container is measured once at load, the
+            grown content spills over the Submit button. These do not.
+          </p>
+          <ul class="hl-uses">
+            <li>Long guidance split into sections without a wall of text</li>
+            <li>Parallel options: CV, covering letter, application form</li>
+            <li>A run of frequently asked questions</li>
+          </ul>
+          <div class="hl-tool__actions">
+            <a class="ct-btn ct-btn--primary" href="../builders/tabs-accordions-builder.html">Build it</a>
+          </div>
+        </div>
+        <div class="hl-demo">
+          <span class="hl-demo__label">Live example &mdash; try it</span>
+          <iframe id="panels-demo" height="300" title="Example swap-in-place accordion"></iframe>
+          <p class="ct-small ct-muted" style="margin: var(--ct-sp-3) 0 0;">
+            Click between the sections &mdash; the box stays exactly the same height whichever
+            one is showing, because it is always as tall as the longest.
+          </p>
+        </div>
+      </article>
+
     </div>
   </section>
 
@@ -550,6 +577,70 @@
 '<label for="' + u + '" class="' + u + '-btn">Got it, thanks</label>' +
 '</div></div></div>';
         var frame = document.getElementById('modal-demo');
+        if (frame) { frame.srcdoc = page; }
+    })();
+
+    /* The panels example, likewise, is the block of code the builder hands you
+       rather than a hosted page. Same scoping and the same visibility trick. */
+    (function mountPanels() {
+        var u = 'cxdemo';
+        var brand = '#0b7d73', dark = '#095f58', tint = '#f0f7f7', tint2 = '#dceceb';
+        var sections = [
+            ['Before the interview',
+             '<p>Research the organisation and re-read the job description the night before.</p>' +
+             '<ul><li>Find three things you can refer to</li><li>Prepare STAR examples</li>' +
+             '<li>Plan your route and allow extra time</li></ul>'],
+            ['On the day',
+             '<p>Arrive around ten minutes early and bring a copy of your CV.</p>' +
+             '<ul><li>Silence your phone before you go in</li><li>A pause before answering is fine</li></ul>'],
+            ['Afterwards',
+             '<p>Write down what you were asked while it is still fresh.</p>' +
+             '<ul><li>Note anything that caught you out</li><li>Ask for feedback either way</li></ul>']
+        ];
+        var sel = function (build) {
+            return sections.map(function (_, i) { return build(i + 1); }).join(',');
+        };
+        var page =
+'<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:16px;background:transparent}</style>' +
+'<div class="' + u + '"><style>' +
+'.' + u + '{--muted:#4b5563;--line:#e4e4ee;--brand:' + brand + ';--brand-dark:' + dark + ';' +
+'--tint:' + tint + ';--tint-2:' + tint2 + ';--focus:#f59e0b;' +
+'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111827;line-height:1.6}' +
+'.' + u + ' *{box-sizing:border-box}' +
+'.' + u + ' .vh{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0)}' +
+'.' + u + ' .wrap{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:14px;align-items:start}' +
+'.' + u + ' .heads{display:flex;flex-direction:column;gap:8px}' +
+'.' + u + ' .head{display:flex;align-items:center;gap:9px;padding:11px 14px;border:1.5px solid var(--line);' +
+'border-radius:8px;background:var(--tint);color:var(--muted);font-weight:600;font-size:.9rem;cursor:pointer}' +
+'.' + u + ' .head::before{content:"";flex:none;width:8px;height:8px;border-right:2.5px solid currentColor;' +
+'border-bottom:2.5px solid currentColor;transform:rotate(-45deg);transition:transform .2s}' +
+'.' + u + ' .stack{display:grid;border:1.5px solid var(--line);border-left:4px solid var(--brand);border-radius:10px;background:#fff}' +
+'.' + u + ' .panel{grid-area:1/1;visibility:hidden;padding:18px 20px;font-size:.92rem}' +
+'.' + u + ' .panel>:first-child{margin-top:0}.' + u + ' .panel>:last-child{margin-bottom:0}' +
+'.' + u + ' .panel h4{margin:0 0 8px;font-size:1rem;color:var(--brand-dark)}' +
+'.' + u + ' .panel ul{margin:8px 0;padding-left:20px}.' + u + ' .panel li{margin:4px 0}' +
+sel(function (n) { return '.' + u + ' .a' + n + ':checked~.wrap .stack .p' + n; }) + '{visibility:visible}' +
+sel(function (n) { return '.' + u + ' .a' + n + ':checked~.wrap .heads .h' + n; }) +
+'{background:var(--brand);border-color:var(--brand);color:#fff}' +
+sel(function (n) { return '.' + u + ' .a' + n + ':checked~.wrap .heads .h' + n + '::before'; }) + '{transform:rotate(45deg)}' +
+sel(function (n) { return '.' + u + ' .a' + n + ':focus-visible~.wrap .heads .h' + n; }) +
+'{outline:3px solid var(--focus);outline-offset:2px}' +
+'@media (max-width:560px){.' + u + ' .wrap{grid-template-columns:1fr}}' +
+'</style>' +
+sections.map(function (_, i) {
+    return '<input type="radio" name="' + u + '" id="' + u + '-' + (i + 1) + '" class="vh a' + (i + 1) + '"' +
+           (i === 0 ? ' checked' : '') + '>';
+}).join('') +
+'<div class="wrap"><div class="heads">' +
+sections.map(function (s, i) {
+    return '<label class="head h' + (i + 1) + '" for="' + u + '-' + (i + 1) + '">' + s[0] + '</label>';
+}).join('') +
+'</div><div class="stack">' +
+sections.map(function (s, i) {
+    return '<div class="panel p' + (i + 1) + '"><h4>' + s[0] + '</h4>' + s[1] + '</div>';
+}).join('') +
+'</div></div></div>';
+        var frame = document.getElementById('panels-demo');
         if (frame) { frame.srcdoc = page; }
     })();
 </script>
