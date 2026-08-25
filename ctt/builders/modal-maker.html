@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pure CSS Modal Maker</title>
-<meta name="description" content="Generate pop-up modals that use no JavaScript at all, for TargetConnect, SharePoint or Canvas.">
+<meta name="description" content="Generate pop-up modals that use no JavaScript at all, for TargetConnect, SharePoint or Canvas. Nothing to host.">
 <link rel="stylesheet" href="../../brand/ct.css">
 <script src="../../brand/ct.js"></script>
 <style>
   /* Tool-specific only. Everything else comes from ct.css. */
-  #live-preview { flex-direction: column; gap: var(--ct-sp-3); text-align: center; }
+  #live-preview { flex-direction: column; gap: var(--ct-sp-3); text-align: center; min-height: 160px; }
+  .mm-meter { font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body class="ct-page">
@@ -21,7 +22,7 @@
       <h1 class="ct-toolbar__title">Pure CSS Modal Maker</h1>
       <p class="ct-toolbar__sub">Pop-up dialogs with no JavaScript at all.</p>
     </div>
-    <span class="ct-badge ct-badge--accent">Universal edition</span>
+    <span class="ct-badge ct-badge--accent">Nothing to host</span>
     <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
       <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
@@ -40,6 +41,9 @@
     <section class="ct-card" id="controls">
       <div class="ct-card__head">
         <h2 class="ct-card__title">Modal configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How this works
+        </button>
       </div>
 
       <div class="ct-stack">
@@ -48,8 +52,10 @@
           <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
           </svg>
-          <div><b>How it works:</b> this uses a hidden checkbox rather than JavaScript,
-          so it survives the strict security filters in most LMS and CRM platforms.</div>
+          <div><b>How it works:</b> a hidden checkbox does the opening and closing rather
+          than JavaScript, so this survives the strict security filters in most LMS and CRM
+          platforms. You paste the code straight into the page &mdash; there is nothing to
+          host anywhere, not even here.</div>
         </div>
 
         <div class="ct-field">
@@ -67,6 +73,7 @@
             <input type="color" id="input-color" value="#496DDB">
             <span class="ct-colour__label">Buttons and highlights</span>
           </div>
+          <span class="ct-hint" id="contrast-readout"></span>
         </div>
 
         <div class="ct-field">
@@ -81,14 +88,28 @@
 
         <div class="ct-field">
           <label class="ct-label" for="input-body">Modal body text</label>
-          <textarea class="ct-textarea" id="input-body">Completing this module increases your <strong>Digital Fluency</strong> score. Industry benchmarks for 2026 suggest that graduates with high AI Fluency are 40% more likely to secure roles in the Tech sector.</textarea>
-          <span class="ct-hint">Basic HTML tags are allowed here.</span>
+          <textarea class="ct-textarea" id="input-body" rows="5">Completing this module increases your <strong>Digital Fluency</strong> score. Industry benchmarks for 2026 suggest that graduates with high AI Fluency are 40% more likely to secure roles in the Tech sector.</textarea>
+          <span class="ct-hint">Basic HTML tags are allowed here. The title and button
+          labels are plain text and are escaped for you.</span>
         </div>
 
         <div class="ct-field">
           <label class="ct-label" for="input-close">Close button text</label>
           <input class="ct-input" type="text" id="input-close" value="Got it, thanks">
         </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-check" for="input-fresh">
+            <input type="checkbox" id="input-fresh">
+            Give this modal a new identity
+          </label>
+          <span class="ct-hint">Every modal gets its own name so several on one page never
+          interfere. Tick this only if you want to regenerate it &mdash; for instance if you
+          pasted the same code twice by mistake.</span>
+        </div>
+
       </div>
     </section>
 
@@ -106,129 +127,293 @@
 
       <div class="ct-field" style="margin-top: var(--ct-sp-5);">
         <label class="ct-label" for="code-output">Generated code</label>
-        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false"></textarea>
-        <span class="ct-hint">Paste this into your platform's source or HTML view.</span>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false" rows="8"></textarea>
+        <span class="ct-hint mm-meter" id="length-readout"></span>
+      </div>
+
+      <div class="ct-note">
+        <span class="ct-note__icon" aria-hidden="true">i</span>
+        <div>Paste this into your platform&rsquo;s source or HTML view &mdash; the
+        <span class="ct-mono">&lt;/&gt;</span> button in most editors. Pasting it into the
+        normal typing view will show the code as text instead of running it.</div>
       </div>
     </section>
 
   </div>
 </main>
 
-    <script>
-        function generateModal() {
-            const template = document.getElementById('input-template').value;
-            const color = document.getElementById('input-color').value;
-            const trigger = document.getElementById('input-trigger').value || 'Click Here';
-            const title = document.getElementById('input-title').value || 'Alert';
-            const body = document.getElementById('input-body').value || 'Modal content goes here.';
-            const closeTxt = document.getElementById('input-close').value || 'Close';
-            
-            // Generate a unique ID so multiple modals don't clash on the same page
-            const uniqueId = 'modal-toggle-' + Math.floor(Math.random() * 10000);
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How this works</h2>
 
-            let css = '';
-            let html = '';
+    <p>This is the only tool here that needs no hosting from anybody. The others put the
+    widget page on a server and pack your content into a link; this one gives you a block
+    of HTML and CSS that is the whole thing. Paste it into a TargetConnect Pathway activity,
+    a SharePoint page or a Canvas page and it works on its own, forever, whether or not any
+    of our servers are still running.</p>
 
-            // --- TEMPLATE 1: MODERN SOLID ---
-            if (template === 'modern') {
-                css = `
-  <style>
-    #${uniqueId} { display: none; }
-    .mod-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    #${uniqueId}:checked ~ .mod-overlay { display: flex; }
-    .mod-box { background: #ffffff; padding: 40px; border-radius: 16px; max-width: 550px; width: 90%; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: modPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    @keyframes modPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .mod-box h2 { color: ${color}; margin-top: 0; font-weight: 800; font-size: 1.8rem; border-bottom: 3px solid #e2e8f0; padding-bottom: 10px; display: inline-block; }
-    .mod-box p { color: #475569; line-height: 1.6; font-size: 1.05rem; }
-    .mod-close-x { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; cursor: pointer; color: #94a3b8; }
-    .mod-btn { background: ${color}; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; display: inline-block; transition: opacity 0.2s; }
-    .mod-btn:hover { opacity: 0.9; }
-  </style>`;
-                html = `
-  <input type="checkbox" id="${uniqueId}">
-  <label for="${uniqueId}" class="mod-btn">${trigger}</label>
-  <div class="mod-overlay">
-      <div class="mod-box">
-          <label for="${uniqueId}" class="mod-close-x">✖</label>
-          <h2>${title}</h2>
-          <p>${body}</p>
-          <label for="${uniqueId}" class="mod-btn" style="display:block; text-align:center; margin-top:20px;">${closeTxt}</label>
-      </div>
-  </div>`;
-            } 
-            
-            // --- TEMPLATE 2: PREMIUM SAAS ---
-            else if (template === 'saas') {
-                css = `
-  <style>
-    #${uniqueId} { display: none; }
-    .saas-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); align-items: center; justify-content: center; font-family: -apple-system, sans-serif; }
-    #${uniqueId}:checked ~ .saas-overlay { display: flex; }
-    .saas-box { background: #ffffff; padding: 0; border-radius: 24px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: saasPop 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; }
-    @keyframes saasPop { 0% { transform: scale(0.95) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-    .saas-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 30px 40px 20px 40px; border-bottom: 1px solid #e2e8f0; position: relative; }
-    .saas-header h2 { margin: 0; font-weight: 800; font-size: 1.8rem; color: #0f172a; line-height: 1.2; }
-    .saas-body { padding: 30px 40px; }
-    .saas-body p { color: #475569; line-height: 1.7; font-size: 1.05rem; margin: 0 0 20px 0; }
-    .saas-close-x { position: absolute; right: 25px; top: 25px; width: 32px; height: 32px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .saas-btn { padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; text-align: center; display: inline-block; background: ${color}; color: white; width: 100%; box-sizing: border-box; transition: transform 0.2s; }
-    .saas-btn:hover { transform: translateY(-2px); }
-  </style>`;
-                html = `
-  <input type="checkbox" id="${uniqueId}">
-  <label for="${uniqueId}" class="saas-btn" style="width: auto;">${trigger}</label>
-  <div class="saas-overlay">
-      <div class="saas-box">
-          <div class="saas-header">
-              <label for="${uniqueId}" class="saas-close-x">✕</label>
-              <h2>${title}</h2>
-          </div>
-          <div class="saas-body">
-              <p>${body}</p>
-              <label for="${uniqueId}" class="saas-btn">${closeTxt}</label>
-          </div>
-      </div>
-  </div>`;
-            }
+    <p>It manages that by using no JavaScript at all. A checkbox that you cannot see holds
+    the open or closed state, and CSS shows the dialog while that checkbox is ticked. The
+    trigger and the close buttons are labels pointing at it.</p>
 
-            // --- TEMPLATE 3: MINIMALIST ---
-            else if (template === 'minimal') {
-                 css = `
-  <style>
-    #${uniqueId} { display: none; }
-    .min-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); align-items: center; justify-content: center; font-family: -apple-system, sans-serif; }
-    #${uniqueId}:checked ~ .min-overlay { display: flex; }
-    .min-box { background: #ffffff; padding: 30px; max-width: 450px; width: 90%; border: 2px solid #e2e8f0; border-top: 6px solid ${color}; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-    .min-box h2 { color: #1e293b; margin: 0 0 15px 0; font-size: 1.4rem; }
-    .min-box p { color: #64748b; line-height: 1.5; font-size: 1rem; margin-bottom: 25px; }
-    .min-btn { padding: 10px 20px; font-weight: bold; cursor: pointer; border: 2px solid ${color}; color: ${color}; background: transparent; display: inline-block; transition: background 0.2s; text-align: center; }
-    .min-btn:hover { background: ${color}; color: white; }
-    .min-trigger { background: ${color}; color: white; padding: 10px 20px; font-weight: bold; cursor: pointer; display: inline-block; border: none; transition: opacity 0.2s; }
-    .min-trigger:hover { opacity: 0.9; }
-  </style>`;
-                html = `
-  <input type="checkbox" id="${uniqueId}">
-  <label for="${uniqueId}" class="min-trigger">${trigger}</label>
-  <div class="min-overlay">
-      <div class="min-box">
-          <h2>${title}</h2>
-          <p>${body}</p>
-          <label for="${uniqueId}" class="min-btn" style="display: block;">${closeTxt}</label>
-      </div>
-  </div>`;
-            }
+    <h3>Several modals on one page</h3>
+    <p>Every modal you generate gets its own randomly named identity, and every class name
+    inside it carries that name too. That is what stops two modals in the same activity from
+    opening each other &mdash; a real problem with the shared class names this tool used to
+    emit, where clicking the first trigger opened every modal on the page at once.</p>
 
-            const finalCode = (css + html).trim();
-            document.getElementById('live-preview').innerHTML = finalCode;
-            document.getElementById('code-output').value = finalCode;
-        }
+    <p>So you can build as many as you like and paste them all into one activity. Just
+    generate each one separately rather than copying the same block twice and editing the
+    text, which would give both the same identity.</p>
 
-        // Redraw whenever any control changes, rather than hanging an
-        // oninput attribute off every single field.
-        var controls = document.getElementById('controls');
-        controls.addEventListener('input', generateModal);
-        controls.addEventListener('change', generateModal);
+    <h3>What it cannot do</h3>
+    <p>Being pure CSS has limits worth knowing before you use one for something important:</p>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>The Escape key will not close it.</b> That needs JavaScript. The close button,
+      the corner cross and clicking the background all work.</li>
+      <li><b>Focus is not trapped inside the dialog.</b> Someone tabbing through the page
+      will eventually tab out of the open dialog and into the page behind it.</li>
+      <li><b>A screen reader announces the trigger as a checkbox</b>, not a button, because
+      that is what it really is underneath.</li>
+    </ul>
+    <p>It is keyboard operable &mdash; you can tab to the trigger and press Space &mdash;
+    which the earlier version of this tool was not, because it hid the checkbox with
+    <span class="ct-mono">display: none</span> and that takes it out of the tab order
+    entirely. For a tip or an aside a modal is fine. For anything a student must read to
+    continue, put the content on the page instead of behind a click.</p>
+
+    <h3>Worth knowing</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>The dialog covers the whole window</b> when open, not just the area the
+      activity occupies.</li>
+      <li><b>Your body text can contain HTML</b> &mdash; bold, links, lists. The title and
+      the button labels are treated as plain text, so an apostrophe or an ampersand in them
+      cannot break the markup.</li>
+      <li><b>The button text colour is chosen for you</b>, black or white, whichever stays
+      readable on the colour you picked.</li>
+      <li><b>Nothing is stored and nothing is tracked.</b> This page builds the code in your
+      browser and never sends it anywhere.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+    /* ====================================================================
+       Building the modal.
+
+       Output has to stand entirely on its own, because it gets pasted into
+       someone else's page and never comes back here. No JavaScript, no
+       external stylesheet, no font, no image.
+
+       Every class name is prefixed with a per-modal token. Without that,
+       the general sibling selector that shows the dialog
+       (#toggle:checked ~ .overlay) reaches every later element on the page
+       carrying that class, so a second modal pasted into the same activity
+       gets opened by the first one's trigger.
+    ==================================================================== */
+
+    let token = freshToken();
+
+    function freshToken() {
+        return 'm' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function escapeText(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /* --- Readable text on the chosen colour --------------------------- */
+
+    function hexToRgb(hex) {
+        let h = String(hex).replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        return {
+            r: parseInt(h.substr(0, 2), 16),
+            g: parseInt(h.substr(2, 2), 16),
+            b: parseInt(h.substr(4, 2), 16)
+        };
+    }
+
+    function luminance(c) {
+        const channel = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    }
+
+    function contrast(a, b) {
+        const la = luminance(a), lb = luminance(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    function onColour(hex) {
+        const rgb = hexToRgb(hex);
+        const white = { r: 255, g: 255, b: 255 };
+        const black = { r: 15, g: 23, b: 42 };
+        return contrast(white, rgb) >= contrast(black, rgb) ? '#ffffff' : '#0f172a';
+    }
+
+    function describeContrast(hex) {
+        const rgb = hexToRgb(hex);
+        const text = onColour(hex);
+        const ratio = contrast(hexToRgb(text), rgb);
+        const readout = document.getElementById('contrast-readout');
+        readout.textContent = 'Button text will be ' +
+            (text === '#ffffff' ? 'white' : 'near-black') + ', at ' + ratio.toFixed(1) +
+            ':1 against this colour.' + (ratio < 4.5
+                ? ' That is under the 4.5:1 that readable text needs — try a darker or lighter shade.'
+                : '');
+    }
+
+    /* --- The three designs --------------------------------------------
+       Each returns { css, html }. "u" is the per-modal token, used for the
+       checkbox id and as the prefix on every class name.
+    ------------------------------------------------------------------ */
+
+    function modern(u, colour, ink, trigger, title, body, closeTxt) {
+        return {
+            css:
+'  <style>\n' +
+'    #' + u + ' { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }\n' +
+'    .' + u + '-trigger { background: ' + colour + '; color: ' + ink + '; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }\n' +
+'    #' + u + ':focus-visible + .' + u + '-trigger { outline: 3px solid ' + colour + '; outline-offset: 3px; }\n' +
+'    .' + u + '-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }\n' +
+'    #' + u + ':checked ~ .' + u + '-overlay { display: flex; }\n' +
+'    .' + u + '-backdrop { position: absolute; inset: 0; cursor: pointer; }\n' +
+'    .' + u + '-box { background: #ffffff; padding: 40px; border-radius: 16px; max-width: 550px; width: 90%; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.2); animation: ' + u + 'Pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-height: 85vh; overflow-y: auto; }\n' +
+'    @keyframes ' + u + 'Pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }\n' +
+'    .' + u + '-box h2 { color: ' + colour + '; margin-top: 0; font-weight: 800; font-size: 1.8rem; border-bottom: 3px solid #e2e8f0; padding-bottom: 10px; display: inline-block; }\n' +
+'    .' + u + '-box p { color: #475569; line-height: 1.6; font-size: 1.05rem; }\n' +
+'    .' + u + '-x { position: absolute; right: 20px; top: 15px; font-size: 1.5rem; cursor: pointer; color: #94a3b8; line-height: 1; }\n' +
+'    .' + u + '-btn { background: ' + colour + '; color: ' + ink + '; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; display: block; text-align: center; margin-top: 20px; }\n' +
+'    @media (prefers-reduced-motion: reduce) { .' + u + '-box { animation: none; } }\n' +
+'  </style>',
+            html:
+'  <input type="checkbox" id="' + u + '">\n' +
+'  <label for="' + u + '" class="' + u + '-trigger">' + trigger + '</label>\n' +
+'  <div class="' + u + '-overlay">\n' +
+'    <label for="' + u + '" class="' + u + '-backdrop" aria-hidden="true"></label>\n' +
+'    <div class="' + u + '-box" role="dialog" aria-modal="true" aria-labelledby="' + u + '-h">\n' +
+'      <label for="' + u + '" class="' + u + '-x" aria-hidden="true">&#10006;</label>\n' +
+'      <h2 id="' + u + '-h">' + title + '</h2>\n' +
+'      <p>' + body + '</p>\n' +
+'      <label for="' + u + '" class="' + u + '-btn">' + closeTxt + '</label>\n' +
+'    </div>\n' +
+'  </div>'
+        };
+    }
+
+    function saas(u, colour, ink, trigger, title, body, closeTxt) {
+        return {
+            css:
+'  <style>\n' +
+'    #' + u + ' { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }\n' +
+'    .' + u + '-trigger { background: ' + colour + '; color: ' + ink + '; padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }\n' +
+'    #' + u + ':focus-visible + .' + u + '-trigger { outline: 3px solid ' + colour + '; outline-offset: 3px; }\n' +
+'    .' + u + '-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(12px); align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }\n' +
+'    #' + u + ':checked ~ .' + u + '-overlay { display: flex; }\n' +
+'    .' + u + '-backdrop { position: absolute; inset: 0; cursor: pointer; }\n' +
+'    .' + u + '-box { background: #ffffff; padding: 0; border-radius: 24px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); animation: ' + u + 'Pop 0.4s cubic-bezier(0.16, 1, 0.3, 1); overflow: hidden; max-height: 85vh; }\n' +
+'    @keyframes ' + u + 'Pop { 0% { transform: scale(0.95) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }\n' +
+'    .' + u + '-head { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 30px 40px 20px 40px; border-bottom: 1px solid #e2e8f0; position: relative; }\n' +
+'    .' + u + '-head h2 { margin: 0; font-weight: 800; font-size: 1.8rem; color: #0f172a; line-height: 1.2; }\n' +
+'    .' + u + '-body { padding: 30px 40px; overflow-y: auto; }\n' +
+'    .' + u + '-body p { color: #475569; line-height: 1.7; font-size: 1.05rem; margin: 0 0 20px 0; }\n' +
+'    .' + u + '-x { position: absolute; right: 25px; top: 25px; width: 32px; height: 32px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; color: #94a3b8; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }\n' +
+'    .' + u + '-btn { padding: 14px 20px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; text-align: center; display: block; background: ' + colour + '; color: ' + ink + '; box-sizing: border-box; }\n' +
+'    @media (prefers-reduced-motion: reduce) { .' + u + '-box { animation: none; } }\n' +
+'  </style>',
+            html:
+'  <input type="checkbox" id="' + u + '">\n' +
+'  <label for="' + u + '" class="' + u + '-trigger">' + trigger + '</label>\n' +
+'  <div class="' + u + '-overlay">\n' +
+'    <label for="' + u + '" class="' + u + '-backdrop" aria-hidden="true"></label>\n' +
+'    <div class="' + u + '-box" role="dialog" aria-modal="true" aria-labelledby="' + u + '-h">\n' +
+'      <div class="' + u + '-head">\n' +
+'        <label for="' + u + '" class="' + u + '-x" aria-hidden="true">&#10005;</label>\n' +
+'        <h2 id="' + u + '-h">' + title + '</h2>\n' +
+'      </div>\n' +
+'      <div class="' + u + '-body">\n' +
+'        <p>' + body + '</p>\n' +
+'        <label for="' + u + '" class="' + u + '-btn">' + closeTxt + '</label>\n' +
+'      </div>\n' +
+'    </div>\n' +
+'  </div>'
+        };
+    }
+
+    function minimal(u, colour, ink, trigger, title, body, closeTxt) {
+        return {
+            css:
+'  <style>\n' +
+'    #' + u + ' { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }\n' +
+'    .' + u + '-trigger { background: ' + colour + '; color: ' + ink + '; padding: 10px 20px; font-weight: bold; cursor: pointer; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }\n' +
+'    #' + u + ':focus-visible + .' + u + '-trigger { outline: 3px solid ' + colour + '; outline-offset: 3px; }\n' +
+'    .' + u + '-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.92); align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }\n' +
+'    #' + u + ':checked ~ .' + u + '-overlay { display: flex; }\n' +
+'    .' + u + '-backdrop { position: absolute; inset: 0; cursor: pointer; }\n' +
+'    .' + u + '-box { background: #ffffff; padding: 30px; max-width: 450px; width: 90%; border: 2px solid #e2e8f0; border-top: 6px solid ' + colour + '; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.05); max-height: 85vh; overflow-y: auto; }\n' +
+'    .' + u + '-box h2 { color: #1e293b; margin: 0 0 15px 0; font-size: 1.4rem; }\n' +
+'    .' + u + '-box p { color: #64748b; line-height: 1.5; font-size: 1rem; margin-bottom: 25px; }\n' +
+'    .' + u + '-btn { padding: 10px 20px; font-weight: bold; cursor: pointer; border: 2px solid ' + colour + '; color: ' + colour + '; background: transparent; display: block; text-align: center; }\n' +
+'  </style>',
+            html:
+'  <input type="checkbox" id="' + u + '">\n' +
+'  <label for="' + u + '" class="' + u + '-trigger">' + trigger + '</label>\n' +
+'  <div class="' + u + '-overlay">\n' +
+'    <label for="' + u + '" class="' + u + '-backdrop" aria-hidden="true"></label>\n' +
+'    <div class="' + u + '-box" role="dialog" aria-modal="true" aria-labelledby="' + u + '-h">\n' +
+'      <h2 id="' + u + '-h">' + title + '</h2>\n' +
+'      <p>' + body + '</p>\n' +
+'      <label for="' + u + '" class="' + u + '-btn">' + closeTxt + '</label>\n' +
+'    </div>\n' +
+'  </div>'
+        };
+    }
+
+    const TEMPLATES = { modern: modern, saas: saas, minimal: minimal };
+
+    function generateModal() {
+        const template = document.getElementById('input-template').value;
+        const colour = document.getElementById('input-color').value;
+        const ink = onColour(colour);
+
+        // Plain text fields are escaped; the body is left alone on purpose so
+        // bold, links and lists still work in it.
+        const trigger  = escapeText(document.getElementById('input-trigger').value || 'Click here');
+        const title    = escapeText(document.getElementById('input-title').value || 'Alert');
+        const closeTxt = escapeText(document.getElementById('input-close').value || 'Close');
+        const body     = document.getElementById('input-body').value || 'Modal content goes here.';
+
+        describeContrast(colour);
+
+        const build = TEMPLATES[template] || modern;
+        const parts = build(token, colour, ink, trigger, title, body, closeTxt);
+        const code = (parts.css + '\n' + parts.html).trim();
+
+        document.getElementById('live-preview').innerHTML = code;
+        document.getElementById('code-output').value = code;
+        document.getElementById('length-readout').textContent =
+            code.length.toLocaleString() + ' characters. Modal name: ' + token;
+    }
+
+    const controls = document.getElementById('controls');
+    controls.addEventListener('input', generateModal);
+    controls.addEventListener('change', generateModal);
+
+    document.getElementById('input-fresh').addEventListener('change', function (event) {
+        if (!event.target.checked) { return; }
+        token = freshToken();
+        event.target.checked = false;
         generateModal();
-    </script>
+    });
+
+    generateModal();
+</script>
 </body>
 </html>

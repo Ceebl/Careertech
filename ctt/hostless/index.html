@@ -24,7 +24,9 @@
   .hl-step__t { display: block; font-weight: 700; margin-bottom: 2px; }
   .hl-step__d { display: block; font-size: var(--ct-size-sm); color: var(--ct-text-soft); line-height: 1.5; }
 
-  .hl-list { display: grid; gap: var(--ct-sp-6); margin-top: var(--ct-sp-6); }
+  .hl-list { display: grid; gap: var(--ct-sp-6); margin-top: var(--ct-sp-5); }
+  .hl-group { margin-top: var(--ct-sp-10); }
+  .hl-group > h2 { margin-bottom: var(--ct-sp-2); }
 
   .hl-tool { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; overflow: hidden; }
   /* The demo column is capped at roughly the width the widget itself uses, so
@@ -98,9 +100,9 @@
   <section class="hl-hero">
     <h2 class="ct-display">Interactive activities when IT <span class="ct-hl">will not let you host files</span></h2>
     <p class="ct-muted" style="font-size: var(--ct-size-lg); max-width: 34rem;">
-      Plenty of careers teams cannot upload anything to a web server. These widgets
-      remove that step. The page is hosted here once; everything you write travels
-      inside the link. You paste an iframe and you are done.
+      Plenty of careers teams cannot upload anything to a web server. These tools remove
+      that step. You write your content, copy what comes out, and paste it where you want
+      it. There is nothing to upload and no account to create.
     </p>
 
     <div class="hl-how">
@@ -111,8 +113,8 @@
       </div>
       <div class="hl-step">
         <span class="hl-step__n">2</span>
-        <span class="hl-step__t">Copy the embed code</span>
-        <span class="hl-step__d">One iframe tag, already sized.</span>
+        <span class="hl-step__t">Copy what it gives you</span>
+        <span class="hl-step__d">A block of code, or a ready-made iframe tag.</span>
       </div>
       <div class="hl-step">
         <span class="hl-step__n">3</span>
@@ -122,14 +124,66 @@
     </div>
 
     <p class="ct-small ct-muted" style="margin-top: var(--ct-sp-4); max-width: 34rem;">
-      Your content sits after the <span class="ct-mono">#</span> in the link, and that part
-      never leaves the browser &mdash; it is never sent to this server and never appears in
-      any log here. The trade is that the embed needs this site to be up. If that is a
+      They come in two kinds, and the difference matters. One kind gives you a block of code
+      that is the whole thing &mdash; it depends on nobody, including us. The other kind gives
+      you a link to a page we host, with your content packed inside the link itself; those are
+      editable later and can do far more, but they need this site to be up. If that is a
       problem, take a copy: every file is plain HTML that will sit on any static hosting.
     </p>
   </section>
 
-  <div class="hl-list" id="tools">
+  <section class="hl-group">
+    <h2>Paste the code &mdash; nothing hosted at all</h2>
+    <p class="ct-muted ct-small" style="max-width: 42rem;">
+      What you copy is the entire thing: markup and styling, no JavaScript, nothing loaded
+      from anywhere. Paste it into a Pathway activity and it keeps working whatever happens
+      to this site. The trade is that you cannot edit it afterwards from here &mdash; to
+      change it you build a new one and swap the code over.
+    </p>
+
+    <div class="hl-list">
+
+      <article class="ct-card ct-card--flush hl-tool">
+        <div class="hl-tool__text">
+          <h3 class="hl-tool__name">Pop-up Modal</h3>
+          <p class="hl-tool__what">
+            A button that opens a dialog over the page. Uses a hidden checkbox instead of
+            JavaScript, so it survives the security filters that strip scripts out of most
+            LMS and CRM platforms.
+          </p>
+          <ul class="hl-uses">
+            <li>A tip or an aside that would clutter the activity if left on the page</li>
+            <li>Terms, eligibility notes, the long version of a short answer</li>
+            <li>Anywhere you want detail available without making everyone read it</li>
+          </ul>
+          <div class="hl-tool__actions">
+            <a class="ct-btn ct-btn--primary" href="../builders/modal-maker.html">Build it</a>
+          </div>
+        </div>
+        <div class="hl-demo">
+          <span class="hl-demo__label">Live example &mdash; try it</span>
+          <iframe id="modal-demo" height="200" title="Example pop-up modal"></iframe>
+          <p class="ct-small ct-muted" style="margin: var(--ct-sp-3) 0 0;">
+            Worth knowing before you use one: the Escape key will not close it, and focus is
+            not held inside the dialog. Both need JavaScript. For a tip that is fine; for
+            something a student must read, put it on the page instead.
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="hl-group">
+    <h2>Paste a link &mdash; we host the page</h2>
+    <p class="ct-muted ct-small" style="max-width: 42rem;">
+      Your content is squashed down and packed into the link itself, after the
+      <span class="ct-mono">#</span> &mdash; a part of a web address that never leaves the
+      browser, so it is never sent to this server and never appears in any log here. You paste
+      an iframe. These can be edited later by pasting the link back into the builder.
+    </p>
+
+    <div class="hl-list" id="tools">
 
     <article class="ct-card ct-card--flush hl-tool">
       <div class="hl-tool__text">
@@ -206,7 +260,8 @@
       </div>
     </article>
 
-  </div>
+    </div>
+  </section>
 
   <section class="hl-next">
     <h2>Being built next</h2>
@@ -427,6 +482,45 @@
     }
 
     Object.keys(DEMOS).forEach(mount);
+
+    /* The modal example is not a hosted page — it is the block of code the
+       builder hands you. It goes into the frame as srcdoc so the overlay,
+       which covers its whole window when open, stays inside the panel
+       instead of taking over this page. */
+    (function mountModal() {
+        var u = 'demo7k2';
+        var colour = '#496DDB';
+        var page =
+'<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:24px;font-family:system-ui,sans-serif;' +
+'display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 48px);background:transparent}</style>' +
+'<style>' +
+'#' + u + ' { position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; }' +
+'.' + u + '-trigger { background: ' + colour + '; color: #fff; padding: 12px 25px; border-radius: 30px; font-weight: 700; cursor: pointer; display: inline-block; }' +
+'#' + u + ':focus-visible + .' + u + '-trigger { outline: 3px solid ' + colour + '; outline-offset: 3px; }' +
+'.' + u + '-overlay { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; }' +
+'#' + u + ':checked ~ .' + u + '-overlay { display: flex; }' +
+'.' + u + '-backdrop { position: absolute; inset: 0; cursor: pointer; }' +
+'.' + u + '-box { background: #fff; padding: 28px; border-radius: 16px; max-width: 460px; width: 90%; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,.2); max-height: 85vh; overflow-y: auto; }' +
+'.' + u + '-box h2 { color: ' + colour + '; margin-top: 0; font-weight: 800; font-size: 1.4rem; border-bottom: 3px solid #e2e8f0; padding-bottom: 8px; display: inline-block; }' +
+'.' + u + '-box p { color: #475569; line-height: 1.6; font-size: .98rem; }' +
+'.' + u + '-x { position: absolute; right: 18px; top: 12px; font-size: 1.4rem; cursor: pointer; color: #94a3b8; line-height: 1; }' +
+'.' + u + '-btn { background: ' + colour + '; color: #fff; padding: 11px 22px; border-radius: 30px; font-weight: 700; cursor: pointer; display: block; text-align: center; margin-top: 18px; }' +
+'</style>' +
+'<div><input type="checkbox" id="' + u + '">' +
+'<label for="' + u + '" class="' + u + '-trigger">Unlock secret tip</label>' +
+'<div class="' + u + '-overlay">' +
+'<label for="' + u + '" class="' + u + '-backdrop" aria-hidden="true"></label>' +
+'<div class="' + u + '-box" role="dialog" aria-modal="true" aria-labelledby="' + u + '-h">' +
+'<label for="' + u + '" class="' + u + '-x" aria-hidden="true">&#10006;</label>' +
+'<h2 id="' + u + '-h">Did you know?</h2>' +
+'<p>Most graduate vacancies are filled before anyone writes a job advert. The time you ' +
+'spend talking to people in the sector is not a distraction from the search &mdash; for ' +
+'most of the market, it <strong>is</strong> the search.</p>' +
+'<label for="' + u + '" class="' + u + '-btn">Got it, thanks</label>' +
+'</div></div></div>';
+        var frame = document.getElementById('modal-demo');
+        if (frame) { frame.srcdoc = page; }
+    })();
 </script>
 </body>
 </html>
