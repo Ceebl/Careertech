@@ -98,10 +98,152 @@
     exec('formatBlock', '<' + tag + '>');
   }
 
-  function addLink() {
-    var url = window.prompt('Link address', 'https://');
-    if (url) exec('createLink', url);
+  /* ------------------------------------------------------------ link picker */
+
+  var picker = document.createElement('div');
+  picker.className = 'rte-picker';
+  picker.hidden = true;
+  picker.innerHTML =
+    '<input type="text" class="rte-picker-input" placeholder="Search entries, or paste a web address">'
+    + '<div class="rte-picker-results"></div>';
+  wrap.insertBefore(picker, canvas);
+
+  var pickerInput = picker.querySelector('.rte-picker-input');
+  var pickerResults = picker.querySelector('.rte-picker-results');
+  var savedRange = null;
+
+  // Focus moves to the search box, which throws away the selection in the
+  // editor. Remember where the cursor was so the link lands in the right place.
+  function rememberSelection() {
+    var sel = window.getSelection();
+    savedRange = (sel && sel.rangeCount && canvas.contains(sel.anchorNode))
+      ? sel.getRangeAt(0).cloneRange()
+      : null;
   }
+
+  function restoreSelection() {
+    canvas.focus();
+    if (!savedRange) return;
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+
+  function closePicker() {
+    picker.hidden = true;
+    pickerResults.innerHTML = '';
+    pickerInput.value = '';
+  }
+
+  function applyLink(url, fallbackText) {
+    restoreSelection();
+    if (savedRange && savedRange.collapsed && fallbackText) {
+      // Nothing selected, so insert the title as the link text.
+      document.execCommand('insertHTML', false,
+        '<a href="' + url + '">' + fallbackText.replace(/</g, '&lt;') + '</a>');
+    } else {
+      exec('createLink', url);
+    }
+    sync();
+    closePicker();
+  }
+
+  function addLink() {
+    rememberSelection();
+    picker.hidden = false;
+    pickerInput.focus();
+    searchEntries('');
+  }
+
+  function chosenCategories() {
+    return [].slice
+      .call(form.querySelectorAll('input[name="categories"]:checked'))
+      .map(function (box) { return Number(box.value); });
+  }
+
+  function renderResults(entries, typed) {
+    pickerResults.innerHTML = '';
+    var looksLikeUrl = /^(https?:\/\/|\/)/i.test(typed);
+
+    if (looksLikeUrl) {
+      addResult('Link to ' + typed, 'web address', function () {
+        applyLink(typed, typed);
+      });
+    }
+
+    entries.forEach(function (entry) {
+      addResult(entry.title, entry.categories.join(', '), function () {
+        applyLink(entry.url, entry.title);
+      });
+    });
+
+    if (typed && !looksLikeUrl) {
+      addResult('Create "' + typed + '"', 'new entry', function () {
+        createAndLink(typed);
+      });
+    }
+
+    if (!pickerResults.children.length) {
+      addResult('Type to search entries', '', null);
+    }
+  }
+
+  function addResult(label, note, onPick) {
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'rte-picker-row';
+    row.innerHTML = '<span>' + label.replace(/</g, '&lt;') + '</span>'
+      + (note ? '<span class="rte-picker-note">' + note.replace(/</g, '&lt;') + '</span>' : '');
+    if (onPick) {
+      row.addEventListener('click', function (e) { e.preventDefault(); onPick(); });
+    } else {
+      row.disabled = true;
+    }
+    pickerResults.appendChild(row);
+  }
+
+  function searchEntries(typed) {
+    fetch('/kb/entries.json?q=' + encodeURIComponent(typed))
+      .then(function (r) { return r.json(); })
+      .then(function (data) { renderResults(data.entries || [], typed); })
+      .catch(function () { renderResults([], typed); });
+  }
+
+  function createAndLink(title) {
+    var categoryIds = chosenCategories();
+    fetch('/kb/quick-entry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: title, categoryIds: categoryIds }),
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error(data.error || 'Could not create the entry');
+          return data;
+        });
+      })
+      .then(function (data) {
+        applyLink(data.url, data.title);
+        say('Created "' + data.title + '" and linked to it.');
+      })
+      .catch(function (err) { say(err.message, true); });
+  }
+
+  var searchTimer = null;
+  pickerInput.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    var typed = pickerInput.value.trim();
+    searchTimer = setTimeout(function () { searchEntries(typed); }, 200);
+  });
+
+  pickerInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); closePicker(); canvas.focus(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var first = pickerResults.querySelector('.rte-picker-row:not([disabled])');
+      if (first) first.click();
+    }
+  });
 
   /* --------------------------------------------------------------- upload */
 

@@ -154,6 +154,19 @@ textarea { min-height:20rem; font-family:ui-monospace, Consolas, monospace; font
 .rte-bar button:hover { background:var(--surface); border-color:var(--line); }
 .rte-toggle { margin-left:auto; color:var(--muted) !important; }
 .rte-toggle.on { background:var(--accent) !important; color:var(--accent-fg) !important; }
+.rte-picker { border-bottom:1px solid var(--line); background:var(--bg); padding:.6rem; }
+.rte-picker-input { border-radius:7px; }
+.rte-picker-results { display:grid; gap:.15rem; margin-top:.4rem; max-height:15rem; overflow-y:auto; }
+.rte-picker-row {
+  display:flex; justify-content:space-between; align-items:center; gap:1rem;
+  width:100%; text-align:left; font:inherit; font-size:.88rem;
+  padding:.45rem .6rem; border:1px solid transparent; border-radius:7px;
+  background:transparent; color:var(--fg); cursor:pointer;
+}
+.rte-picker-row:hover:not(:disabled) { background:var(--surface); border-color:var(--accent); }
+.rte-picker-row:disabled { color:var(--muted); cursor:default; }
+.rte-picker-note { color:var(--muted); font-size:.75rem; white-space:nowrap; }
+
 .rte-canvas {
   min-height:22rem; padding:1rem 1.1rem; outline:none;
   overflow-wrap:anywhere; font-size:1rem;

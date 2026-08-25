@@ -113,6 +113,41 @@ router.post('/upload', requireAdmin, (req, res) => {
   }
 });
 
+/* --------------------------------------------------- linking entries up */
+
+// Used by the editor's link picker. Returns the entries matching what has been
+// typed so far, so a link can be made by choosing rather than by copying URLs.
+router.get('/entries.json', (req, res) => {
+  const q = String(req.query.q ?? '').trim();
+  const found = q ? searchEntries(q) : recentEntries(10);
+  res.json({
+    entries: found.slice(0, 10).map((e) => ({
+      id: e.id,
+      title: e.title,
+      url: `/kb/entry/${e.id}`,
+      categories: e.categories.map((c) => c.name),
+    })),
+  });
+});
+
+// Create a placeholder entry and link to it in one step, so a thought can be
+// captured mid-sentence without abandoning what is being written.
+router.post('/quick-entry', requireAdmin, (req, res) => {
+  const title = String(req.body?.title ?? '').trim().slice(0, 200);
+  const raw = req.body?.categoryIds;
+  const categoryIds = (Array.isArray(raw) ? raw : []).map(Number).filter(Number.isInteger);
+
+  if (!title) return res.status(400).json({ error: 'A title is required.' });
+  if (!categoryIds.length) {
+    return res.status(400).json({
+      error: 'Tick at least one category on this entry first - the new one will share it.',
+    });
+  }
+
+  const id = createEntry({ title, body: '', status: '', link: '', categoryIds, tags: [] });
+  res.status(201).json({ id, title, url: `/kb/entry/${id}` });
+});
+
 router.get('/', (req, res) => {
   const categories = listCategories();
   const recent = recentEntries(8);

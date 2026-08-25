@@ -4,3 +4,7 @@ node_modules/
 
 # Detailed infrastructure notes. Kept out of the public repo on purpose.
 DOCS.local.md
+
+# TargetConnect capability probes, forum drafts and KB entry drafts.
+# Work notes -- not for the public web root.
+targetconnect-probe/

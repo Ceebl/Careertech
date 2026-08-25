@@ -6,6 +6,13 @@
 // and could steal their session. Nothing you have asked for needs one.
 
 const SCRIPT_BLOCK = /<script\b[^>]*>[\s\S]*?<\/script\s*>/gi;
+// Page-level furniture that means nothing inside an entry. Pasting a whole
+// HTML document would otherwise render its <title> as stray text.
+const HEAD_BLOCK = /<(head|title)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
+const DOCUMENT_WRAPPER = /<\/?(html|body)\b[^>]*>|<!doctype[^>]*>/gi;
+// For previews only: elements whose text is code, not prose. Stripping the tags
+// alone would leave the CSS itself showing as the preview text.
+const CODE_BLOCK = /<(style|noscript|template)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
 const SCRIPT_OPEN = /<\/?script\b[^>]*>/gi;
 const EVENT_ATTR = /\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
 const JS_URL = /\s(href|src|action|formaction|data)\s*=\s*(["']?)\s*javascript:[^"'>\s]*\2/gi;
@@ -17,6 +24,8 @@ export function cleanHtml(input) {
   return input
     .replace(SCRIPT_BLOCK, '')
     .replace(SCRIPT_OPEN, '')
+    .replace(HEAD_BLOCK, '')
+    .replace(DOCUMENT_WRAPPER, '')
     .replace(DANGEROUS_TAG, '')
     .replace(EVENT_ATTR, '')
     .replace(JS_URL, '');
@@ -46,6 +55,10 @@ const ENTITIES = {
 export function excerpt(html, length = 180) {
   const text = String(html ?? '')
     .replace(SCRIPT_BLOCK, ' ')
+    // Contents removed, not just the tags -- otherwise pasting a whole HTML
+    // page shows its stylesheet as the preview text.
+    .replace(CODE_BLOCK, ' ')
+    .replace(HEAD_BLOCK, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&(amp|lt|gt|quot|#39|apos|nbsp);/gi, (m) => ENTITIES[m.toLowerCase()] ?? m)
     .replace(/\s+/g, ' ')
