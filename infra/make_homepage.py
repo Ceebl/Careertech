@@ -111,14 +111,23 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--list", required=True, help="file of folder names, one per line")
     parser.add_argument("--out", required=True, help="where to write index.html")
+    parser.add_argument(
+        "--hide",
+        default="",
+        help="space-separated folders to publish but leave off the homepage",
+    )
     args = parser.parse_args()
+
+    # Shared assets and support folders are still served -- other pages load
+    # their CSS -- they just are not projects a visitor would click into.
+    hidden = set(args.hide.split())
 
     # Sorted by the label a visitor actually sees, not the folder behind it.
     names = sorted(
         (
             line.strip()
             for line in Path(args.list).read_text().splitlines()
-            if line.strip()
+            if line.strip() and line.strip() not in hidden
         ),
         key=lambda n: label_for(n).lower(),
     )

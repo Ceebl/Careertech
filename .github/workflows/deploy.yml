@@ -44,6 +44,9 @@ jobs:
             # served. Listing it here also makes step 2 delete the copy that
             # earlier deploys already published.
             EXCLUDE=".github api infra targetconnect-probe"
+            # Published, but left off the homepage: shared assets and support
+            # folders rather than projects a visitor would click into.
+            HIDE_FROM_HOMEPAGE="brand"
 
             echo "::: fetching repo"
             sudo rm -rf "$TMP"
@@ -117,7 +120,9 @@ jobs:
             # Homepage is generated from the list above, so it always matches
             # what is actually deployed.
             echo "::: writing homepage"
-            sudo python3 "$TMP/infra/make_homepage.py"               --list "$NEW_LIST" --out "$WEB_ROOT/index.html"
+            sudo python3 "$TMP/infra/make_homepage.py" \
+              --list "$NEW_LIST" --out "$WEB_ROOT/index.html" \
+              --hide "$HIDE_FROM_HOMEPAGE"
             sudo chown www-data:www-data "$WEB_ROOT/index.html"
 
             rm -f "$NEW_LIST"
