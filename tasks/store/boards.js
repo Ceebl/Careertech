@@ -169,6 +169,36 @@ export function updateColumn(column, { name, settings }) {
   );
 }
 
+const setColumnPosition = db.prepare('UPDATE board_columns SET position = ? WHERE id = ?');
+
+/**
+ * Shuffle a column one place left or right.
+ *
+ * Every position on the board is rewritten rather than just swapping two, so
+ * the order is renumbered 0,1,2,... each time. Positions can otherwise drift
+ * into duplicates and gaps -- a column added while another was being deleted,
+ * say -- and once two columns share a position the order they come back in is
+ * whatever SQLite feels like.
+ *
+ * @param {{ id: string, board_id: string }} column
+ * @param {'left'|'right'} direction
+ * @returns {boolean} false if it is already at that end
+ */
+export function moveColumn(column, direction) {
+  return transaction(() => {
+    const columns = columnsIn.all(column.board_id);
+    const from = columns.findIndex((candidate) => candidate.id === column.id);
+    const to = from + (direction === 'left' ? -1 : 1);
+
+    if (from < 0 || to < 0 || to >= columns.length) return false;
+
+    const reordered = [...columns];
+    [reordered[from], reordered[to]] = [reordered[to], reordered[from]];
+    reordered.forEach((moved, index) => setColumnPosition.run(index, moved.id));
+    return true;
+  });
+}
+
 /** Deleting a column takes its cells with it, via the foreign key. */
 export function deleteColumn(columnId) {
   deleteColumnRow.run(columnId);

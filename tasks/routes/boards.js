@@ -19,6 +19,7 @@ import {
 import {
   createBoard, boardsInWorkspace, groupsOf, columnsOf, renameBoard, archiveBoard,
   addGroup, renameGroup, deleteGroup, addColumn, updateColumn, deleteColumn,
+  moveColumn,
 } from '../store/boards.js';
 import {
   boardContents, createItem, renameItem, archiveItem, setCell, cellsOf,
@@ -254,14 +255,14 @@ router.post('/b/:boardId/column', requireBoard('member', 'boardId'), (req, res) 
         'This board already has a Blocked by column. It shows the links between '
         + 'items rather than a value of its own, so a second one would only ever '
         + 'repeat the first.',
-        `/tasks/b/${req.board.id}/settings`,
+        columnReturn(req, req.board.id),
       ),
     });
   }
 
   addColumn(req.board.id, { name: req.body?.name, type });
   log(req, 'column.create', `${req.board.id} ${type}`);
-  return res.redirect(`/tasks/b/${req.board.id}/settings?saved=1`);
+  return res.redirect(columnReturn(req, req.board.id));
 });
 
 /* ----------------------------------------------------------------- groups */
@@ -342,19 +343,40 @@ router.post('/item/:itemId/subitem', requireItem('member', 'itemId'), (req, res)
 
 /* ---------------------------------------------------------------- columns */
 
+/**
+ * Where to return after a column change.
+ *
+ * The same forms are used from the board's own header and from the Settings
+ * page, and landing somewhere you did not come from is disorienting. Only the
+ * two known destinations are honoured -- taking a path from the form on trust
+ * is how a redirect becomes somebody else's phishing link.
+ */
+function columnReturn(req, boardId) {
+  return req.body?.back === 'board'
+    ? `/tasks/b/${boardId}`
+    : `/tasks/b/${boardId}/settings?saved=1`;
+}
+
+router.post('/column/:columnId/move', requireColumn('member', 'columnId'), (req, res) => {
+  const direction = req.body?.direction === 'left' ? 'left' : 'right';
+  moveColumn(req.column, direction);
+  log(req, 'column.move', `${req.column.id} ${direction}`);
+  res.redirect(columnReturn(req, req.column.board_id));
+});
+
 router.post('/column/:columnId/rename', requireColumn('member', 'columnId'), (req, res) => {
   updateColumn(req.column, {
     name: req.body?.name,
     settings: settingsOf(req.column),
   });
   log(req, 'column.rename', req.column.id);
-  res.redirect(`/tasks/b/${req.column.board_id}/settings?saved=1`);
+  res.redirect(columnReturn(req, req.column.board_id));
 });
 
 router.post('/column/:columnId/delete', requireColumn('member', 'columnId'), (req, res) => {
   deleteColumn(req.column.id);
   log(req, 'column.delete', `${req.column.id} (${req.column.name})`);
-  res.redirect(`/tasks/b/${req.column.board_id}/settings?saved=1`);
+  res.redirect(columnReturn(req, req.column.board_id));
 });
 
 router.get('/column/:columnId/labels', requireColumn('member', 'columnId'), (req, res) => {

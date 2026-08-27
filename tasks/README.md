@@ -17,6 +17,21 @@ Boards have two views: **Table** (the editable one -- click a cell and it saves
 itself) and **Kanban** (the same items stacked into columns by status). Items
 have a comment thread.
 
+Almost everything is done from the table rather than from a settings page:
+
+| To | Do this on the board |
+|---|---|
+| Add a column | the **+** at the right-hand end of the header row |
+| Rename, move or delete a column | click the column's heading |
+| Add a task | the "+ Add item" line at the bottom of a group |
+| Add a subitem | the chevron at the left of any row |
+| Change a status, owner, date or priority | click the cell |
+| Link or unlink a blocker | click the Blocked by cell |
+| Rename, recolour or delete a group | the `···` at the right of the group heading |
+
+The Settings page still has all of the column controls, plus renaming and
+archiving the board itself.
+
 ## Subitems
 
 Any task can hold smaller tasks. Use **Add subitem** in the row's `···` menu, or

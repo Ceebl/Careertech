@@ -2,7 +2,7 @@
 
 import { html } from '../lib/html.js';
 import {
-  settingsOf, labelFor, colourClass, isVirtual, hasLabels,
+  settingsOf, labelFor, colourClass, isVirtual, hasLabels, TYPES, TYPE_NAMES,
 } from '../lib/columns.js';
 
 /**
@@ -43,21 +43,26 @@ function groupBlock(group, groupItems, view) {
         <thead>
           <tr>
             <th class="col-title">Item</th>
-            ${columns.map((column) => html`<th
-              class="col-narrow col-${column.type}">${column.name}</th>`)}
+            ${columns.map((column, index) => html`<th
+              class="col-narrow col-${column.type}">
+              ${canEdit
+    ? columnMenu(column, index, columns.length, csrf)
+    : html`${column.name}`}
+            </th>`)}
+            <th class="col-add">${canEdit ? addColumnMenu(view.board, csrf) : ''}</th>
             <th class="col-actions"></th>
           </tr>
         </thead>
         <tbody>
           ${groupItems.length === 0 && !canEdit
-    ? html`<tr><td colspan="${columns.length + 2}"
+    ? html`<tr><td colspan="${columns.length + 3}"
              class="muted pad-note">Nothing here yet.</td></tr>`
     : ''}
           ${groupItems.map((item) => html`${itemRow(item, view)}
             ${(item.children ?? []).map((child) => itemRow(child, view, item))}
             ${canEdit ? addSubitemRow(item, view, (item.children ?? []).length === 0) : ''}`)}
           ${canEdit ? html`<tr class="add-row">
-            <td colspan="${columns.length + 2}">
+            <td colspan="${columns.length + 3}">
               <form method="post" action="/tasks/group/${group.id}/item">
                 <input type="hidden" name="_csrf" value="${csrf}">
                 <input type="text" name="title" maxlength="300"
@@ -84,13 +89,16 @@ function itemRow(item, view, parent = null) {
     ${parent ? html`data-child-of="${parent.id}"` : ''}>
     <td class="col-title">
       <div class="item-title ${parent ? 'indented' : ''}">
-        ${children.length ? html`<button type="button" class="twist"
-          data-twist="${item.id}" aria-expanded="true"
-          aria-label="Hide or show the subitems of ${item.title}">
+        <!-- The chevron is on every top-level row, not only rows that already
+             have subitems: opening an empty one is how you add the first. -->
+        ${parent ? html`<span class="twist-space" aria-hidden="true"></span>`
+    : html`<button type="button" class="twist ${children.length ? '' : 'folded'}"
+          data-twist="${item.id}" aria-expanded="${children.length ? 'true' : 'false'}"
+          aria-label="Subitems of ${item.title}">
           <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
                stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
                stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </button>` : html`<span class="twist-space" aria-hidden="true"></span>`}
+        </button>`}
         <input class="text" type="text" value="${item.title}" maxlength="300"
                data-item="${item.id}" data-field="title" aria-label="Item name"
                ${canEdit ? '' : 'readonly'}>
@@ -117,17 +125,19 @@ function itemRow(item, view, parent = null) {
       </div>
     </td>
     ${columns.map((column) => html`<td>${cell(item, column, view)}</td>`)}
+    <td class="col-add"></td>
     <td class="col-actions">
-      ${canEdit ? html`<details class="row-menu">
+      ${canEdit ? html`<details class="row-menu pop">
         <summary aria-label="Item actions">···</summary>
-        <div class="menu-panel">
+        <div class="pop-panel">
           <a href="/tasks/item/${item.id}">Open</a>
           <a href="/tasks/item/${item.id}#blocked-by">Blocked by…</a>
           ${parent ? '' : html`<button type="button" class="linkish"
             data-add-subitem="${item.id}">Add subitem</button>`}
           <form method="post" action="/tasks/item/${item.id}/delete">
             <input type="hidden" name="_csrf" value="${csrf}">
-            <button type="submit" class="linkish">Delete item</button>
+            <button type="submit" class="linkish danger"
+              data-confirm="Delete &quot;${item.title}&quot;?">Delete item</button>
           </form>
         </div>
       </details>` : ''}
@@ -138,11 +148,80 @@ function itemRow(item, view, parent = null) {
 // Rendered for every parent, but kept out of the way until it is wanted -- a
 // board with a "+ Add subitem" line under every single row is unreadable.
 // "Add subitem" in the row menu reveals it; having subitems already shows it.
+/**
+ * The menu on a column heading: rename, move, edit labels, delete.
+ *
+ * All of it was only on the Settings page before, which is a strange place to
+ * go to move a column you are looking at.
+ */
+function columnMenu(column, index, total, csrf) {
+  return html`<details class="col-menu pop">
+    <summary>
+      <span class="label">${column.name}</span>
+      <svg viewBox="0 0 24 24" width="11" height="11" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+    </summary>
+    <div class="pop-panel">
+      <form method="post" action="/tasks/column/${column.id}/rename" class="menu-form">
+        <input type="hidden" name="_csrf" value="${csrf}">
+        <input type="hidden" name="back" value="board">
+        <input type="text" name="name" value="${column.name}" maxlength="80"
+               aria-label="Rename the ${column.name} column">
+        <button class="btn small" type="submit">Rename</button>
+      </form>
+
+      ${hasLabels(column)
+    ? html`<a href="/tasks/column/${column.id}/labels">Edit labels…</a>` : ''}
+
+      <form method="post" action="/tasks/column/${column.id}/move">
+        <input type="hidden" name="_csrf" value="${csrf}">
+        <input type="hidden" name="back" value="board">
+        <button type="submit" name="direction" value="left" class="linkish"
+                ${index === 0 ? 'disabled' : ''}>← Move left</button>
+        <button type="submit" name="direction" value="right" class="linkish"
+                ${index === total - 1 ? 'disabled' : ''}>Move right →</button>
+      </form>
+
+      <form method="post" action="/tasks/column/${column.id}/delete">
+        <input type="hidden" name="_csrf" value="${csrf}">
+        <input type="hidden" name="back" value="board">
+        <button type="submit" class="linkish danger"
+          data-confirm="Delete the ${column.name} column? Everything filled in under it goes too.">Delete column</button>
+      </form>
+    </div>
+  </details>`;
+}
+
+/** The `+` at the end of the header row. */
+function addColumnMenu(board, csrf) {
+  return html`<details class="col-menu add pop">
+    <summary aria-label="Add a column"
+      ><span aria-hidden="true">+</span></summary>
+    <div class="pop-panel">
+      <form method="post" action="/tasks/b/${board.id}/column" class="stacked">
+        <input type="hidden" name="_csrf" value="${csrf}">
+        <input type="hidden" name="back" value="board">
+        <label class="field tight">Name
+          <input type="text" name="name" maxlength="80" placeholder="Priority">
+        </label>
+        <label class="field tight">Type
+          <select name="type">
+            ${TYPE_NAMES.map((name) => html`<option value="${name}"
+              >${TYPES[name].label} — ${TYPES[name].hint}</option>`)}
+          </select>
+        </label>
+        <button class="btn primary small" type="submit">Add column</button>
+      </form>
+    </div>
+  </details>`;
+}
+
 function addSubitemRow(item, view, hidden) {
   const { columns, csrf } = view;
-  return html`<tr class="add-row subitem-row ${hidden ? 'tucked' : ''}"
-    data-child-of="${item.id}">
-    <td colspan="${columns.length + 2}">
+  return html`<tr class="add-row subitem-row" data-child-of="${item.id}"
+    ${hidden ? 'hidden' : ''}>
+    <td colspan="${columns.length + 3}">
       <form method="post" action="/tasks/item/${item.id}/subitem">
         <input type="hidden" name="_csrf" value="${csrf}">
         <input type="text" name="title" maxlength="300" class="indented-input"
@@ -180,9 +259,9 @@ function statusCell(item, column, value, editable) {
   if (!editable) return face;
 
   const labels = settingsOf(column).labels ?? [];
-  return html`<details class="status-menu" data-item="${item.id}" data-column="${column.id}">
+  return html`<details class="status-menu pop" data-item="${item.id}" data-column="${column.id}">
     <summary>${face}</summary>
-    <div class="status-options">
+    <div class="status-options pop-panel">
       ${labels.map((label) => html`<button type="button"
         class="bg-${colourClass(label.colour)}"
         data-choice="${label.id}" data-label="${label.text}"
@@ -206,9 +285,9 @@ function personCell(item, column, value, view, editable) {
 
   if (!editable) return face;
 
-  return html`<details class="status-menu" data-item="${item.id}" data-column="${column.id}">
+  return html`<details class="status-menu pop" data-item="${item.id}" data-column="${column.id}">
     <summary>${face}</summary>
-    <div class="status-options">
+    <div class="status-options pop-panel">
       ${[...view.people.values()].map((member) => html`<button type="button"
         class="bg-c5"
         data-choice="${member.id}"
@@ -258,9 +337,9 @@ function blockedByCell(item, editable) {
 
   if (!editable) return face;
 
-  return html`<details class="status-menu blocked-menu" data-item="${item.id}" data-blockedby>
+  return html`<details class="status-menu blocked-menu pop" data-item="${item.id}" data-blockedby>
     <summary>${face}</summary>
-    <div class="status-options" data-blocker-panel>
+    <div class="status-options pop-panel" data-blocker-panel>
       <p class="muted small pad-empty">Loading…</p>
     </div>
   </details>`;
@@ -302,13 +381,14 @@ function tickMark() {
 }
 
 function groupMenu(group, csrf) {
-  return html`<details class="row-menu">
+  return html`<details class="row-menu pop">
     <summary aria-label="Group actions">···</summary>
-    <div class="menu-panel">
+    <div class="pop-panel">
       <a href="/tasks/group/${group.id}/edit">Rename or recolour</a>
       <form method="post" action="/tasks/group/${group.id}/delete">
         <input type="hidden" name="_csrf" value="${csrf}">
-        <button type="submit" class="linkish">Delete group and its items</button>
+        <button type="submit" class="linkish danger"
+          data-confirm="Delete the ${group.name} group and everything in it?">Delete group and its items</button>
       </form>
     </div>
   </details>`;

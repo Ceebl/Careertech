@@ -149,7 +149,13 @@ router.use((err, req, res, next) => {
 });
 
 app.use('/tasks', router);
-// Anything outside /tasks is not ours -- nginx should never send it here.
+
+// In production nginx owns "/" and only ever proxies /tasks/ here, so this is
+// really for `npm run dev`, where opening the root would otherwise 404 and look
+// like the app had failed to start.
+app.get('/', (req, res) => res.redirect('/tasks/'));
+
+// Anything else outside /tasks is not ours.
 app.use((req, res) => res.status(404).json({ error: 'not found' }));
 
 /* ---------------------------------------------------------------- startup */

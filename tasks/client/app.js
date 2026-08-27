@@ -185,6 +185,20 @@
     if (event.key === 'Escape') { input.value = input.defaultValue; input.blur(); }
   });
 
+  /* ---------------------------------------------------- destructive actions */
+
+  // Deleting a column takes every value under it, and deleting a group takes
+  // its items. Both used to be buried on the settings page; now they are one
+  // click from the board, which is worth a question first.
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-confirm]');
+    if (!button) return;
+    if (!window.confirm(button.dataset.confirm)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+
   /* --------------------------------------------------------------- subitems */
 
   // Which parents are collapsed, remembered per browser. Server state would be
@@ -209,10 +223,9 @@
   }
 
   function setFolded(parentId, folded) {
+    // Everything belonging to the parent, the "+ Add subitem" line included --
+    // opening a row that has no subitems yet is exactly how you add the first.
     for (const row of document.querySelectorAll(`tr[data-child-of="${CSS.escape(parentId)}"]`)) {
-      // A tucked "add subitem" row stays tucked either way; folding must not
-      // be what reveals it.
-      if (row.classList.contains('tucked')) continue;
       row.hidden = folded;
     }
     const twist = document.querySelector(`[data-twist="${CSS.escape(parentId)}"]`);
@@ -222,7 +235,8 @@
     }
   }
 
-  // Apply what was remembered, once, on load.
+  // Apply what was remembered, once, on load. The server has already folded
+  // rows with no subitems, so only the remembered ones need doing here.
   for (const parentId of readCollapsed()) setFolded(parentId, true);
 
   document.addEventListener('click', (event) => {
@@ -236,23 +250,34 @@
     const remembered = readCollapsed();
     if (folded) remembered.add(parentId); else remembered.delete(parentId);
     writeCollapsed(remembered);
+
+    // Opening a row with no subitems yet: the only thing revealed is the add
+    // line, so put the cursor in it rather than making them aim at it.
+    if (!folded) {
+      const rows = document.querySelectorAll(`tr[data-child-of="${CSS.escape(parentId)}"]`);
+      if (rows.length === 1) {
+        rows[0].querySelector('input[name="title"]')?.focus();
+      }
+    }
   });
+
+  function forget(parentId) {
+    const remembered = readCollapsed();
+    remembered.delete(parentId);
+    writeCollapsed(remembered);
+  }
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('[data-add-subitem]');
     if (!button) return;
 
     const parentId = button.dataset.addSubitem;
-    const row = document.querySelector(
-      `tr.add-row[data-child-of="${CSS.escape(parentId)}"]`,
-    );
-    if (!row) return;
-
-    row.classList.remove('tucked');
-    row.hidden = false;
     setFolded(parentId, false);
+    forget(parentId);
     button.closest('details')?.removeAttribute('open');
-    row.querySelector('input[name="title"]')?.focus();
+
+    document.querySelector(`tr.add-row[data-child-of="${CSS.escape(parentId)}"]`)
+      ?.querySelector('input[name="title"]')?.focus();
   });
 
   /* ------------------------------------------------- blocked by, on the board */
@@ -363,7 +388,7 @@
   let openMenu = null;
 
   function placeMenu(details) {
-    const panel = details.querySelector('.status-options');
+    const panel = details.querySelector('.pop-panel');
     const anchor = details.querySelector('summary');
     if (!panel || !anchor) return;
 
@@ -389,7 +414,7 @@
   // `toggle` does not bubble, so this listens on the way down instead.
   document.addEventListener('toggle', (event) => {
     const details = event.target;
-    if (!details.classList?.contains('status-menu')) return;
+    if (!details.classList?.contains('pop')) return;
     if (details.open) {
       openMenu = details;
       placeMenu(details);
