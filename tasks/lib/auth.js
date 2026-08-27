@@ -56,15 +56,38 @@ export function requireAdmin(req, res, next) {
 /**
  * Is this a path within this app, rather than somewhere else entirely?
  *
- * `//evil.example.com` and `/\evil.example.com` are both read by browsers as
- * other sites despite starting with a slash, so a plain startsWith('/tasks')
- * is not enough on its own.
+ * Used on the `next` parameter the login page carries -- the one place where
+ * a visitor's own text decides where the browser goes next. Get it wrong and
+ * the sign-in page becomes a redirector: a link that genuinely does start at
+ * emaitch.co.uk and ends up somewhere else, which is what makes a phishing
+ * link convincing.
+ *
+ * A whitelist, and each rule closes off a shape that reads as somewhere other
+ * than where it looks.
  */
 export function isInternal(target) {
   const value = String(target ?? '');
-  if (!value.startsWith('/tasks')) return false;
-  if (value.startsWith('//') || value.startsWith('/\\')) return false;
-  if (/[\r\n]/.test(value)) return false;
+
+  // Exactly this app's own paths, and nothing that merely begins with the
+  // letters "tasks". This also rules out `//evil.example.com`, which browsers
+  // read as another host despite starting with a slash.
+  if (value !== '/tasks' && !value.startsWith('/tasks/')) return false;
+
+  // `/tasks/../../elsewhere` resolves to `/elsewhere` once the browser is done
+  // with it. It cannot leave this origin, so it is not an escape -- but this
+  // function should mean what its name says.
+  if (value.includes('..')) return false;
+
+  // Newlines, raw or percent-encoded. Express keeps the encoded form encoded,
+  // so this is not a way to add a response header today; the rule is here so
+  // it stays that way if anything in front ever decodes first.
+  if (/[\r\n]/.test(value) || /%0[da]/i.test(value)) return false;
+
+  // Backslashes and control characters have no legitimate place in these
+  // paths, and browsers have historically disagreed about what a backslash
+  // means in a URL.
+  if (/[\u0000-\u001f\u007f\\]/.test(value)) return false;
+
   return true;
 }
 
