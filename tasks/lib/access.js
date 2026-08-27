@@ -54,7 +54,8 @@ const boardQuery = db.prepare(`
 `);
 
 const itemQuery = db.prepare(`
-  SELECT i.id, i.board_id, i.group_id, i.title, i.created_at, i.updated_at,
+  SELECT i.id, i.board_id, i.group_id, i.parent_id, i.title,
+         i.created_at, i.updated_at,
          b.workspace_id, b.name AS board_name,
          w.name AS workspace_name,
          m.role

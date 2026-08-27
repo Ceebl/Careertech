@@ -24,10 +24,11 @@ import {
   boardContents, createItem, renameItem, archiveItem, setCell, cellsOf,
   addComment, commentsFor, blockersOf, blockingFrom, addBlocker, dropBlocker,
   wouldLoop, blockersByItem, itemsOnBoard, releaseDependents, releaseItem,
+  subitemsOf,
 } from '../store/items.js';
 import { listUsers } from '../store/users.js';
 import {
-  settingsOf, isType, paletteColour, doneLabelIds, isVirtual,
+  settingsOf, isType, paletteColour, doneLabelIds, isVirtual, hasLabels,
 } from '../lib/columns.js';
 import { html } from '../lib/html.js';
 import { log } from '../lib/audit.js';
@@ -135,7 +136,10 @@ router.get('/b/:boardId', requireBoard('viewer', 'boardId'), (req, res) => {
   // finished, the same column the kanban view groups by.
   const statusColumn = columns.find((column) => column.type === 'status') ?? null;
   const byItem = blockersByItem(board.id, statusColumn, doneLabelIds(statusColumn));
-  for (const item of items) {
+  // Subitems hang off their parents rather than sitting in `items`, so walking
+  // the top level alone would leave every subitem looking as though nothing
+  // were in its way.
+  for (const item of walk(items)) {
     item.blockers = byItem.get(item.id) ?? [];
     item.blockedBy = item.blockers.filter((blocker) => !blocker.finished)
       .map((blocker) => blocker.title);
@@ -153,10 +157,41 @@ router.get('/b/:boardId', requireBoard('viewer', 'boardId'), (req, res) => {
     ],
     actions: viewTabs(board.id, view, canEdit),
     body: view === 'kanban'
-      ? kanbanView({ items, groups, column: columns.find((c) => c.type === 'status') })
+      // The table nests subitems under their parents; the kanban is a flat wall
+      // of cards, so they are flattened back out with their parent named on
+      // each card. Leaving them out would hide real work.
+      ? kanbanView({ items: flatten(items), groups, column: statusColumn })
       : tableView({ board, groups, columns, items, people, csrf: res.locals.csrf, canEdit }),
   });
 });
+
+/**
+ * Every row on the board, parents and subitems alike, as the objects
+ * themselves. Used where the items are about to be added to.
+ */
+function walk(items) {
+  const out = [];
+  for (const item of items) {
+    out.push(item);
+    for (const child of item.children ?? []) out.push(child);
+  }
+  return out;
+}
+
+/**
+ * The same rows, but as copies carrying their parent's name -- for the kanban,
+ * which draws a flat wall of cards and has nowhere to show nesting.
+ *
+ * Copies, so the card's extra field cannot leak back into the table's data.
+ */
+function flatten(items) {
+  const out = [];
+  for (const item of items) {
+    out.push(item);
+    for (const child of item.children ?? []) out.push({ ...child, parentTitle: item.title });
+  }
+  return out;
+}
 
 function viewTabs(boardId, current, canEdit) {
   return html`<nav class="view-tabs">
@@ -278,6 +313,33 @@ router.post('/group/:groupId/item', requireGroup('member', 'groupId'), (req, res
   res.redirect(`/tasks/b/${req.group.board_id}`);
 });
 
+router.post('/item/:itemId/subitem', requireItem('member', 'itemId'), (req, res) => {
+  const back = `/tasks/b/${req.item.board_id}`;
+
+  // One level only. Nested checklists inside nested checklists are how a to-do
+  // list stops being readable, and monday.com draws the same line.
+  if (req.item.parent_id) {
+    res.status(400);
+    return render(res, {
+      title: 'Not possible',
+      body: notice('A subitem cannot have subitems of its own.', back),
+    });
+  }
+
+  const title = String(req.body?.title ?? '').trim();
+  if (title) {
+    createItem({
+      boardId: req.item.board_id,
+      groupId: req.item.group_id,
+      parentId: req.item.id,
+      title,
+      userId: req.user.id,
+    });
+    log(req, 'subitem.create', req.item.id);
+  }
+  return res.redirect(back);
+});
+
 /* ---------------------------------------------------------------- columns */
 
 router.post('/column/:columnId/rename', requireColumn('member', 'columnId'), (req, res) => {
@@ -296,7 +358,7 @@ router.post('/column/:columnId/delete', requireColumn('member', 'columnId'), (re
 });
 
 router.get('/column/:columnId/labels', requireColumn('member', 'columnId'), (req, res) => {
-  if (req.column.type !== 'status') {
+  if (!hasLabels(req.column)) {
     return res.redirect(`/tasks/b/${req.column.board_id}/settings`);
   }
   return render(res, {
@@ -371,6 +433,8 @@ router.get('/item/:itemId', requireItem('viewer', 'itemId'), (req, res) => {
       people,
       blockers,
       blocking: blockingFrom(req.item.id),
+      parent: req.item.parent_id ? itemFor(req.user.id, req.item.parent_id) : null,
+      children: subitemsOf(req.item.id),
       // Anything else on this board that is not already in the list. A choice
       // that would make a loop is refused on submit, with a reason.
       candidates: itemsOnBoard(req.item.board_id)

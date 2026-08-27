@@ -9,12 +9,39 @@ A private boards-and-to-do app, in the shape of monday.com, at
       board     one table of things     "Bathroom renovation"
         group   a coloured section      "This week", "Done"
           item  a row -- the to-do      "Get quotes for tiling"
-        column  a typed field           Status, Person, Date, Number, Text,
-                                        Tick box, Blocked by
+        column  a typed field           Status, Priority, Person, Date, Number,
+                                        Text, Tick box, Blocked by
+      subitem   a task inside a task    "Ring three tilers"
 
 Boards have two views: **Table** (the editable one -- click a cell and it saves
 itself) and **Kanban** (the same items stacked into columns by status). Items
 have a comment thread.
+
+## Subitems
+
+Any task can hold smaller tasks. Use **Add subitem** in the row's `···` menu, or
+the "+ Add subitem" line that appears once a task has some. They are indented
+under their parent with a chevron to fold them away, and the fold is remembered
+in your browser rather than for everybody.
+
+Subitems live in the same group and use the same columns as everything else, so
+one carries a status, an owner and a dependency exactly like a top-level task.
+That is simpler than monday.com, where subitems are a separate board with their
+own columns — one set of columns is less to explain and less to keep in step.
+
+Nesting stops at one level: a subitem cannot have subitems of its own. Deleting a
+parent takes its subitems with it.
+
+## Priority
+
+A Priority column is a second kind of coloured-label column, seeded with
+Critical / High / Medium / Low. It is deliberately a different type from Status
+rather than a renamed one: Status is what "counts as finished" reads, what the
+kanban groups by, and what an unblocked task is moved to. If they were the same
+type, raising a task's priority could mark it finished.
+
+Both kinds are edited in the same label editor, so you can rename, recolour, add
+and delete on either.
 
 ## Blocked by
 

@@ -185,6 +185,76 @@
     if (event.key === 'Escape') { input.value = input.defaultValue; input.blur(); }
   });
 
+  /* --------------------------------------------------------------- subitems */
+
+  // Which parents are collapsed, remembered per browser. Server state would be
+  // wrong here: whether you have a row folded away is about how you are reading
+  // the board right now, not something the board itself should carry for
+  // everybody. Wrapped because a private window can refuse storage outright.
+  const COLLAPSED = 'tasks:collapsed';
+
+  function readCollapsed() {
+    try {
+      const raw = window.localStorage.getItem(COLLAPSED);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch {
+      return new Set();
+    }
+  }
+
+  function writeCollapsed(set) {
+    try {
+      window.localStorage.setItem(COLLAPSED, JSON.stringify([...set]));
+    } catch { /* storage unavailable; folding just will not be remembered */ }
+  }
+
+  function setFolded(parentId, folded) {
+    for (const row of document.querySelectorAll(`tr[data-child-of="${CSS.escape(parentId)}"]`)) {
+      // A tucked "add subitem" row stays tucked either way; folding must not
+      // be what reveals it.
+      if (row.classList.contains('tucked')) continue;
+      row.hidden = folded;
+    }
+    const twist = document.querySelector(`[data-twist="${CSS.escape(parentId)}"]`);
+    if (twist) {
+      twist.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      twist.classList.toggle('folded', folded);
+    }
+  }
+
+  // Apply what was remembered, once, on load.
+  for (const parentId of readCollapsed()) setFolded(parentId, true);
+
+  document.addEventListener('click', (event) => {
+    const twist = event.target.closest('[data-twist]');
+    if (!twist) return;
+
+    const parentId = twist.dataset.twist;
+    const folded = twist.getAttribute('aria-expanded') !== 'false';
+    setFolded(parentId, folded);
+
+    const remembered = readCollapsed();
+    if (folded) remembered.add(parentId); else remembered.delete(parentId);
+    writeCollapsed(remembered);
+  });
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-add-subitem]');
+    if (!button) return;
+
+    const parentId = button.dataset.addSubitem;
+    const row = document.querySelector(
+      `tr.add-row[data-child-of="${CSS.escape(parentId)}"]`,
+    );
+    if (!row) return;
+
+    row.classList.remove('tucked');
+    row.hidden = false;
+    setFolded(parentId, false);
+    button.closest('details')?.removeAttribute('open');
+    row.querySelector('input[name="title"]')?.focus();
+  });
+
   /* ------------------------------------------------- blocked by, on the board */
 
   // A Blocked by cell is filled in when it opens rather than when the page
@@ -237,7 +307,11 @@
         add.type = 'button';
         add.className = 'pick';
         add.dataset.addBlocker = candidate.id;
-        add.textContent = candidate.title;
+        // Two subitems on the same board can easily share a name, so a subitem
+        // is shown under its parent rather than on its own.
+        add.textContent = candidate.parent_title
+          ? `${candidate.parent_title} › ${candidate.title}`
+          : candidate.title;
         panel.appendChild(add);
       }
     } else if (!data.blockers.length) {

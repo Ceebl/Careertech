@@ -2,7 +2,7 @@
 
 import { html } from '../lib/html.js';
 import {
-  PALETTE, TYPES, TYPE_NAMES, paletteColour, colourClass,
+  PALETTE, TYPES, TYPE_NAMES, paletteColour, colourClass, hasLabels,
 } from '../lib/columns.js';
 
 export function homePage({ workspaces, csrf }) {
@@ -212,7 +212,7 @@ export function boardSettingsPage({ board, columns, csrf, notice = '' }) {
           </td>
           <td><span class="tag">${TYPES[column.type]?.label ?? column.type}</span></td>
           <td class="right">
-            ${column.type === 'status'
+            ${hasLabels(column)
     ? html`<a class="btn small" href="/tasks/column/${column.id}/labels">Edit labels</a> `
     : ''}
             <form method="post" action="/tasks/column/${column.id}/delete"
@@ -258,6 +258,9 @@ export function boardSettingsPage({ board, columns, csrf, notice = '' }) {
 export function labelsPage({ column, board, csrf }) {
   const settings = JSON.parse(column.settings || '{}');
   const labels = settings.labels ?? [];
+  // The finished/unblock machinery belongs to Status. A Priority column is
+  // just labels, so those controls are left off rather than shown doing nothing.
+  const isStatus = column.type === 'status';
   return html`<div class="page-head">
     <div>
       <h1>${column.name} labels</h1>
@@ -271,11 +274,11 @@ export function labelsPage({ column, board, csrf }) {
       the same label, so nothing on the board is lost. Deleting one clears it
       from any item that had it.
     </p>
-    <p class="muted small">
+    ${isStatus ? html`<p class="muted small">
       <strong>Counts as finished</strong> is what the <em>blocked by</em> feature
       reads. When a task reaches a status ticked here, anything that was waiting
       on it is freed, and its status moves to whatever you choose below.
-    </p>
+    </p>` : ''}
     <form method="post" action="/tasks/column/${column.id}/labels">
       <input type="hidden" name="_csrf" value="${csrf}">
       ${labels.map((label, index) => html`<div class="row bottom">
@@ -286,11 +289,11 @@ export function labelsPage({ column, board, csrf }) {
         <label class="field w-10">Colour
           ${colourSelect(`colour${index}`, label.colour)}
         </label>
-        <label class="field w-9 check-field">
+        ${isStatus ? html`<label class="field w-9 check-field">
           <input type="checkbox" name="done${index}" value="1" class="auto"
                  ${label.done ? 'checked' : ''}>
           Counts as finished
-        </label>
+        </label>` : ''}
         <label class="field w-7 check-field">
           <input type="checkbox" name="delete${index}" value="1" class="auto">
           Delete
@@ -304,13 +307,13 @@ export function labelsPage({ column, board, csrf }) {
         <label class="field w-10">Colour
           ${colourSelect('newColour', '#717EC3')}
         </label>
-        <label class="field w-9 check-field">
+        ${isStatus ? html`<label class="field w-9 check-field">
           <input type="checkbox" name="newDone" value="1" class="auto">
           Counts as finished
-        </label>
+        </label>` : ''}
       </div>
 
-      <hr class="divider">
+      ${isStatus ? html`<hr class="divider">
 
       <label class="field">
         When everything a task was waiting on is finished, move that task to
@@ -324,7 +327,7 @@ export function labelsPage({ column, board, csrf }) {
           A task already on a finished status is never moved by this, so being
           unblocked cannot undo something you have marked as done.
         </span>
-      </label>
+      </label>` : ''}
 
       <button class="btn primary" type="submit">Save labels</button>
     </form>

@@ -92,6 +92,29 @@ export const TYPES = {
     },
   },
 
+  // Behaves exactly like a status -- coloured labels you click -- but is kept a
+  // separate type on purpose. Status drives the workflow: it is what "counts as
+  // finished" is read from, what the kanban groups by, and what a freed task is
+  // moved to. Priority is just a label. Merging them would mean raising a task's
+  // priority could accidentally mark it done.
+  priority: {
+    label: 'Priority',
+    hint: 'How urgent, as coloured labels',
+    defaultSettings: () => ({
+      labels: [
+        { id: newId(), text: 'Critical', colour: '#C95D63' },
+        { id: newId(), text: 'High', colour: '#EE8434' },
+        { id: newId(), text: 'Medium', colour: '#717EC3' },
+        { id: newId(), text: 'Low', colour: '#8A8F98' },
+      ],
+    }),
+    normalise: (value, settings) => {
+      const wanted = String(value ?? '');
+      const labels = settings?.labels ?? [];
+      return labels.some((label) => label.id === wanted) ? wanted : '';
+    },
+  },
+
   person: {
     label: 'Person',
     hint: 'Someone in this workspace',
@@ -165,6 +188,17 @@ export function isVirtual(column) {
 }
 
 /**
+ * Is this a column whose value is one of a set of coloured labels?
+ *
+ * Status and Priority render, edit and validate identically; they differ only
+ * in what the rest of the app reads them for.
+ */
+export function hasLabels(column) {
+  const type = typeof column === 'string' ? column : column?.type;
+  return type === 'status' || type === 'priority';
+}
+
+/**
  * Read a column's settings back out of the database.
  * Bad JSON in the row must not take a whole board down, so it becomes {}.
  *
@@ -200,7 +234,7 @@ export function normaliseValue(column, value) {
  * @param {unknown} incoming
  */
 export function normaliseSettings(type, incoming) {
-  if (type !== 'status') return {};
+  if (!hasLabels(type)) return {};
 
   const labels = Array.isArray(incoming?.labels) ? incoming.labels : [];
   const cleaned = labels
@@ -213,7 +247,7 @@ export function normaliseSettings(type, incoming) {
       done: label?.done === true || label?.done === '1',
     }));
 
-  if (!cleaned.length) return TYPES.status.defaultSettings();
+  if (!cleaned.length) return TYPES[type].defaultSettings();
 
   // Only a label that still exists can be the one released items move to --
   // otherwise deleting it would leave a setting pointing at nothing.
@@ -245,6 +279,7 @@ export function labelFor(column, value) {
  * @returns {Set<string>}
  */
 export function doneLabelIds(column) {
+  // Status only, never Priority -- "Critical" must not mean finished.
   if (!column || column.type !== 'status') return new Set();
   const labels = settingsOf(column).labels ?? [];
   return new Set(labels.filter((label) => label.done).map((label) => label.id));

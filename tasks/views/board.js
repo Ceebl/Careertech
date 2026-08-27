@@ -1,7 +1,9 @@
 // Drawing a board: the table view, the kanban view, and one item's page.
 
 import { html } from '../lib/html.js';
-import { settingsOf, labelFor, colourClass, isVirtual } from '../lib/columns.js';
+import {
+  settingsOf, labelFor, colourClass, isVirtual, hasLabels,
+} from '../lib/columns.js';
 
 /**
  * The table view -- one table per group, monday.com style.
@@ -51,7 +53,9 @@ function groupBlock(group, groupItems, view) {
     ? html`<tr><td colspan="${columns.length + 2}"
              class="muted pad-note">Nothing here yet.</td></tr>`
     : ''}
-          ${groupItems.map((item) => itemRow(item, view))}
+          ${groupItems.map((item) => html`${itemRow(item, view)}
+            ${(item.children ?? []).map((child) => itemRow(child, view, item))}
+            ${canEdit ? addSubitemRow(item, view, (item.children ?? []).length === 0) : ''}`)}
           ${canEdit ? html`<tr class="add-row">
             <td colspan="${columns.length + 2}">
               <form method="post" action="/tasks/group/${group.id}/item">
@@ -68,15 +72,31 @@ function groupBlock(group, groupItems, view) {
   </section>`;
 }
 
-function itemRow(item, view) {
+/**
+ * One row. `parent` is set when this is a subitem, which indents it and marks
+ * it so the collapse chevron on its parent can find it.
+ */
+function itemRow(item, view, parent = null) {
   const { columns, csrf, canEdit } = view;
+  const children = item.children ?? [];
 
-  return html`<tr>
+  return html`<tr class="${parent ? 'subitem-row' : ''}"
+    ${parent ? html`data-child-of="${parent.id}"` : ''}>
     <td class="col-title">
-      <div class="item-title">
+      <div class="item-title ${parent ? 'indented' : ''}">
+        ${children.length ? html`<button type="button" class="twist"
+          data-twist="${item.id}" aria-expanded="true"
+          aria-label="Hide or show the subitems of ${item.title}">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
+               stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+               stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>` : html`<span class="twist-space" aria-hidden="true"></span>`}
         <input class="text" type="text" value="${item.title}" maxlength="300"
                data-item="${item.id}" data-field="title" aria-label="Item name"
                ${canEdit ? '' : 'readonly'}>
+        ${children.length ? html`<span class="child-count"
+          title="${children.length} subitem${children.length === 1 ? '' : 's'}"
+          >${children.length}</span>` : ''}
         ${item.blockedBy?.length ? html`<a class="blocked-chip"
           href="/tasks/item/${item.id}"
           title="Waiting on ${item.blockedBy.join(', ')}">
@@ -103,12 +123,32 @@ function itemRow(item, view) {
         <div class="menu-panel">
           <a href="/tasks/item/${item.id}">Open</a>
           <a href="/tasks/item/${item.id}#blocked-by">Blocked by…</a>
+          ${parent ? '' : html`<button type="button" class="linkish"
+            data-add-subitem="${item.id}">Add subitem</button>`}
           <form method="post" action="/tasks/item/${item.id}/delete">
             <input type="hidden" name="_csrf" value="${csrf}">
             <button type="submit" class="linkish">Delete item</button>
           </form>
         </div>
       </details>` : ''}
+    </td>
+  </tr>`;
+}
+
+// Rendered for every parent, but kept out of the way until it is wanted -- a
+// board with a "+ Add subitem" line under every single row is unreadable.
+// "Add subitem" in the row menu reveals it; having subitems already shows it.
+function addSubitemRow(item, view, hidden) {
+  const { columns, csrf } = view;
+  return html`<tr class="add-row subitem-row ${hidden ? 'tucked' : ''}"
+    data-child-of="${item.id}">
+    <td colspan="${columns.length + 2}">
+      <form method="post" action="/tasks/item/${item.id}/subitem">
+        <input type="hidden" name="_csrf" value="${csrf}">
+        <input type="text" name="title" maxlength="300" class="indented-input"
+               placeholder="+ Add subitem" aria-label="New subitem under ${item.title}">
+        <button type="submit" class="visually-hidden">Add subitem</button>
+      </form>
     </td>
   </tr>`;
 }
@@ -120,7 +160,8 @@ function cell(item, column, view) {
   const editable = view.canEdit;
 
   switch (column.type) {
-    case 'status': return statusCell(item, column, value, editable);
+    case 'status':
+    case 'priority': return statusCell(item, column, value, editable);
     case 'person': return personCell(item, column, value, view, editable);
     case 'date': return inputCell(item, column, value, 'date', editable);
     case 'number': return inputCell(item, column, value, 'number', editable);
@@ -191,18 +232,27 @@ function blockedByCell(item, editable) {
   const blockers = item.blockers ?? [];
   const waiting = blockers.filter((blocker) => !blocker.finished);
 
+  // Name the task rather than counting it -- "Choose the bath" tells you
+  // something, "1" does not. Extra blockers become a +N after the first, and
+  // the full list is in the tooltip either way.
+  const all = blockers.map((blocker) => blocker.title).join(', ');
+  const first = waiting[0] ?? blockers[0];
+  const extra = blockers.length - 1;
+
   let face;
   if (!blockers.length) {
     face = html`<span class="cell blocked empty">—</span>`;
   } else if (waiting.length) {
-    face = html`<span class="cell blocked waiting"
-      title="Waiting on ${waiting.map((b) => b.title).join(', ')}">
-      ${padlock()}${waiting.length > 1 ? waiting.length : waiting[0].title}
+    face = html`<span class="cell blocked waiting" title="Waiting on ${all}">
+      ${padlock()}<span class="who">${first.title}</span>${extra
+    ? html`<span class="more">+${extra}</span>` : ''}
     </span>`;
   } else {
-    face = html`<span class="cell blocked clear"
-      title="${blockers.map((b) => b.title).join(', ')} — all finished">
-      ${tickMark()}clear
+    // Everything it was waiting on is finished. Struck through, the way a
+    // completed date reads on a board.
+    face = html`<span class="cell blocked clear" title="${all} — all finished">
+      ${tickMark()}<span class="who done">${first.title}</span>${extra
+    ? html`<span class="more">+${extra}</span>` : ''}
     </span>`;
   }
 
@@ -300,6 +350,7 @@ function kanbanColumn(title, colour, items, groupName) {
   return html`<div class="kanban-col">
     <h3 class="bg-${colour}">${title}<span class="n">${items.length}</span></h3>
     ${items.map((item) => html`<a class="kanban-card" href="/tasks/item/${item.id}">
+      ${item.parentTitle ? html`<span class="parent-of">${item.parentTitle} ›</span>` : ''}
       ${item.title}
       <span class="meta">${groupName.get(item.group_id) ?? ''}</span>
     </a>`)}
@@ -312,7 +363,7 @@ function kanbanColumn(title, colour, items, groupName) {
 export function itemPage({
   item, board, columns, cells, comments, people, csrf, canEdit,
   blockers = [], blocking = [], candidates = [], hasStatusColumn = true,
-  notice = '',
+  notice = '', parent = null, children = [],
 }) {
   const waitingOn = blockers.filter((blocker) => !blocker.finished);
 
@@ -320,6 +371,8 @@ export function itemPage({
     <div>
       <h1>${item.title}</h1>
       <p class="lede">In <a href="/tasks/b/${board.id}">${board.name}</a>
+        ${parent ? html`· a subitem of
+          <a href="/tasks/item/${parent.id}">${parent.title}</a>` : ''}
         · added ${item.created_at}</p>
     </div>
   </div>
@@ -348,6 +401,30 @@ export function itemPage({
       Values are edited on the board itself, where clicking a cell changes it.
     </p>
   </div>
+
+  ${!parent ? html`<div class="panel">
+    <h2>Subitems</h2>
+    ${children.length === 0
+    ? html`<p class="muted">None yet.</p>`
+    : html`<ul class="blocker-list">
+        ${children.map((child) => html`<li>
+          <a href="/tasks/item/${child.id}">${child.title}</a>
+        </li>`)}
+      </ul>`}
+    ${canEdit ? html`<form method="post" action="/tasks/item/${item.id}/subitem"
+      class="row bottom mt-1">
+      <input type="hidden" name="_csrf" value="${csrf}">
+      <label class="field tight">Add a subitem
+        <input type="text" name="title" maxlength="300" required
+               placeholder="Something smaller that is part of this">
+      </label>
+      <div class="grow-0"><button class="btn" type="submit">Add</button></div>
+    </form>` : ''}
+    <p class="small muted note">
+      Subitems live in the same group and use the same columns as the rest of
+      the board, and they only go one level deep.
+    </p>
+  </div>` : ''}
 
   <div class="panel" id="blocked-by">
     <h2>Blocked by</h2>
@@ -381,7 +458,8 @@ export function itemPage({
       <input type="hidden" name="_csrf" value="${csrf}">
       <label class="field tight">This item is waiting on
         <select name="blockerId">
-          ${candidates.map((other) => html`<option value="${other.id}">${other.title}</option>`)}
+          ${candidates.map((other) => html`<option value="${other.id}"
+            >${other.parent_title ? `${other.parent_title} › ` : ''}${other.title}</option>`)}
         </select>
       </label>
       <div class="grow-0"><button class="btn" type="submit">Add</button></div>
@@ -431,7 +509,8 @@ export function itemPage({
 function describe(column, value, people) {
   if (!value) return html`<span class="muted">—</span>`;
   switch (column.type) {
-    case 'status': {
+    case 'status':
+    case 'priority': {
       const label = labelFor(column, value);
       return label
         ? html`<span class="tag tag-${colourClass(label.colour)}">${label.text}</span>`

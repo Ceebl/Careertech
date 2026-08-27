@@ -125,10 +125,20 @@ export const SCHEMA = `
 
   /* -------------------------------------------------------------- items */
 
+  /* A subitem is an ordinary item with a parent. It lives in the same group and
+     uses the same columns as everything else on the board, which is a
+     simplification of what monday.com does -- there, subitems are a board of
+     their own with their own columns. One shared set of columns is less to
+     explain and less to keep in step, and it means a subitem can carry a
+     status, an owner and a dependency like anything else.
+
+     Nesting is one level deep, enforced in the routes: a subitem cannot have
+     subitems of its own. */
   CREATE TABLE IF NOT EXISTS items (
     id          TEXT    NOT NULL PRIMARY KEY,
     board_id    TEXT    NOT NULL REFERENCES boards(id)       ON DELETE CASCADE,
     group_id    TEXT    NOT NULL REFERENCES board_groups(id) ON DELETE CASCADE,
+    parent_id   TEXT    REFERENCES items(id) ON DELETE CASCADE,
     title       TEXT    NOT NULL,
     position    INTEGER NOT NULL DEFAULT 0,
     created_by  TEXT REFERENCES users(id) ON DELETE SET NULL,
@@ -139,6 +149,8 @@ export const SCHEMA = `
 
   CREATE INDEX IF NOT EXISTS idx_items_board ON items(board_id, archived_at);
   CREATE INDEX IF NOT EXISTS idx_items_group ON items(group_id, position);
+  /* The index on parent_id is created in lib/db.js instead: on a database that
+     predates the column, this block runs before the column has been added. */
 
   CREATE TABLE IF NOT EXISTS cells (
     item_id   TEXT NOT NULL REFERENCES items(id)         ON DELETE CASCADE,

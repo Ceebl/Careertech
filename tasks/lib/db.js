@@ -24,8 +24,50 @@ db.exec('PRAGMA foreign_keys = ON');
 db.exec('PRAGMA busy_timeout = 5000');
 
 db.exec(SCHEMA);
+migrate();
 
 export { DATA_DIR };
+
+/**
+ * Add columns that the schema gained after a database was first created.
+ *
+ * CREATE TABLE IF NOT EXISTS does nothing to a table that already exists, so a
+ * new column in SCHEMA above reaches a fresh database and no other. Each entry
+ * here is checked against the table as it actually is and added only if it is
+ * missing, which makes running this on every start safe and makes the schema
+ * the single description of the shape.
+ *
+ * Only additive changes belong here. Anything that drops or rewrites a column
+ * needs a considered migration and a backup first.
+ */
+function migrate() {
+  const additions = [
+    // Subitems, added 2026-08-27.
+    { table: 'items', column: 'parent_id', definition: 'TEXT REFERENCES items(id) ON DELETE CASCADE' },
+  ];
+
+  for (const { table, column, definition } of additions) {
+    // PRAGMA and ALTER TABLE cannot take bound parameters for an identifier, so
+    // these are the only statements in the app built by interpolation. Every
+    // value comes from the fixed list above rather than from a request, and the
+    // pattern check makes that a rule the code enforces rather than a habit.
+    if (!/^[a-z_][a-z0-9_]*$/i.test(table) || !/^[a-z_][a-z0-9_]*$/i.test(column)) {
+      throw new Error(`unsafe migration identifier: ${table}.${column}`);
+    }
+
+    const existing = db.prepare(`PRAGMA table_info(${table})`).all();
+    if (!existing.length) continue; // table not created yet; SCHEMA will have it
+    if (existing.some((row) => row.name === column)) continue;
+
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    console.log(`tasks: added ${table}.${column}`);
+  }
+
+  // Indexes on migrated columns have to wait until the columns exist, so they
+  // live here rather than in SCHEMA -- on an older database SCHEMA runs first
+  // and would be indexing a column that is not there yet.
+  db.exec('CREATE INDEX IF NOT EXISTS idx_items_parent ON items(parent_id, position)');
+}
 
 /**
  * Run several statements as one all-or-nothing unit.

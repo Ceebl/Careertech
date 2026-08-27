@@ -299,6 +299,7 @@ main.wide { max-width: none; padding: 1.25rem 1.25rem 5rem; }
 .board-table .col-narrow { width: 9rem; }
 /* Task names need more room than a one-word label does. */
 .board-table .col-blockedby { width: 12rem; }
+.board-table .col-priority { width: 8rem; }
 .board-table .col-checkbox { width: 6rem; }
 .board-table .col-actions { width: 3rem; }
 
@@ -603,6 +604,14 @@ input.cell.date:focus::-webkit-calendar-picker-indicator { opacity: .75; }
 .cell.blocked.waiting { color: var(--warning); }
 .cell.blocked.clear { color: var(--done); }
 .cell.blocked svg { flex: none; }
+.cell.blocked .who {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Finished blockers read like a completed date: still named, struck through. */
+.cell.blocked .who.done { text-decoration: line-through; opacity: .8; }
+.cell.blocked .more {
+  flex: none; font-size: .74rem; opacity: .75; font-weight: 600;
+}
 
 /* The picker that opens out of the cell. Shares .status-options for its
    position and frame; only the contents differ. */
@@ -648,3 +657,47 @@ input.cell.date:focus::-webkit-calendar-picker-indicator { opacity: .75; }
 
 /* Wider than a status menu: these hold task names, not one-word labels. */
 .blocked-menu .status-options { min-width: 15rem; max-width: 22rem; }
+
+/* ------------------------------------------------------------- subitems */
+
+/* Subitems sit inside their parent's row block: a tinted band down the left
+   edge does the work of showing they belong to the row above, without the
+   indentation eating the whole column. */
+.board-table tr.subitem-row > td:first-child {
+  box-shadow: inset 3px 0 0 var(--line-strong);
+}
+.board-table tr.subitem-row > td { background: var(--surface-sunk); }
+
+.item-title.indented { padding-left: 1.6rem; }
+
+/* The chevron, and a matching gap on rows without one, so every title in the
+   column starts at the same place. */
+.twist, .twist-space { flex: none; width: 18px; }
+.twist {
+  display: grid; place-items: center;
+  height: 18px; padding: 0;
+  background: none; border: 0; border-radius: var(--radius-sm);
+  color: var(--ink-faint); cursor: pointer;
+  transition: transform .12s;
+}
+.twist:hover { color: var(--ink); background: var(--surface-sunk); }
+.twist.folded { transform: rotate(-90deg); }
+
+.child-count {
+  flex: none; padding: 0 .3rem;
+  font-size: .72rem; font-weight: 700; line-height: 1.5;
+  color: var(--ink-faint);
+  background: var(--surface-sunk);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+
+.add-row .indented-input { padding-left: 2.55rem; }
+.add-row.tucked { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .twist { transition: none; }
+}
+.kanban-card .parent-of {
+  display: block; font-size: .74rem; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}

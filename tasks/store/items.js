@@ -5,12 +5,12 @@ import { newId } from '../lib/ids.js';
 import { normaliseValue, settingsOf } from '../lib/columns.js';
 
 const insertItem = db.prepare(`
-  INSERT INTO items (id, board_id, group_id, title, position, created_by)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO items (id, board_id, group_id, parent_id, title, position, created_by)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
 const itemsOn = db.prepare(`
-  SELECT id, group_id, title, position, created_at, updated_at, created_by
+  SELECT id, group_id, parent_id, title, position, created_at, updated_at, created_by
     FROM items
    WHERE board_id = ? AND archived_at IS NULL
    ORDER BY position, rowid
@@ -71,7 +71,9 @@ const deleteCommentRow = db.prepare('DELETE FROM comments WHERE id = ? AND user_
  */
 export function boardContents(boardId) {
   const items = itemsOn.all(boardId);
-  const byId = new Map(items.map((item) => [item.id, { ...item, cells: {}, comments: 0 }]));
+  const byId = new Map(items.map(
+    (item) => [item.id, { ...item, cells: {}, comments: 0, children: [] }],
+  ));
 
   for (const cell of cellsOn.all(boardId)) {
     const item = byId.get(cell.item_id);
@@ -82,15 +84,25 @@ export function boardContents(boardId) {
     if (item) item.comments = row.n;
   }
 
-  return [...byId.values()];
+  // Hang subitems off their parents and return only the top level, so the view
+  // draws each row once. A subitem whose parent has vanished would otherwise
+  // disappear from the board entirely, so it is promoted rather than dropped.
+  const top = [];
+  for (const item of byId.values()) {
+    const parent = item.parent_id ? byId.get(item.parent_id) : null;
+    if (parent) parent.children.push(item);
+    else top.push(item);
+  }
+  return top;
 }
 
-export function createItem({ boardId, groupId, title, userId }) {
+export function createItem({ boardId, groupId, title, userId, parentId = null }) {
   const id = newId();
   insertItem.run(
     id,
     boardId,
     groupId,
+    parentId,
     cleanTitle(title),
     nextItemPosition.get(boardId).next,
     userId,
@@ -102,8 +114,42 @@ export function renameItem(itemId, title) {
   renameItemRow.run(cleanTitle(title), itemId);
 }
 
+const archiveChildren = db.prepare(
+  "UPDATE items SET archived_at = datetime('now') WHERE parent_id = ? AND archived_at IS NULL",
+);
+
+/**
+ * Archive an item and, if it has any, its subitems.
+ *
+ * The foreign key cascade would handle this on a real DELETE, but items are
+ * archived rather than deleted -- so without this the subitems would survive
+ * their parent and vanish from the board with no way back to them.
+ */
 export function archiveItem(itemId) {
-  archiveItemRow.run(itemId);
+  transaction(() => {
+    archiveChildren.run(itemId);
+    archiveItemRow.run(itemId);
+  });
+}
+
+/** How many live subitems an item has. */
+const countChildren = db.prepare(
+  'SELECT COUNT(*) AS n FROM items WHERE parent_id = ? AND archived_at IS NULL',
+);
+
+export function childCount(itemId) {
+  return countChildren.get(itemId).n;
+}
+
+const childrenOfItem = db.prepare(`
+  SELECT id, title FROM items
+   WHERE parent_id = ? AND archived_at IS NULL
+   ORDER BY position, rowid
+`);
+
+/** An item's subitems, for its own page. */
+export function subitemsOf(itemId) {
+  return childrenOfItem.all(itemId);
 }
 
 export function moveItem(itemId, groupId, position) {
@@ -202,11 +248,15 @@ const blockersOnBoard = db.prepare(`
    ORDER BY b.position, b.rowid
 `);
 
-// Titles only, for the "what should this wait on?" picker.
+// Titles only, for the "what should this wait on?" picker. Subitems are
+// included -- waiting on one is perfectly sensible -- with their parent's name
+// so two subitems called "Order parts" can be told apart.
 const titlesOnBoard = db.prepare(`
-  SELECT id, title FROM items
-   WHERE board_id = ? AND archived_at IS NULL
-   ORDER BY position, rowid
+  SELECT i.id, i.title, p.title AS parent_title
+    FROM items i
+    LEFT JOIN items p ON p.id = i.parent_id
+   WHERE i.board_id = ? AND i.archived_at IS NULL
+   ORDER BY i.position, i.rowid
 `);
 
 /** Every live item on a board, id and title only. */
