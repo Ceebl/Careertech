@@ -1,0 +1,650 @@
+/* Tasks -- the whole stylesheet.
+ *
+ * Self-contained on purpose: it borrows the site palette from brand/ct.css but
+ * links to nothing outside this app, so the private pages have no dependency on
+ * a publicly served file.
+ *
+ * Light is the default and the operating system's preference is ignored --
+ * the sun/moon button decides, and the choice is remembered in a cookie.
+ */
+
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/tasks/fonts/dm-sans-latin.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'DM Sans';
+  src: url('/tasks/fonts/dm-sans-latin-ext.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* Native controls (the date picker, scrollbars, default field backgrounds)
+     take their cue from this, not from our variables. Without it a dark page
+     still gets white input boxes. */
+  color-scheme: light;
+
+  /* House palette. Mid-tones -- never used for body text or page backgrounds. */
+  --primary: #496DDB;
+  --success: #C0BF47;
+  --warning: #EE8434;
+  --danger: #C95D63;
+  --info: #717EC3;
+  --decorative: #AE8799;
+  --done: #3E8E5F;
+
+  /* Neutral ramp with a faint purple cast, anchored at #1C1A22. */
+  --ink: #1C1A22;
+  --ink-soft: #4A4753;
+  --ink-faint: #767283;
+  --line: #E4E2E9;
+  --line-strong: #CFCCD7;
+  --surface: #FFFFFF;
+  --surface-sunk: #F6F5F8;
+  --surface-raised: #FFFFFF;
+  --shadow: 0 1px 2px rgba(28, 26, 34, .06), 0 4px 14px rgba(28, 26, 34, .05);
+  --radius: 6px;
+  --radius-sm: 4px;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --ink: #EDEBF2;
+  --ink-soft: #B6B2C2;
+  --ink-faint: #85818F;
+  --line: #2C2A34;
+  --line-strong: #3D3A47;
+  --surface: #161520;
+  --surface-sunk: #100F17;
+  --surface-raised: #1E1C28;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 14px rgba(0, 0, 0, .3);
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--surface-sunk);
+  color: var(--ink);
+  font: 15px/1.55 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1 { font-size: 1.5rem; font-weight: 600; margin: 0 0 .3rem; letter-spacing: -.01em; }
+h2 { font-size: 1.05rem; font-weight: 600; margin: 0 0 .6rem; }
+h3 { font-size: .95rem; font-weight: 600; margin: 0 0 .4rem; }
+
+.lede { color: var(--ink-soft); margin: 0 0 1.4rem; }
+.muted { color: var(--ink-faint); }
+.small { font-size: .85rem; }
+
+main { max-width: 62rem; margin: 0 auto; padding: 1.75rem 1.25rem 5rem; }
+main.wide { max-width: none; padding: 1.25rem 1.25rem 5rem; }
+
+/* ------------------------------------------------------------------ topbar */
+
+.topbar {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .55rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; z-index: 30;
+}
+
+.mark { display: flex; flex: none; }
+.mark:hover { text-decoration: none; }
+
+.crumbs {
+  display: flex; align-items: center; gap: .4rem;
+  min-width: 0; flex: 1 1 auto;
+  font-size: .92rem; overflow: hidden; white-space: nowrap;
+}
+.crumbs a { color: var(--ink-soft); }
+.crumbs .here { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.crumbs .sep { color: var(--ink-faint); }
+
+.topbar-actions { display: flex; gap: .4rem; align-items: center; flex: none; }
+
+.theme-toggle {
+  flex: none;
+  display: grid; place-items: center;
+  width: 32px; height: 32px; padding: 0;
+  background: none; border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft); cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--line-strong); color: var(--ink); }
+.theme-toggle svg { fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round; }
+.theme-toggle .moon { display: none; }
+[data-theme='dark'] .theme-toggle .sun { display: none; }
+[data-theme='dark'] .theme-toggle .moon { display: block; }
+
+/* Menus are <details>, so they open and close with no script at all. */
+.menu { position: relative; flex: none; }
+.menu summary {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .25rem .5rem .25rem .25rem;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  cursor: pointer; list-style: none;
+}
+.menu summary::-webkit-details-marker { display: none; }
+.menu summary:hover { border-color: var(--line-strong); }
+.menu .who { font-size: .88rem; max-width: 9rem; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+
+.avatar {
+  display: grid; place-items: center;
+  width: 24px; height: 24px; flex: none;
+  background: var(--primary); color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: .68rem; font-weight: 700; letter-spacing: .02em;
+}
+
+.menu-panel {
+  position: absolute; right: 0; top: calc(100% + .35rem);
+  min-width: 12rem; padding: .3rem;
+  background: var(--surface-raised); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+}
+.menu-panel a, .menu-panel .linkish {
+  display: block; width: 100%; text-align: left;
+  padding: .45rem .6rem; border-radius: var(--radius-sm);
+  color: var(--ink); font: inherit; background: none; border: 0; cursor: pointer;
+}
+.menu-panel a:hover, .menu-panel .linkish:hover {
+  background: var(--surface-sunk); text-decoration: none;
+}
+
+/* ------------------------------------------------------------- panels/forms */
+
+.panel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem;
+}
+.panel.narrow { max-width: 28rem; margin-inline: auto; }
+
+.field { display: block; margin-bottom: .9rem; font-size: .88rem;
+  font-weight: 500; color: var(--ink-soft); }
+.field input, .field select, .field textarea {
+  display: block; width: 100%; margin-top: .3rem;
+  padding: .5rem .6rem;
+  font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+.field input:focus, .field select:focus, .field textarea:focus,
+.btn:focus-visible, .cell:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 1px;
+}
+.field textarea { resize: vertical; min-height: 5rem; }
+.field-hint { display: block; margin-top: .25rem; font-weight: 400;
+  color: var(--ink-faint); font-size: .82rem; }
+.row { display: flex; gap: .75rem; flex-wrap: wrap; }
+.row > * { flex: 1 1 12rem; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .48rem .85rem;
+  font: inherit; font-weight: 500; line-height: 1.2;
+  color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  cursor: pointer; text-decoration: none;
+}
+.btn:hover { background: var(--surface-sunk); text-decoration: none; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: none; }
+.btn.danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+.btn.small { padding: .3rem .55rem; font-size: .84rem; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+.notice {
+  padding: .65rem .8rem; margin-bottom: 1rem;
+  border: 1px solid var(--line-strong); border-left-width: 3px;
+  border-radius: var(--radius-sm); font-size: .9rem;
+  background: var(--surface);
+}
+.notice.error { border-left-color: var(--danger); color: var(--danger); }
+.notice.ok { border-left-color: var(--success); }
+.notice.warn { border-left-color: var(--warning); }
+
+/* --------------------------------------------------------------- login page */
+
+.login-wrap {
+  min-height: 100vh; display: grid; place-items: center; padding: 1.25rem;
+}
+.login-card {
+  width: 100%; max-width: 22rem;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 1.75rem; box-shadow: var(--shadow);
+}
+.login-card h1 { display: flex; align-items: center; gap: .6rem; }
+
+/* ------------------------------------------------------------- card grids */
+
+.cards { display: grid; gap: .75rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+.card {
+  display: block; padding: .9rem 1rem;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
+}
+.card:hover { border-color: var(--line-strong); text-decoration: none;
+  box-shadow: var(--shadow); }
+.card .name { font-weight: 600; display: block; margin-bottom: .15rem; }
+.card .meta { color: var(--ink-faint); font-size: .84rem; }
+
+.page-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.page-head .actions { display: flex; gap: .5rem; flex: none; }
+
+.empty {
+  padding: 2.5rem 1.25rem; text-align: center;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius);
+  color: var(--ink-faint);
+}
+
+/* -------------------------------------------------------------- board table */
+
+.group { margin-bottom: 1.5rem; }
+.group-head {
+  display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem;
+}
+.group-head .dot { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.group-head .title { font-weight: 600; }
+.group-head .count { color: var(--ink-faint); font-size: .84rem; }
+.group-head .spacer { flex: 1; }
+
+.board-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden;
+}
+.board-scroll { overflow-x: auto; }
+.board-table th {
+  text-align: left; font-size: .78rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .04em;
+  color: var(--ink-faint);
+  padding: .5rem .7rem; border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.board-table td {
+  padding: 0; border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.board-table tr:last-child td { border-bottom: 0; }
+.board-table .col-title { min-width: 16rem; width: 40%; }
+.board-table .col-narrow { width: 9rem; }
+/* Task names need more room than a one-word label does. */
+.board-table .col-blockedby { width: 12rem; }
+.board-table .col-checkbox { width: 6rem; }
+.board-table .col-actions { width: 3rem; }
+
+.item-title {
+  display: flex; align-items: center; gap: .5rem; padding: .1rem .7rem;
+}
+.item-title .text {
+  flex: 1; padding: .42rem .35rem; border-radius: var(--radius-sm);
+  border: 1px solid transparent; min-width: 0;
+  /* Sits in the row like text until you touch it, rather than looking like a
+     form field on every line. */
+  background: none; color: inherit; font: inherit;
+}
+.item-title .text:hover { border-color: var(--line); }
+.item-title .text:focus { border-color: var(--primary); outline: none;
+  background: var(--surface); }
+.item-title .bubble {
+  display: inline-flex; align-items: center; gap: .2rem;
+  color: var(--ink-faint); font-size: .8rem; flex: none;
+}
+
+/* A padlock on any row still waiting on something else. Orange rather than red:
+   it is a "not yet", not a fault. */
+.item-title .blocked-chip {
+  display: inline-flex; align-items: center; gap: .15rem;
+  color: var(--warning); font-size: .78rem; font-weight: 600; flex: none;
+}
+.item-title .blocked-chip:hover { text-decoration: none; filter: brightness(1.15); }
+
+.blocker-list { list-style: none; margin: .5rem 0 0; padding: 0; }
+.blocker-list li {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  padding: .45rem 0; border-bottom: 1px solid var(--line);
+}
+.blocker-list li:last-child { border-bottom: 0; }
+.blocker-list li.finished a { color: var(--ink-faint); text-decoration: line-through; }
+
+/* Cells are edited in place. Each one is a button or an input that writes
+   straight back to the server -- there is no save button anywhere. */
+.cell {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 38px; padding: 0 .5rem;
+  font: inherit; color: inherit; background: none;
+  border: 0; border-left: 1px solid var(--line);
+  cursor: pointer; text-align: center;
+}
+.cell:hover { background: var(--surface-sunk); }
+.cell.status {
+  color: #fff; font-size: .84rem; font-weight: 500; border-radius: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cell.status.empty { color: var(--ink-faint); background: var(--surface-sunk); }
+.cell.date, .cell.number, .cell.text { font-size: .88rem; }
+.cell.date.empty, .cell.number.empty, .cell.text.empty,
+.cell.person.empty { color: var(--ink-faint); }
+.cell input { width: 100%; border: 0; background: none; font: inherit;
+  color: inherit; text-align: center; padding: 0; }
+.cell input:focus { outline: none; }
+.cell .tick {
+  width: 20px; height: 20px; border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm); display: grid; place-items: center;
+  color: #fff;
+}
+.cell .tick.on { background: var(--done); border-color: var(--done); }
+/* The tick mark is always in the markup so switching it on is instant, but an
+   unticked box has to look empty. It was invisible in light mode by luck -- a
+   white tick on white -- and an obvious white blob in dark mode. */
+.cell .tick > svg { opacity: 0; }
+.cell .tick.on > svg { opacity: 1; }
+.cell:hover .tick:not(.on) { color: var(--ink-faint); }
+.cell:hover .tick:not(.on) > svg { opacity: .45; }
+
+.person-chip {
+  display: inline-grid; place-items: center;
+  width: 24px; height: 24px; border-radius: var(--radius-sm);
+  background: var(--info); color: #fff; font-size: .68rem; font-weight: 700;
+}
+
+.add-row td { padding: 0; }
+.add-row input {
+  width: 100%; padding: .55rem .95rem; font: inherit;
+  color: var(--ink); background: none; border: 0;
+}
+.add-row input::placeholder { color: var(--ink-faint); }
+.add-row input:focus { outline: none; background: var(--surface-sunk); }
+
+.row-menu { position: relative; }
+.row-menu summary { list-style: none; cursor: pointer; padding: .4rem;
+  color: var(--ink-faint); text-align: center; }
+.row-menu summary::-webkit-details-marker { display: none; }
+.row-menu summary:hover { color: var(--ink); }
+.row-menu .menu-panel { min-width: 10rem; }
+
+/* Status picker, opened by clicking a status cell. */
+.status-menu { position: relative; width: 100%; height: 100%; }
+.status-menu > summary { list-style: none; height: 100%; }
+.status-menu > summary::-webkit-details-marker { display: none; }
+/* Fixed, not absolute.
+ *
+ * The board scrolls sideways, and a box that scrolls clips everything inside it
+ * -- so an absolutely-positioned menu was being sliced off at the edge of the
+ * table. A fixed element is positioned against the window instead and escapes
+ * the clip completely. The price is that its coordinates have to be worked out
+ * in app.js when it opens, rather than stated here. */
+.status-options {
+  position: fixed; z-index: 60; top: 0; left: 0;
+  min-width: 11rem; max-height: 60vh; overflow-y: auto; padding: .3rem;
+  background: var(--surface-raised); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.status-options button {
+  display: block; width: 100%; text-align: left;
+  padding: .4rem .55rem; margin-bottom: .15rem;
+  font: inherit; font-size: .86rem; color: #fff;
+  border: 0; border-radius: var(--radius-sm); cursor: pointer;
+}
+.status-options button.clear { background: var(--surface-sunk); color: var(--ink-faint); }
+.status-options .edit-labels {
+  display: block; padding: .4rem .55rem; margin-top: .25rem;
+  border-top: 1px solid var(--line);
+  font-size: .82rem; color: var(--ink-faint);
+}
+.status-options .edit-labels:hover { color: var(--primary); text-decoration: none; }
+
+/* ------------------------------------------------------------------ kanban */
+
+.kanban { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: 1rem; }
+.kanban-col { flex: 0 0 17rem; }
+.kanban-col h3 {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .4rem .6rem; margin-bottom: .5rem;
+  border-radius: var(--radius-sm); color: #fff; font-size: .86rem;
+}
+.kanban-col h3 .n { margin-left: auto; opacity: .8; font-weight: 500; }
+.kanban-card {
+  display: block; padding: .6rem .7rem; margin-bottom: .5rem;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+.kanban-card:hover { border-color: var(--line-strong); text-decoration: none; }
+.kanban-card .meta { color: var(--ink-faint); font-size: .8rem; margin-top: .25rem;
+  display: flex; gap: .5rem; align-items: center; }
+
+.view-tabs { display: flex; gap: .25rem; }
+.view-tabs a {
+  padding: .35rem .7rem; font-size: .88rem; color: var(--ink-soft);
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+}
+.view-tabs a.on { background: var(--surface); border-color: var(--line);
+  color: var(--ink); font-weight: 600; }
+.view-tabs a:hover { text-decoration: none; color: var(--ink); }
+
+/* ------------------------------------------------------------------ tables */
+
+.list { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.list th {
+  text-align: left; font-size: .78rem; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--ink-faint);
+  padding: .5rem .6rem; border-bottom: 1px solid var(--line);
+}
+.list td { padding: .55rem .6rem; border-bottom: 1px solid var(--line); }
+.list tr:last-child td { border-bottom: 0; }
+.list .right { text-align: right; }
+
+.tag {
+  display: inline-block; padding: .1rem .4rem;
+  font-size: .74rem; font-weight: 600; letter-spacing: .02em;
+  border-radius: var(--radius-sm); background: var(--surface-sunk);
+  color: var(--ink-soft); border: 1px solid var(--line);
+}
+.tag.owner { border-color: var(--primary); color: var(--primary); }
+.tag.viewer { border-color: var(--decorative); color: var(--decorative); }
+.tag.admin { border-color: var(--warning); color: var(--warning); }
+.tag.off { border-color: var(--danger); color: var(--danger); }
+
+/* ------------------------------------------------------------- item drawer */
+
+.comment { padding: .6rem 0; border-bottom: 1px solid var(--line); }
+.comment:last-child { border-bottom: 0; }
+.comment .who { font-weight: 600; font-size: .86rem; }
+.comment .when { color: var(--ink-faint); font-size: .8rem; margin-left: .4rem; }
+.comment .body { margin: .2rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Saved/failed feedback for the inline cell edits. */
+.flash {
+  position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+  padding: .5rem .9rem; font-size: .88rem;
+  background: var(--ink); color: var(--surface);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow);
+  opacity: 0; pointer-events: none; transition: opacity .15s;
+  z-index: 60;
+}
+.flash.show { opacity: 1; }
+.flash.bad { background: var(--danger); color: #fff; }
+
+@media (max-width: 640px) {
+  .topbar { gap: .5rem; padding: .5rem .75rem; }
+  .menu .who { display: none; }
+  main { padding: 1.25rem .75rem 4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+/* ==========================================================================
+   Utility classes.
+   ==========================================================================
+   These exist for one reason: the Content-Security-Policy this app sends
+   forbids style attributes outright, so nothing can be positioned or coloured
+   inline. Every colour a user can choose is one of the eight in the palette
+   (see lib/columns.js), so all of them can be named here in advance.
+   The cost is this block. The gain is that a page which cannot carry a style
+   attribute cannot be talked into carrying a hostile one either. */
+
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 1.5rem; }
+.note { margin: .8rem 0 0; }
+.foot-note { margin: 1.2rem 0 0; }
+.tight { margin-bottom: 0; }
+.grow-0 { flex: 0 0 auto; }
+.w-7 { flex: 0 0 7rem; }
+.w-9 { flex: 0 0 9rem; }
+.w-10 { flex: 0 0 10rem; }
+.w-12 { flex: 0 0 12rem; }
+.row.bottom { align-items: flex-end; }
+.inline-form { display: flex; gap: .35rem; }
+.inline-form.right { justify-content: flex-end; }
+.inline-block { display: inline; }
+.check-field { display: flex; gap: .5rem; align-items: center; }
+.check-field input, input.auto { width: auto; margin: 0; }
+.nowrap { white-space: nowrap; }
+.full-width { width: 100%; justify-content: center; }
+.divider { border: 0; border-top: 1px solid var(--line); margin: 1.25rem 0; }
+.pad-note { padding: .8rem 1rem; }
+.pad-empty { padding: .4rem .2rem; }
+.th-label { width: 10rem; }
+.add-group { margin-top: .5rem; }
+
+/* Inputs used as cells need to override the flex layout .cell sets up. */
+input.cell { display: block; text-align: center; }
+
+/* A submit button that is present for the browser but not for the eye. Forms
+   with no visible button still need one, or pressing Enter does nothing in
+   some browsers. */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* The palette, as classes. Index matches PALETTE in lib/columns.js. */
+.bg-c1 { background: #496DDB; }
+.bg-c2 { background: #C0BF47; }
+.bg-c3 { background: #EE8434; }
+.bg-c4 { background: #C95D63; }
+.bg-c5 { background: #717EC3; }
+.bg-c6 { background: #AE8799; }
+.bg-c7 { background: #5B6472; }
+.bg-c8 { background: #8A8F98; }
+.bg-c9 { background: #3E8E5F; }
+
+.bl-c1 { border-left-color: #496DDB; }
+.bl-c2 { border-left-color: #C0BF47; }
+.bl-c3 { border-left-color: #EE8434; }
+.bl-c4 { border-left-color: #C95D63; }
+.bl-c5 { border-left-color: #717EC3; }
+.bl-c6 { border-left-color: #AE8799; }
+.bl-c7 { border-left-color: #5B6472; }
+.bl-c8 { border-left-color: #8A8F98; }
+.bl-c9 { border-left-color: #3E8E5F; }
+
+.tag-c1 { border-color: #496DDB; color: #496DDB; }
+.tag-c2 { border-color: #C0BF47; color: #8a8a2e; }
+.tag-c3 { border-color: #EE8434; color: #EE8434; }
+.tag-c4 { border-color: #C95D63; color: #C95D63; }
+.tag-c5 { border-color: #717EC3; color: #717EC3; }
+.tag-c6 { border-color: #AE8799; color: #AE8799; }
+.tag-c7 { border-color: #5B6472; color: #5B6472; }
+.tag-c8 { border-color: #8A8F98; color: #8A8F98; }
+.tag-c9 { border-color: #3E8E5F; color: #3E8E5F; }
+
+[data-theme='dark'] .tag-c2 { color: #C0BF47; }
+
+/* A native date input announces "dd/mm/yyyy" even when it holds nothing, and a
+   board is mostly empty Due cells -- so a column of them becomes a wall of grey
+   noise. Hide the format until the cell is actually being used. Firefox does
+   not support these pseudo-elements and simply shows the format, which is the
+   old behaviour rather than a broken one. */
+input.cell.date.empty::-webkit-datetime-edit { color: transparent; }
+input.cell.date.empty:hover::-webkit-datetime-edit,
+input.cell.date.empty:focus::-webkit-datetime-edit { color: var(--ink-faint); }
+input.cell.date::-webkit-calendar-picker-indicator { opacity: .3; cursor: pointer; }
+input.cell.date:hover::-webkit-calendar-picker-indicator,
+input.cell.date:focus::-webkit-calendar-picker-indicator { opacity: .75; }
+
+/* ------------------------------------------------------- blocked by cell */
+
+.cell.blocked {
+  gap: .25rem; font-size: .82rem; font-weight: 500;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.cell.blocked.waiting { color: var(--warning); }
+.cell.blocked.clear { color: var(--done); }
+.cell.blocked svg { flex: none; }
+
+/* The picker that opens out of the cell. Shares .status-options for its
+   position and frame; only the contents differ. */
+.status-options .menu-heading {
+  margin: .35rem .55rem .2rem; font-size: .72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint);
+}
+.status-options .menu-heading:first-child { margin-top: .1rem; }
+
+.status-options .blocker-row {
+  display: flex; align-items: center; gap: .4rem;
+  padding: .3rem .4rem .3rem .55rem; border-radius: var(--radius-sm);
+  font-size: .86rem;
+}
+.status-options .blocker-row:hover { background: var(--surface-sunk); }
+.status-options .blocker-row .name {
+  flex: 1; min-width: 0; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.status-options .blocker-row.finished .name {
+  color: var(--ink-faint); text-decoration: line-through;
+}
+.status-options .blocker-row .drop {
+  flex: none; width: 20px; height: 20px; padding: 0;
+  font: inherit; font-size: 1rem; line-height: 1;
+  color: var(--ink-faint); background: none;
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.status-options .blocker-row .drop:hover {
+  color: var(--danger); border-color: var(--danger);
+}
+
+.status-options .pick {
+  display: block; width: 100%; text-align: left;
+  padding: .35rem .55rem; margin-bottom: .1rem;
+  font: inherit; font-size: .86rem; color: var(--ink);
+  background: none; border: 0; border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.status-options .pick:hover { background: var(--surface-sunk); }
+
+/* Wider than a status menu: these hold task names, not one-word labels. */
+.blocked-menu .status-options { min-width: 15rem; max-width: 22rem; }

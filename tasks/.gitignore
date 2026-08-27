@@ -1,0 +1,7 @@
+# Local development database, session key and WAL files. Never committed --
+# the real ones live on the server's own volume at /srv/careertech/tasks-data.
+.localdata/
+node_modules/
+*.db
+*.db-wal
+*.db-shm

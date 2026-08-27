@@ -4,8 +4,21 @@
     {
       "name": "static",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "4173"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4173"
+      ],
       "port": 4173
+    },
+    {
+      "name": "tasks",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "dev.js"
+      ],
+      "cwd": "tasks",
+      "port": 3011
     }
   ]
 }

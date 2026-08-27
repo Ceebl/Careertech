@@ -1,0 +1,7 @@
+node_modules
+npm-debug.log
+.localdata
+data
+*.db
+*.db-wal
+*.db-shm

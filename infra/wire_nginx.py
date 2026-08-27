@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Add the API include line to the HTTPS server block, once.
+"""Add a snippet include line to the HTTPS server block, once.
 
 nginx has no drop-in mechanism for adding a location to an existing server
 block, so this finds the right block and inserts a single include line. It is
@@ -8,7 +8,13 @@ idempotent: running it again when the line is already present does nothing.
 The caller is expected to run `nginx -t` afterwards and restore the backup this
 script reports if the test fails.
 
-Usage: sudo python3 wire_nginx.py [--domain emaitch.co.uk] [--dry-run]
+Usage:
+    sudo python3 wire_nginx.py [--domain emaitch.co.uk] [--dry-run]
+    sudo python3 wire_nginx.py --include /etc/nginx/snippets/careertech-tasks.conf
+
+Each project that runs in its own container gets its own snippet and its own
+run of this script, so the includes are independent -- adding one cannot
+disturb another.
 """
 
 import argparse
@@ -17,8 +23,7 @@ import sys
 import time
 from pathlib import Path
 
-INCLUDE_PATH = "/etc/nginx/snippets/careertech-api.conf"
-INCLUDE_LINE = f"include {INCLUDE_PATH};"
+DEFAULT_INCLUDE = "/etc/nginx/snippets/careertech-api.conf"
 SEARCH_DIRS = ["/etc/nginx/sites-available", "/etc/nginx/conf.d"]
 
 
@@ -61,7 +66,7 @@ def indent_of(line):
     return line[:len(line) - len(line.lstrip())]
 
 
-def wire(path, domain, dry_run):
+def wire(path, domain, dry_run, include_path):
     """Return True if the file was changed (or would be)."""
     lines = path.read_text().splitlines()
 
@@ -70,12 +75,12 @@ def wire(path, domain, dry_run):
             continue
 
         block = "\n".join(lines[start:end + 1])
-        if INCLUDE_PATH in block:
+        if include_path in block:
             print(f"already wired: {path}")
             return False
 
         inner_indent = indent_of(lines[start]) + "    "
-        lines.insert(start + 1, f"{inner_indent}{INCLUDE_LINE}")
+        lines.insert(start + 1, f"{inner_indent}include {include_path};")
 
         if dry_run:
             print(f"would insert into {path} after line {start + 1}")
@@ -96,6 +101,8 @@ def main():
     parser.add_argument("--domain", default="emaitch.co.uk")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--search-dir", action="append", default=None)
+    parser.add_argument("--include", default=DEFAULT_INCLUDE,
+                        help="path of the snippet to include")
     args = parser.parse_args()
 
     search_dirs = args.search_dir or SEARCH_DIRS
@@ -107,7 +114,7 @@ def main():
 
     for path in candidates:
         try:
-            result = wire(path, args.domain, args.dry_run)
+            result = wire(path, args.domain, args.dry_run, args.include)
         except (OSError, UnicodeDecodeError) as err:
             print(f"skipping {path}: {err}", file=sys.stderr)
             continue

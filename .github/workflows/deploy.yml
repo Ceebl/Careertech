@@ -21,8 +21,12 @@ jobs:
         env:
           KB_READER_PASSWORD: ${{ secrets.KB_READER_PASSWORD }}
           KB_ADMIN_PASSWORD: ${{ secrets.KB_ADMIN_PASSWORD }}
+          # Only ever used to create the very first account on an empty tasks
+          # database. Once an account exists these are read and ignored.
+          TASKS_ADMIN_USER: ${{ secrets.TASKS_ADMIN_USER }}
+          TASKS_ADMIN_PASSWORD: ${{ secrets.TASKS_ADMIN_PASSWORD }}
         with:
-          envs: KB_READER_PASSWORD,KB_ADMIN_PASSWORD
+          envs: KB_READER_PASSWORD,KB_ADMIN_PASSWORD,TASKS_ADMIN_USER,TASKS_ADMIN_PASSWORD
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
@@ -38,12 +42,13 @@ jobs:
             TMP=/var/www/careertech-temp
             MANIFEST=/var/www/.careertech-manifest
             DATA_DIR=/srv/careertech/data
+            TASKS_DATA_DIR=/srv/careertech/tasks-data
             DOMAIN=emaitch.co.uk
             # Folders that are not published as static sites.
             # targetconnect-probe is internal research notes and must never be
             # served. Listing it here also makes step 2 delete the copy that
             # earlier deploys already published.
-            EXCLUDE=".github api infra targetconnect-probe"
+            EXCLUDE=".github api infra tasks targetconnect-probe"
             # Published, but left off the homepage: shared assets and support
             # folders rather than projects a visitor would click into.
             HIDE_FROM_HOMEPAGE="brand"
@@ -185,30 +190,107 @@ jobs:
 
               sudo docker image prune -f >/dev/null
 
-              # -------------------------------------------------------------
-              # 4. Point nginx at the backend (idempotent)
-              # -------------------------------------------------------------
-              echo "::: wiring nginx"
-              sudo mkdir -p /etc/nginx/snippets
-              sudo cp "$TMP/infra/careertech-api.conf" /etc/nginx/snippets/careertech-api.conf
+            fi
 
-              WIRE_OUT=$(sudo python3 "$TMP/infra/wire_nginx.py" --domain "$DOMAIN")
-              echo "$WIRE_OUT"
+            # ---------------------------------------------------------------
+            # 4. Build and restart the tasks app
+            #
+            # Its own image, own port and own volume, deliberately. It holds the
+            # only data on this box that would actually hurt to lose or leak,
+            # and careertech-api serves endpoints that are open to anyone.
+            # ---------------------------------------------------------------
+            if [ -d "$TMP/tasks" ]; then
+              echo "::: building tasks image"
+              sudo mkdir -p "$TASKS_DATA_DIR"
+              # The image runs as the unprivileged `node` user (uid 1000), and
+              # the database and session key must not be readable by anyone
+              # else on the box.
+              sudo chown -R 1000:1000 "$TASKS_DATA_DIR"
+              sudo chmod 700 "$TASKS_DATA_DIR"
 
-              if sudo nginx -t; then
-                sudo systemctl reload nginx
-                echo "  nginx reloaded"
-              else
-                BACKUP=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^backup: //p')
-                WIRED=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^wired: //p')
-                if [ -n "$BACKUP" ] && [ -n "$WIRED" ]; then
-                  sudo cp "$BACKUP" "$WIRED"
-                  echo "!! nginx test failed -- config rolled back"
-                else
-                  echo "!! nginx test failed -- no change to roll back"
+              sudo docker build -t careertech-tasks:latest "$TMP/tasks"
+
+              # Secrets go in a root-only file rather than on the docker command
+              # line, where `ps` would expose them to any user on the box.
+              TASKS_ENV_FILE=/srv/careertech/tasks.env
+              sudo touch "$TASKS_ENV_FILE"
+              sudo chmod 600 "$TASKS_ENV_FILE"
+              printf '%s\n' \
+                "TASKS_ADMIN_USER=${TASKS_ADMIN_USER:-}" \
+                "TASKS_ADMIN_PASSWORD=${TASKS_ADMIN_PASSWORD:-}" \
+                | sudo tee "$TASKS_ENV_FILE" >/dev/null
+
+              sudo docker rm -f careertech-tasks >/dev/null 2>&1 || true
+              sudo docker run -d \
+                --name careertech-tasks \
+                --restart unless-stopped \
+                -p 127.0.0.1:3001:3001 \
+                -v "$TASKS_DATA_DIR":/data \
+                --env-file "$TASKS_ENV_FILE" \
+                -e NODE_ENV=production \
+                -e DATA_DIR=/data \
+                --memory 512m \
+                --cpus 1 \
+                careertech-tasks:latest
+
+              echo "::: waiting for tasks to become healthy"
+              healthy=0
+              for _ in $(seq 1 15); do
+                if curl -fsS http://127.0.0.1:3001/tasks/health >/dev/null 2>&1; then
+                  healthy=1; break
                 fi
+                # Fall back to asking the container itself, so the check does
+                # not depend on what is installed on the host.
+                if sudo docker exec careertech-tasks node -e "fetch('http://localhost:3001/tasks/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))" >/dev/null 2>&1; then
+                  healthy=1
+                  break
+                fi
+                sleep 2
+              done
+
+              if [ "$healthy" -ne 1 ]; then
+                echo "!! tasks did not come up -- last 50 log lines:"
+                sudo docker logs --tail 50 careertech-tasks || true
                 exit 1
               fi
+              echo "  tasks healthy"
+
+              sudo docker image prune -f >/dev/null
+            fi
+
+            # ---------------------------------------------------------------
+            # 5. Point nginx at both containers (idempotent)
+            #
+            # One include line per project, wired separately, so adding or
+            # removing one cannot disturb the other.
+            # ---------------------------------------------------------------
+            echo "::: wiring nginx"
+            sudo mkdir -p /etc/nginx/snippets
+            sudo cp "$TMP/infra/careertech-api.conf"   /etc/nginx/snippets/careertech-api.conf
+            sudo cp "$TMP/infra/careertech-tasks.conf" /etc/nginx/snippets/careertech-tasks.conf
+
+            WIRE_OUT=$(
+              sudo python3 "$TMP/infra/wire_nginx.py" --domain "$DOMAIN"
+              sudo python3 "$TMP/infra/wire_nginx.py" --domain "$DOMAIN" \
+                --include /etc/nginx/snippets/careertech-tasks.conf
+            )
+            echo "$WIRE_OUT"
+
+            if sudo nginx -t; then
+              sudo systemctl reload nginx
+              echo "  nginx reloaded"
+            else
+              # Restore the oldest backup taken in this run: it predates every
+              # change made above, so one copy undoes all of them.
+              BACKUP=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^backup: //p' | head -n 1)
+              WIRED=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^wired: //p' | head -n 1)
+              if [ -n "$BACKUP" ] && [ -n "$WIRED" ]; then
+                sudo cp "$BACKUP" "$WIRED"
+                echo "!! nginx test failed -- config rolled back"
+              else
+                echo "!! nginx test failed -- no change to roll back"
+              fi
+              exit 1
             fi
 
             sudo rm -rf "$TMP"
