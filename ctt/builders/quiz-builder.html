@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Marking Quiz Builder</title>
+<meta name="description" content="Build a two-choice quiz that marks itself, for pasting straight into a pathway activity. No JavaScript, nothing to host.">
+<link rel="stylesheet" href="../../brand/ct.css">
+<script src="../../brand/ct.js"></script>
+<style>
+  /* Tool-specific only. Everything else comes from ct.css. */
+  #live-preview { display: block; padding: var(--ct-sp-5); min-height: 260px; }
+  .qz-item {
+    display: grid; gap: var(--ct-sp-3); padding: var(--ct-sp-4);
+    background: var(--ct-surface-2); border: 1px solid var(--ct-line);
+    border-radius: var(--ct-radius); margin-bottom: var(--ct-sp-3);
+  }
+  .qz-head { display: flex; gap: var(--ct-sp-2); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .qz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ct-sp-3); }
+  .qz-meter { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body class="ct-page">
+
+<header class="ct-toolbar">
+  <div class="ct-toolbar__inner">
+    <div class="ct-toolbar__mark" aria-hidden="true">QZ</div>
+    <div class="ct-toolbar__titles">
+      <h1 class="ct-toolbar__title">Self-Marking Quiz Builder</h1>
+      <p class="ct-toolbar__sub">Two-choice questions that mark themselves. No JavaScript.</p>
+    </div>
+    <span class="ct-badge ct-badge--accent">Nothing to host</span>
+    <button class="ct-icon-btn ct-themetoggle" data-ct-theme-toggle type="button" aria-label="Switch to dark mode">
+      <svg class="ct-icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M17 12.3A7.5 7.5 0 017.7 3 7.5 7.5 0 1017 12.3z"/>
+      </svg>
+      <svg class="ct-icon-sun" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 14a4 4 0 100-8 4 4 0 000 8zm0-11.5a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zm0 13a.9.9 0 01.9.9v1a.9.9 0 01-1.8 0v-1a.9.9 0 01.9-.9zM17.5 10a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm-13 0a.9.9 0 01-.9.9h-1a.9.9 0 010-1.8h1a.9.9 0 01.9.9zm10.8-5.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zM6.7 13.3a.9.9 0 010 1.3l-.7.7a.9.9 0 01-1.3-1.3l.7-.7a.9.9 0 011.3 0zm8.6 2a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3zM6.7 6.7a.9.9 0 01-1.3 0l-.7-.7a.9.9 0 011.3-1.3l.7.7a.9.9 0 010 1.3z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main class="ct-shell">
+  <div class="ct-workspace">
+
+    <section class="ct-card" id="controls">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Configuration</h2>
+        <button class="ct-btn ct-btn--sm" type="button" data-ct-modal-open="#help-modal">
+          How this works
+        </button>
+      </div>
+
+      <div class="ct-stack">
+
+        <div class="ct-note">
+          <svg class="ct-note__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.9 4.2H9.1V8h1.8V6.2zm0 3.3H9.1V14h1.8V9.5z"/>
+          </svg>
+          <div><b>Nothing is recorded.</b> This marks itself in the student&rsquo;s browser and
+          keeps nothing &mdash; refreshing the page clears it, and no score reaches you. It is a
+          self-check, not an assessment. Pair it with a reflection field if you need evidence.</div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="quiz-title">Title</label>
+          <input class="ct-input" id="quiz-title" type="text" value="Spot the scam">
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="quiz-intro">Opening line</label>
+          <textarea class="ct-textarea" id="quiz-intro" rows="2">Five job adverts. For each one, decide whether it is genuine or a scam. You will get an explanation straight away, and a score at the end.</textarea>
+        </div>
+
+        <div class="qz-grid">
+          <div class="ct-field">
+            <label class="ct-label" for="opt-a">First answer</label>
+            <input class="ct-input" id="opt-a" type="text" value="Scam" maxlength="30">
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="opt-b">Second answer</label>
+            <input class="ct-input" id="opt-b" type="text" value="Genuine" maxlength="30">
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="item-noun">Word for each item</label>
+            <input class="ct-input" id="item-noun" type="text" value="Advert" maxlength="30">
+            <span class="ct-hint">Used as &ldquo;Advert 1 of 5&rdquo;.</span>
+          </div>
+        </div>
+
+        <div class="ct-field">
+          <label class="ct-label" for="brand">Brand colour</label>
+          <div class="ct-colour">
+            <input type="color" id="brand" value="#4f46e5">
+            <span class="ct-colour__label">Headings, selected answer, borders</span>
+          </div>
+          <span class="ct-hint" id="contrast-readout"></span>
+        </div>
+
+        <div class="ct-field">
+          <span class="ct-label">Show</span>
+          <div class="ct-stack-2" style="margin-top: var(--ct-sp-2);">
+            <label class="ct-check" for="show-dots">
+              <input type="checkbox" id="show-dots" checked>
+              Progress squares along the top
+            </label>
+            <label class="ct-check" for="show-score">
+              <input type="checkbox" id="show-score" checked>
+              A score at the end
+            </label>
+            <label class="ct-check" for="show-bands">
+              <input type="checkbox" id="show-bands" checked>
+              Tailored advice based on how they did
+            </label>
+          </div>
+        </div>
+
+        <div id="bands-config" class="ct-stack">
+          <div class="ct-field">
+            <label class="ct-label" for="pass-mark">Pass mark</label>
+            <input class="ct-range" id="pass-mark" type="range" min="1" max="9" step="1" value="3">
+            <span class="ct-hint" id="pass-readout"></span>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="band-none">Before they have finished</label>
+            <input class="ct-input" id="band-none" type="text" value="Not finished yet">
+            <textarea class="ct-textarea" id="band-none-body" rows="2" style="margin-top: var(--ct-sp-2);">Answer every one to see how you did.</textarea>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="band-low">Below the pass mark</label>
+            <input class="ct-input" id="band-low" type="text" value="Worth a closer look">
+            <textarea class="ct-textarea" id="band-low-body" rows="4">&lt;p&gt;Scam adverts are getting harder to spot. The signs that matter most:&lt;/p&gt;
+&lt;ul&gt;&lt;li&gt;You are asked to &lt;strong&gt;pay anything&lt;/strong&gt; to be hired.&lt;/li&gt;&lt;li&gt;You are asked to &lt;strong&gt;move money&lt;/strong&gt; through your own bank account.&lt;/li&gt;&lt;li&gt;The &lt;strong&gt;pay is far too high&lt;/strong&gt; for the hours or experience needed.&lt;/li&gt;&lt;li&gt;Contact is from a &lt;strong&gt;free email address&lt;/strong&gt; rather than a company domain.&lt;/li&gt;&lt;/ul&gt;</textarea>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="band-mid">At or above the pass mark</label>
+            <input class="ct-input" id="band-mid" type="text" value="Good instincts">
+            <textarea class="ct-textarea" id="band-mid-body" rows="3">&lt;p&gt;You caught most of them. The ones that catch people out look ordinary until the first task arrives — anything involving moving money, cashing a cheque or buying gift cards is a scam, however normal the advert looked.&lt;/p&gt;</textarea>
+          </div>
+          <div class="ct-field">
+            <label class="ct-label" for="band-high">Full marks</label>
+            <input class="ct-input" id="band-high" type="text" value="Full marks">
+            <textarea class="ct-textarea" id="band-high-body" rows="3">&lt;p&gt;You spotted all of them. If you see an advert like these on a jobs board, please report it — it helps us take it down before someone else applies.&lt;/p&gt;</textarea>
+          </div>
+          <div class="ct-note" id="cost-note" hidden>
+            <span class="ct-note__icon" aria-hidden="true">!</span>
+            <div id="cost-note-text"></div>
+          </div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div id="content-builder">
+          <div class="ct-row" style="justify-content: space-between;">
+            <h3 class="ct-card__title">Questions</h3>
+            <button class="ct-btn ct-btn--sm" type="button" id="add-item-btn">Add question</button>
+          </div>
+          <p class="ct-hint" id="count-readout" style="margin-top: var(--ct-sp-2);"></p>
+          <div id="items-container"></div>
+        </div>
+
+        <hr class="ct-divider">
+
+        <div class="ct-field">
+          <label class="ct-check" for="fresh">
+            <input type="checkbox" id="fresh">
+            Give this quiz a new identity
+          </label>
+          <span class="ct-hint">Each quiz gets its own name so two on the same page never
+          interfere. Tick this only to regenerate it.</span>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="ct-card ct-workspace__preview">
+      <div class="ct-card__head">
+        <h2 class="ct-card__title">Live preview</h2>
+        <button class="ct-btn ct-btn--primary ct-btn--sm" type="button"
+                data-ct-copy="#code-output" data-ct-copy-label="Code copied">
+          Copy HTML
+        </button>
+      </div>
+
+      <div class="ct-stage" id="live-preview"></div>
+
+      <p class="ct-hint" id="stability-readout" style="margin-top: var(--ct-sp-3);"></p>
+
+      <div class="ct-field" style="margin-top: var(--ct-sp-4);">
+        <label class="ct-label" for="code-output">Generated code</label>
+        <textarea class="ct-codebox" id="code-output" readonly spellcheck="false" rows="10"></textarea>
+        <span class="ct-hint qz-meter" id="length-readout"></span>
+      </div>
+
+      <div class="ct-note">
+        <span class="ct-note__icon" aria-hidden="true">i</span>
+        <div>Paste this into your platform&rsquo;s source or HTML view &mdash; the
+        <span class="ct-mono">&lt;/&gt;</span> button in most editors. Pasting it into the
+        normal typing view will show the code as text instead of running it.</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<div class="ct-modal" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="ct-modal__box">
+    <button class="ct-btn ct-btn--quiet ct-btn--sm ct-modal__close" type="button"
+            data-ct-modal-close aria-label="Close">Close</button>
+    <h2 id="help-title">How this works</h2>
+
+    <p>A quiz that marks itself with no JavaScript at all, so it survives the security filters
+    that strip scripts out of most platforms, and no file is hosted anywhere. What you copy is
+    the whole thing.</p>
+
+    <h3>The mechanism</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li>Each question is a pair of radio buttons, and the correct one carries a marker class.
+      CSS shows the matching feedback when it is chosen.</li>
+      <li>The three feedback panels &mdash; not answered, right, wrong &mdash; are stacked in a
+      single grid cell with all but one hidden by
+      <span class="ct-mono">visibility: hidden</span>. That keeps the block exactly the same
+      height whatever the student clicks, which matters where a growing activity spills over
+      the Submit button beneath it.</li>
+      <li>The score is a pair of CSS counters, incremented by whichever radios are checked.</li>
+      <li>The closing advice uses <span class="ct-mono">:has()</span> to work out how they did.</li>
+    </ul>
+
+    <h3>Why longer quizzes cost more</h3>
+    <p>CSS can display a counter but cannot compare one, so &ldquo;at least four correct&rdquo;
+    has no arithmetic form &mdash; every winning combination has to be written out. Five
+    questions with a pass mark of three is ten combinations, which is nothing. Nine questions
+    with a pass mark of five is a hundred and twenty-six, and the code balloons.</p>
+    <p>The builder tells you the cost as you go. If it gets uncomfortable, either shorten the
+    quiz or turn the tailored advice off &mdash; the score itself is cheap at any length,
+    because a counter needs no enumeration.</p>
+
+    <h3>Worth knowing</h3>
+    <ul style="padding-left: 1.2rem; line-height: 1.8;">
+      <li><b>Nothing is recorded.</b> No score reaches you and refreshing clears it. If you need
+      evidence of completion, pair the quiz with a reflection or evidence field in the same
+      activity and ask students to say what they got.</li>
+      <li><b>The answers are in the source.</b> Anyone who views the page code can see which
+      option is marked correct. That is unavoidable without a server, and fine for a
+      self-check &mdash; but do not use this for anything that counts.</li>
+      <li><b>On an older browser</b> without <span class="ct-mono">:has()</span> support, the
+      per-question feedback and the score still work, because those use plain sibling selectors
+      and counters. Only the progress squares and the closing advice stop responding. It
+      degrades quietly rather than breaking.</li>
+      <li><b>Every quiz gets a unique name</b> so two on one page never interfere. Written by
+      hand these share ids and radio group names, which makes the second quiz answer the
+      first one&rsquo;s questions.</li>
+      <li><b>Colours are checked for contrast.</b> The selected answer is white text on your
+      brand colour, so whatever you pick is darkened just enough to clear 4.5:1.</li>
+      <li><b>Keep the focus outlines.</b> They are how keyboard users see where they are.</li>
+      <li><b>Test it in UAT first.</b></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+    /* ====================================================================
+       Building the quiz.
+
+       Output has to stand entirely on its own, because it gets pasted into
+       someone else's page and never comes back here. No JavaScript, no
+       external stylesheet, no font, no image.
+
+       Everything - the ids, the radio group names, the counters and every
+       class - is prefixed with a per-quiz token, so two quizzes on one page
+       cannot answer each other's questions.
+    ==================================================================== */
+
+    const MAX_QUESTIONS = 10;
+
+    let token = freshToken();
+
+    function freshToken() {
+        return 'qz' + Math.random().toString(36).slice(2, 7);
+    }
+
+    function escapeText(value) {
+        return String(value === undefined || value === null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /* --- Colour, kept readable --------------------------------------- */
+
+    function hexToRgb(hex) {
+        let h = String(hex).replace('#', '');
+        if (h.length === 3) { h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]; }
+        return { r: parseInt(h.substr(0, 2), 16), g: parseInt(h.substr(2, 2), 16), b: parseInt(h.substr(4, 2), 16) };
+    }
+
+    function toHex(c) {
+        const p = function (v) { return ('0' + Math.round(v).toString(16)).slice(-2); };
+        return '#' + p(c.r) + p(c.g) + p(c.b);
+    }
+
+    function blend(fg, bg, a) {
+        return { r: fg.r * a + bg.r * (1 - a), g: fg.g * a + bg.g * (1 - a), b: fg.b * a + bg.b * (1 - a) };
+    }
+
+    function luminance(c) {
+        const ch = function (v) {
+            v = v / 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        };
+        return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
+    }
+
+    function contrast(a, b) {
+        const la = luminance(a), lb = luminance(b);
+        return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    }
+
+    const WHITE = { r: 255, g: 255, b: 255 };
+    const BLACK = { r: 0, g: 0, b: 0 };
+
+    function deepenForWhite(rgb) {
+        let c = rgb;
+        for (let i = 0; i < 24 && contrast(WHITE, c) < 4.5; i++) { c = blend(c, BLACK, 0.92); }
+        return c;
+    }
+
+    function palette(pickedHex) {
+        const picked = hexToRgb(pickedHex);
+        const brand = deepenForWhite(picked);
+        return {
+            adjusted: contrast(WHITE, picked) < 4.5,
+            ratio: contrast(WHITE, brand),
+            brand: toHex(brand),
+            brandDark: toHex(blend(brand, BLACK, 0.82)),
+            tint: toHex(blend(brand, WHITE, 0.07)),
+            hover: toHex(blend(brand, WHITE, 0.45))
+        };
+    }
+
+    /* --- "At least k of n" has no arithmetic form in CSS, so every
+           winning combination is written out. This is what makes long
+           quizzes expensive, and why the cost is reported as you type. --- */
+
+    function combinations(list, k) {
+        const out = [];
+        (function pick(start, acc) {
+            if (acc.length === k) { out.push(acc.slice()); return; }
+            for (let i = start; i < list.length; i++) {
+                acc.push(list[i]);
+                pick(i + 1, acc);
+                acc.pop();
+            }
+        })(0, []);
+        return out;
+    }
+
+    /* --- The generated block ------------------------------------------ */
+
+    function buildCode(t, c, items, opts) {
+        const n = items.length;
+        const nums = items.map(function (_, i) { return i + 1; });
+        const answered = '.' + t + nums.map(function (i) { return ':has(.q' + i + ' .opt:checked)'; }).join('');
+        const allRight = answered + nums.map(function (i) { return ':has(.q' + i + ' .right:checked)'; }).join('');
+
+        let css =
+'.' + t + '{--brand:' + c.brand + ';--brand-dark:' + c.brandDark + ';--tint:' + c.tint + ';--line:#e4e4ee;\n' +
+'  --ink:#1f2937;--muted:#4b5563;--ok:#15803d;--ok-bg:#eafaf0;--no:#b91c1c;--no-bg:#fdeeee;\n' +
+'  --focus:#f59e0b;\n' +
+'  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;\n' +
+'  color:var(--ink);background:#fff;line-height:1.6;border:1.5px solid var(--line);\n' +
+'  border-top:5px solid var(--brand);border-radius:10px;padding:22px;\n' +
+'  counter-reset:' + t + '-score ' + t + '-answered}\n' +
+'.' + t + ' *{box-sizing:border-box}\n' +
+'.' + t + ' .vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;\n' +
+'  clip:rect(0 0 0 0);white-space:nowrap;border:0}\n' +
+'.' + t + ' h3{margin:0 0 6px;font-size:1.25rem;color:var(--brand-dark)}\n' +
+'.' + t + ' .intro{margin:0 0 18px;color:var(--muted)}\n';
+
+        if (opts.dots) {
+            css += '\n.' + t + ' .dots{display:flex;gap:7px;margin:0 0 22px}\n' +
+'.' + t + ' .dot{width:13px;height:13px;border:2px solid var(--line);border-radius:3px;background:#fff}\n' +
+nums.map(function (i) {
+    return '.' + t + ':has(.q' + i + ' .opt:checked) .d' + i + '{background:var(--brand);border-color:var(--brand)}';
+}).join('\n') + '\n';
+        }
+
+        css +=
+'\n.' + t + ' .q{border-top:1px solid var(--line);padding:18px 0 4px}\n' +
+'.' + t + ' .qnum{margin:0 0 8px;font-size:.78rem;font-weight:700;letter-spacing:.06em;\n' +
+'  text-transform:uppercase;color:var(--muted)}\n' +
+'.' + t + ' .advert{margin:0 0 14px;padding:14px 16px;background:var(--tint);\n' +
+'  border-left:4px solid var(--brand)}\n' +
+'.' + t + ' .advert > :first-child{margin-top:0}\n' +
+'.' + t + ' .advert > :last-child{margin-bottom:0}\n' +
+'\n.' + t + ' .opts{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 12px}\n' +
+'.' + t + ' .opt-btn{padding:10px 22px;border:1.5px solid var(--line);border-radius:8px;\n' +
+'  background:#fff;color:var(--muted);font-weight:600;cursor:pointer;\n' +
+'  transition:background .15s,color .15s,border-color .15s}\n' +
+'.' + t + ' .opt-btn:hover{background:var(--tint);color:var(--brand-dark);border-color:' + c.hover + '}\n' +
+'.' + t + ' .o1:checked ~ .opts .l1,\n' +
+'.' + t + ' .o2:checked ~ .opts .l2{background:var(--brand);border-color:var(--brand);color:#fff}\n' +
+'.' + t + ' .o1:focus-visible ~ .opts .l1,\n' +
+'.' + t + ' .o2:focus-visible ~ .opts .l2{outline:3px solid var(--focus);outline-offset:2px}\n' +
+'\n/* feedback: all three panels share one grid cell, so the height never changes */\n' +
+'.' + t + ' .fb{display:grid}\n' +
+'.' + t + ' .fbp{grid-area:1/1;visibility:hidden;padding:13px 16px;border-radius:8px;\n' +
+'  border:1px solid var(--line);font-size:.95rem}\n' +
+'.' + t + ' .p-none{visibility:visible;color:var(--muted);background:#fafafa}\n' +
+'.' + t + ' .p-right{background:var(--ok-bg);border-color:#b7e4c7}\n' +
+'.' + t + ' .p-wrong{background:var(--no-bg);border-color:#f3c3c3}\n' +
+'.' + t + ' .opt:checked ~ .fb .p-none{visibility:hidden}\n' +
+'.' + t + ' .right:checked ~ .fb .p-right{visibility:visible}\n' +
+'.' + t + ' .opt:not(.right):checked ~ .fb .p-wrong{visibility:visible}\n' +
+'.' + t + ' .tag{display:inline-block;font-weight:700;margin-right:6px}\n' +
+'.' + t + ' .tag-r{color:var(--ok)}\n' +
+'.' + t + ' .tag-r::before{content:"\\2713  "}\n' +
+'.' + t + ' .tag-w{color:var(--no)}\n' +
+'.' + t + ' .tag-w::before{content:"\\2717  "}\n';
+
+        if (opts.score || opts.bands) {
+            css += '\n/* scoring: CSS counters, incremented by the checked radios above */\n' +
+'.' + t + ' .opt:checked{counter-increment:' + t + '-answered}\n' +
+'.' + t + ' .opt.right:checked{counter-increment:' + t + '-answered ' + t + '-score}\n' +
+'.' + t + ' .result{border-top:3px solid var(--brand);margin-top:22px;padding-top:18px}\n';
+        }
+        if (opts.score) {
+            css +=
+'.' + t + ' .score{font-size:1.5rem;font-weight:700;margin:0 0 4px;color:var(--brand-dark)}\n' +
+'.' + t + ' .score::after{content:"Score: " counter(' + t + '-score) " of ' + n + '"}\n' +
+'.' + t + ' .answered{margin:0 0 14px;font-size:.88rem;color:var(--muted)}\n' +
+'.' + t + ' .answered::after{content:"Answered " counter(' + t + '-answered) " of ' + n + '"}\n';
+        }
+
+        let bandSelectors = 0;
+        if (opts.bands) {
+            const mid = combinations(nums, opts.pass).map(function (combo) {
+                return answered + combo.map(function (i) { return ':has(.q' + i + ' .right:checked)'; }).join('');
+            });
+            bandSelectors = mid.length * 2 + 4;
+
+            css += '\n/* result bands: also stacked in one cell, so the block never changes height */\n' +
+'.' + t + ' .bands{display:grid}\n' +
+'.' + t + ' .band{grid-area:1/1;visibility:hidden;padding:15px 18px;border-radius:8px;\n' +
+'  border:1px solid var(--line);background:var(--tint)}\n' +
+'.' + t + ' .band > :first-child{margin-top:0}\n' +
+'.' + t + ' .band > :last-child{margin-bottom:0}\n' +
+'.' + t + ' .band h4{margin:0 0 8px;font-size:1.05rem;color:var(--brand-dark)}\n' +
+'.' + t + ' .band ul{margin:8px 0 0;padding-left:22px}\n' +
+'.' + t + ' .band li{margin:4px 0}\n' +
+'.' + t + ' .b-incomplete{visibility:visible}\n' +
+'\n/* every question answered */\n' +
+answered + ' .b-incomplete{visibility:hidden}\n' +
+answered + ' .b-low{visibility:visible}\n';
+
+            if (opts.pass <= n) {
+                css += '\n/* at least ' + opts.pass + ' correct - CSS cannot compare a counter, so the ' +
+                       mid.length + ' winning combinations are enumerated */\n' +
+                       mid.map(function (s) { return s + ' .b-low'; }).join(',\n') + '{visibility:hidden}\n' +
+                       mid.map(function (s) { return s + ' .b-mid'; }).join(',\n') + '{visibility:visible}\n';
+            }
+
+            // :has() carries the specificity of its argument, so the all-correct
+            // rules must weigh at least as much as the "at least k" ones above or
+            // both bands show at once. Being all-correct implies all-answered, so
+            // prefixing costs nothing and settles the weight.
+            css += '\n/* all correct */\n' +
+allRight + ' .b-mid{visibility:hidden}\n' +
+allRight + ' .b-high{visibility:visible}\n';
+        }
+
+        css += '\n@media (max-width:520px){\n' +
+'  .' + t + '{padding:16px}\n' +
+'  .' + t + ' .opt-btn{flex:1;text-align:center;padding:10px 12px}\n' +
+'}\n';
+
+        /* --- markup --- */
+
+        const dots = opts.dots
+            ? '\n<div class="dots" role="img" aria-label="Progress through the ' + n + ' questions">\n' +
+              nums.map(function (i) { return '<span class="dot d' + i + '"></span>'; }).join('') + '\n</div>\n'
+            : '';
+
+        const questions = items.map(function (item, i) {
+            const num = i + 1;
+            const aRight = item.correct === 'a' ? ' right' : '';
+            const bRight = item.correct === 'b' ? ' right' : '';
+            const stim = item.stim ? '<blockquote class="advert">' + item.stim + '</blockquote>\n' : '';
+            return '\n<div class="q q' + num + '">\n' +
+'<p class="qnum">' + escapeText(opts.noun) + ' ' + num + ' of ' + n + '</p>\n' + stim +
+'<input type="radio" name="' + t + '-q' + num + '" id="' + t + '-q' + num + 'a" class="vh o1 opt' + aRight + '">\n' +
+'<input type="radio" name="' + t + '-q' + num + '" id="' + t + '-q' + num + 'b" class="vh o2 opt' + bRight + '">\n' +
+'<div class="opts">\n' +
+'<label class="opt-btn l1" for="' + t + '-q' + num + 'a">' + escapeText(opts.optA) + '</label>\n' +
+'<label class="opt-btn l2" for="' + t + '-q' + num + 'b">' + escapeText(opts.optB) + '</label>\n' +
+'</div>\n' +
+'<div class="fb">\n' +
+'<div class="fbp p-none">Choose an answer to see whether you were right.</div>\n' +
+'<div class="fbp p-right"><span class="tag tag-r">Correct</span> ' + (item.right || '') + '</div>\n' +
+'<div class="fbp p-wrong"><span class="tag tag-w">Not quite</span> ' + (item.wrong || '') + '</div>\n' +
+'</div>\n</div>';
+        }).join('');
+
+        let result = '';
+        if (opts.score || opts.bands) {
+            const band = function (cls, heading, body) {
+                return '\n<div class="band ' + cls + '">\n<h4>' + escapeText(heading) + '</h4>\n' + body + '\n</div>\n';
+            };
+            result = '\n\n<div class="result">\n' +
+                (opts.score ? '<p class="score"></p>\n<p class="answered"></p>\n' : '') +
+                (opts.bands
+                    ? '<div class="bands">\n' +
+                      band('b-incomplete', opts.bandNone, opts.bandNoneBody) +
+                      band('b-low', opts.bandLow, opts.bandLowBody) +
+                      band('b-mid', opts.bandMid, opts.bandMidBody) +
+                      band('b-high', opts.bandHigh, opts.bandHighBody) +
+                      '</div>\n'
+                    : '') +
+                '</div>';
+        }
+
+        const code =
+'<!-- ' + escapeText(opts.title).toUpperCase() + ' - a self-marking quiz.\n' +
+'     Pure HTML and CSS. No JavaScript. Constant height, so it will not render over\n' +
+'     the platform\'s Submit button.\n' +
+'     Every rule is scoped under .' + t + ', which is unique to this quiz, so two of\n' +
+'     them on one page cannot answer each other\'s questions.\n' +
+'     NOTE: nothing is saved. This is a self-check only - refreshing clears it, and\n' +
+'     no result is recorded against the student. -->\n' +
+'<div class="' + t + '">\n<style>\n' + css + '</style>\n\n' +
+'<h3>' + escapeText(opts.title) + '</h3>\n' +
+'<p class="intro">' + escapeText(opts.intro) + '</p>\n' +
+dots + questions + result + '\n</div>';
+
+        return { code: code, bandSelectors: bandSelectors };
+    }
+
+    /* --- The question editors -----------------------------------------
+       gatherItems finds each editor by .item-card and each control by its
+       data-field name, so renaming either breaks the output silently.
+    ------------------------------------------------------------------ */
+
+    let itemCount = 0;
+
+    function addItem(preset) {
+        preset = preset || {};
+        itemCount++;
+        const id = itemCount;
+        const correct = preset.correct === 'b' ? 'b' : 'a';
+        const card = document.createElement('div');
+        card.className = 'item-card qz-item';
+        card.id = 'item-' + id;
+        card.innerHTML =
+            '<div class="qz-head">' +
+              '<span class="ct-section-label">Question ' + id + '</span>' +
+              '<div class="ct-row">' +
+                '<select class="ct-select ct-btn--sm" data-field="correct" aria-label="Which answer is correct?" style="width:auto;">' +
+                  '<option value="a"' + (correct === 'a' ? ' selected' : '') + ' data-slot="a"></option>' +
+                  '<option value="b"' + (correct === 'b' ? ' selected' : '') + ' data-slot="b"></option>' +
+                '</select>' +
+                '<button type="button" class="ct-btn ct-btn--quiet ct-btn--sm" data-remove="' + id + '">Remove</button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-s">What they are judging</label>' +
+              '<textarea id="f' + id + '-s" class="ct-textarea" rows="3" data-field="stim" ' +
+              'placeholder="The advert, statement or scenario. HTML allowed.">' + escapeText(preset.stim) + '</textarea>' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-r">If they get it right</label>' +
+              '<textarea id="f' + id + '-r" class="ct-textarea" rows="3" data-field="right">' + escapeText(preset.right) + '</textarea>' +
+            '</div>' +
+            '<div class="ct-field">' +
+              '<label class="ct-label" for="f' + id + '-w">If they get it wrong</label>' +
+              '<textarea id="f' + id + '-w" class="ct-textarea" rows="3" data-field="wrong">' + escapeText(preset.wrong) + '</textarea>' +
+            '</div>';
+        document.getElementById('items-container').appendChild(card);
+    }
+
+    function gatherItems() {
+        const items = [];
+        document.querySelectorAll('.item-card').forEach(function (card) {
+            const out = {};
+            card.querySelectorAll('[data-field]').forEach(function (input) {
+                out[input.getAttribute('data-field')] = input.value.trim();
+            });
+            if (out.stim || out.right || out.wrong) { items.push(out); }
+        });
+        return items;
+    }
+
+    // The correct-answer dropdown shows whatever the two answers are called,
+    // so it never says "a" and "b" at the operator.
+    function syncAnswerLabels() {
+        const a = document.getElementById('opt-a').value || 'First';
+        const b = document.getElementById('opt-b').value || 'Second';
+        document.querySelectorAll('[data-slot="a"]').forEach(function (o) { o.textContent = a + ' is correct'; });
+        document.querySelectorAll('[data-slot="b"]').forEach(function (o) { o.textContent = b + ' is correct'; });
+    }
+
+    /* --- Output ------------------------------------------------------- */
+
+    function generate() {
+        const c = palette(document.getElementById('brand').value);
+        const items = gatherItems();
+        const n = items.length;
+
+        syncAnswerLabels();
+
+        document.getElementById('contrast-readout').textContent = c.adjusted
+            ? 'Darkened to ' + c.brand + ' so the white text on the selected answer stays readable, at ' +
+              c.ratio.toFixed(1) + ':1.'
+            : 'White text on this colour is ' + c.ratio.toFixed(1) + ':1, comfortably readable.';
+
+        const bandsOn = document.getElementById('show-bands').checked;
+        document.getElementById('bands-config').hidden = !bandsOn;
+
+        const passInput = document.getElementById('pass-mark');
+        passInput.max = Math.max(n, 1);
+        let pass = Math.min(parseInt(passInput.value, 10) || 1, Math.max(n, 1));
+        passInput.value = pass;
+        document.getElementById('pass-readout').textContent =
+            n ? pass + ' of ' + n + ' correct counts as a pass.' : 'Add some questions first.';
+
+        document.getElementById('count-readout').textContent = n
+            ? n + (n === 1 ? ' question.' : ' questions.') +
+              (n >= MAX_QUESTIONS ? ' That is the most this tool will build.' : '')
+            : 'Add a question to get some code.';
+
+        if (!n) {
+            document.getElementById('code-output').value = '';
+            document.getElementById('live-preview').innerHTML = '';
+            document.getElementById('length-readout').textContent = '';
+            document.getElementById('stability-readout').textContent = '';
+            document.getElementById('cost-note').hidden = true;
+            return;
+        }
+
+        const built = buildCode(token, c, items, {
+            title: document.getElementById('quiz-title').value,
+            intro: document.getElementById('quiz-intro').value,
+            optA: document.getElementById('opt-a').value,
+            optB: document.getElementById('opt-b').value,
+            noun: document.getElementById('item-noun').value,
+            dots: document.getElementById('show-dots').checked,
+            score: document.getElementById('show-score').checked,
+            bands: bandsOn,
+            pass: pass,
+            bandNone: document.getElementById('band-none').value,
+            bandNoneBody: document.getElementById('band-none-body').value,
+            bandLow: document.getElementById('band-low').value,
+            bandLowBody: document.getElementById('band-low-body').value,
+            bandMid: document.getElementById('band-mid').value,
+            bandMidBody: document.getElementById('band-mid-body').value,
+            bandHigh: document.getElementById('band-high').value,
+            bandHighBody: document.getElementById('band-high-body').value
+        });
+
+        document.getElementById('code-output').value = built.code;
+        document.getElementById('live-preview').innerHTML = built.code;
+        document.getElementById('length-readout').textContent =
+            built.code.length.toLocaleString() + ' characters. Quiz name: ' + token;
+
+        describeCost(built, n, pass, bandsOn);
+        measureStability();
+    }
+
+    function describeCost(built, n, pass, bandsOn) {
+        const note = document.getElementById('cost-note');
+        const text = document.getElementById('cost-note-text');
+        if (!bandsOn || built.code.length < 12000) { note.hidden = true; return; }
+        note.hidden = false;
+        note.className = built.code.length > 30000 ? 'ct-note ct-note--warning' : 'ct-note';
+        const advice = built.code.length > 80000
+            ? ' That is more than many CMS text boxes will accept in one paste, and a truncated ' +
+              'block will not work at all. Test it where you plan to use it before you rely on it, ' +
+              'or shorten the quiz.'
+            : ' It still works, but if that is awkward to paste, shorten the quiz or turn the ' +
+              'tailored advice off.';
+        text.textContent = 'Writing out every way to score ' + pass + ' or more out of ' + n +
+            ' takes ' + (built.bandSelectors).toLocaleString() + ' selectors, which is why this ' +
+            'is ' + built.code.length.toLocaleString() + ' characters.' + advice +
+            ' The score itself costs nothing at any length.';
+    }
+
+    /* The claim this rests on is that the height never changes as students
+       answer. Rather than assert it, the preview is measured unanswered,
+       all-correct and all-wrong, and the readout reports what was found. */
+    function measureStability() {
+        const root = document.querySelector('#live-preview > div');
+        const readout = document.getElementById('stability-readout');
+        if (!root) { readout.textContent = ''; return; }
+
+        const questions = root.querySelectorAll('.q');
+        const heights = [Math.round(root.getBoundingClientRect().height)];
+
+        questions.forEach(function (q) { q.querySelector('.opt.right').checked = true; });
+        heights.push(Math.round(root.getBoundingClientRect().height));
+
+        questions.forEach(function (q) {
+            const wrong = q.querySelector('.opt:not(.right)');
+            if (wrong) { wrong.checked = true; }
+        });
+        heights.push(Math.round(root.getBoundingClientRect().height));
+
+        root.querySelectorAll('input[type="radio"]').forEach(function (r) { r.checked = false; });
+
+        const min = Math.min.apply(null, heights), max = Math.max.apply(null, heights);
+        readout.textContent = min === max
+            ? 'Measured ' + max + 'px tall unanswered, all correct and all wrong — the height never ' +
+              'changes, so nothing below it can be covered.'
+            : 'Height varied between ' + min + 'px and ' + max + 'px. That should not happen — please report it.';
+    }
+
+    /* --- Wiring ------------------------------------------------------- */
+
+    const container = document.getElementById('items-container');
+
+    container.addEventListener('click', function (event) {
+        const remove = event.target.closest('[data-remove]');
+        if (!remove) { return; }
+        document.getElementById('item-' + remove.getAttribute('data-remove')).remove();
+        generate();
+    });
+    container.addEventListener('input', generate);
+    container.addEventListener('change', generate);
+
+    document.getElementById('add-item-btn').addEventListener('click', function () {
+        if (document.querySelectorAll('.item-card').length >= MAX_QUESTIONS) { return; }
+        addItem();
+        generate();
+    });
+
+    document.getElementById('fresh').addEventListener('change', function (event) {
+        if (!event.target.checked) { return; }
+        token = freshToken();
+        event.target.checked = false;
+        generate();
+    });
+
+    ['quiz-title', 'quiz-intro', 'opt-a', 'opt-b', 'item-noun', 'brand', 'show-dots',
+     'show-score', 'show-bands', 'pass-mark', 'band-none', 'band-none-body', 'band-low',
+     'band-low-body', 'band-mid', 'band-mid-body', 'band-high', 'band-high-body']
+        .forEach(function (id) {
+            const node = document.getElementById(id);
+            node.addEventListener('input', generate);
+            node.addEventListener('change', generate);
+        });
+
+    /* --- Something to look at on first load --------------------------- */
+
+    addItem({
+        correct: 'a',
+        stim: 'Admin Assistant &mdash; work from home, &pound;450 per week, no experience needed, ' +
+              'start Monday. To secure your place, send &pound;45 for your DBS check by bank ' +
+              'transfer to the account below.',
+        right: 'Correct &mdash; this is a scam. No legitimate employer asks you to pay to be hired. ' +
+               'A real DBS check is paid for by the employer, and a bank transfer to an individual ' +
+               'is almost impossible to get back.',
+        wrong: 'This one is a scam. The giveaway is the upfront fee &mdash; no legitimate employer ' +
+               'asks you to pay to be hired. A real DBS check is paid for by the employer, and a ' +
+               'bank transfer to an individual is almost impossible to get back.'
+    });
+    addItem({
+        correct: 'b',
+        stim: 'Graduate Marketing Assistant, Sunderland. &pound;24,000. Apply through our careers ' +
+              'site with a CV and covering letter. Closing date 30 September, interviews week ' +
+              'commencing 13 October.',
+        right: 'Correct &mdash; this one looks genuine. A named location, a realistic salary for the ' +
+               'role, a proper application route on the employer’s own site, and clear dates.',
+        wrong: 'This one is genuine. A named location, a realistic salary for the role, an ' +
+               'application route on the employer’s own site, and clear closing and interview ' +
+               'dates. Nothing asks you for money or bank details.'
+    });
+    addItem({
+        correct: 'a',
+        stim: 'Payment Processor needed urgently. Receive client funds into your own bank account, ' +
+              'forward 90% to our supplier, and keep 10% as your fee. Reply to ' +
+              'quickhire.recruit@gmail.com.',
+        right: 'Correct &mdash; and this is the most serious one here. Moving money through your own ' +
+               'account for someone else is money muling. It is a criminal offence, and it will get ' +
+               'your bank account closed even if you did not know. Report it and never reply.',
+        wrong: 'This is a scam, and the most dangerous one here. Moving money through your own ' +
+               'account for someone else is money muling &mdash; a criminal offence that will also ' +
+               'get your bank account closed, even if you did not know. The free email address ' +
+               'instead of a company domain is a second red flag.'
+    });
+    addItem({
+        correct: 'b',
+        stim: 'Part-time Retail Assistant, 16 hours per week, city centre. National Minimum Wage. ' +
+              'Apply in store with a CV or online. Interviews held in store.',
+        right: 'Correct &mdash; genuine. Ordinary hours, lawful pay, and an interview at the ' +
+               'employer’s own premises.',
+        wrong: 'This one is genuine. Ordinary hours, lawful pay for the role, and an interview at ' +
+               'the employer’s own premises. Nothing here asks for money or financial details.'
+    });
+    addItem({
+        correct: 'a',
+        stim: 'Personal Assistant to an overseas executive. &pound;800 per week for around five ' +
+              'hours&rsquo; work. Your first task: we will post you a cheque to pay into your ' +
+              'account, then you use the funds to buy gift cards and send us the codes.',
+        right: 'Correct &mdash; scam. The pay is wildly out of line with the hours, and the ' +
+               'cheque-then-gift-cards task is classic fake cheque fraud. The cheque bounces days ' +
+               'later and the bank reclaims the money from you.',
+        wrong: 'This is a scam. Pay wildly out of line with the hours is the first flag. The ' +
+               'cheque-then-gift-cards task is classic fake cheque fraud &mdash; the cheque bounces ' +
+               'days later and the bank takes the money back from you, after you have spent it.'
+    });
+
+    generate();
+</script>
+</body>
+</html>

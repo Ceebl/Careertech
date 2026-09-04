@@ -215,6 +215,32 @@
         </div>
       </article>
 
+      <article class="ct-card ct-card--flush hl-tool">
+        <div class="hl-tool__text">
+          <h3 class="hl-tool__name">Self-Marking Quiz</h3>
+          <p class="hl-tool__what">
+            Two-choice questions that mark themselves as students answer, with an explanation
+            after each one and a score at the end. No JavaScript, and it never changes height.
+          </p>
+          <ul class="hl-uses">
+            <li>Spot the scam &mdash; judging job adverts as genuine or fraudulent</li>
+            <li>True or false, myth or fact, appropriate or not</li>
+            <li>Any check-your-understanding step inside a longer activity</li>
+          </ul>
+          <div class="hl-tool__actions">
+            <a class="ct-btn ct-btn--primary" href="../builders/quiz-builder.html">Build it</a>
+          </div>
+        </div>
+        <div class="hl-demo">
+          <span class="hl-demo__label">Live example &mdash; try it</span>
+          <iframe id="quiz-demo" height="715" title="Example self-marking quiz"></iframe>
+          <p class="ct-small ct-muted" style="margin: var(--ct-sp-3) 0 0;">
+            Nothing is recorded &mdash; it marks itself in the student&rsquo;s browser and keeps
+            nothing, so pair it with a reflection field if you need evidence.
+          </p>
+        </div>
+      </article>
+
     </div>
   </section>
 
@@ -641,6 +667,103 @@ sections.map(function (s, i) {
 }).join('') +
 '</div></div></div>';
         var frame = document.getElementById('panels-demo');
+        if (frame) { frame.srcdoc = page; }
+    })();
+
+    /* The quiz example: three questions rather than the builder's five, to keep
+       the enumerated result bands small. Same mechanism - radios, stacked
+       feedback panels, CSS counters and :has(). */
+    (function mountQuiz() {
+        var u = 'qzdemo';
+        var brand = '#4338ca', dark = '#372aa3', tint = '#f1f0fb';
+        var qs = [
+            ['Admin Assistant, work from home, &pound;450 a week, no experience needed. To ' +
+             'secure your place, send &pound;45 for your DBS check by bank transfer.', 'a',
+             'Correct &mdash; a scam. No legitimate employer asks you to pay to be hired.',
+             'This is a scam. No legitimate employer asks you to pay to be hired.'],
+            ['Payment Processor needed urgently. Receive client funds into your own bank ' +
+             'account, forward 90% on, keep 10% as your fee.', 'a',
+             'Correct &mdash; money muling, which is a criminal offence.',
+             'A scam. Moving money through your own account is money muling, a criminal offence.']
+        ];
+        var nums = [1, 2];
+        var answered = '.' + u + nums.map(function (i) { return ':has(.q' + i + ' .opt:checked)'; }).join('');
+        var allRight = answered + nums.map(function (i) { return ':has(.q' + i + ' .right:checked)'; }).join('');
+        var pairs = [[1], [2]].map(function (c) {
+            return answered + c.map(function (i) { return ':has(.q' + i + ' .right:checked)'; }).join('');
+        });
+
+        var page =
+'<!doctype html><meta charset="utf-8"><style>body{margin:0;padding:14px;background:transparent}</style>' +
+'<div class="' + u + '"><style>' +
+'.' + u + '{--brand:' + brand + ';--brand-dark:' + dark + ';--tint:' + tint + ';--line:#e4e4ee;' +
+'--ink:#1f2937;--muted:#4b5563;--ok:#15803d;--ok-bg:#eafaf0;--no:#b91c1c;--no-bg:#fdeeee;--focus:#f59e0b;' +
+'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;' +
+'color:var(--ink);background:#fff;line-height:1.55;border:1.5px solid var(--line);' +
+'border-top:5px solid var(--brand);border-radius:10px;padding:16px;font-size:.9rem;' +
+'counter-reset:' + u + '-score ' + u + '-answered}' +
+'.' + u + ' *{box-sizing:border-box}' +
+'.' + u + ' .vh{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0)}' +
+'.' + u + ' h3{margin:0 0 4px;font-size:1.05rem;color:var(--brand-dark)}' +
+'.' + u + ' .intro{margin:0 0 12px;color:var(--muted);font-size:.85rem}' +
+'.' + u + ' .q{border-top:1px solid var(--line);padding:12px 0 2px}' +
+'.' + u + ' .qnum{margin:0 0 6px;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}' +
+'.' + u + ' .advert{margin:0 0 10px;padding:10px 12px;background:var(--tint);border-left:4px solid var(--brand);font-size:.85rem}' +
+'.' + u + ' .opts{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}' +
+'.' + u + ' .opt-btn{padding:8px 18px;border:1.5px solid var(--line);border-radius:8px;background:#fff;' +
+'color:var(--muted);font-weight:600;cursor:pointer;font-size:.85rem}' +
+'.' + u + ' .o1:checked~.opts .l1,.' + u + ' .o2:checked~.opts .l2{background:var(--brand);border-color:var(--brand);color:#fff}' +
+'.' + u + ' .o1:focus-visible~.opts .l1,.' + u + ' .o2:focus-visible~.opts .l2{outline:3px solid var(--focus);outline-offset:2px}' +
+'.' + u + ' .fb{display:grid}' +
+'.' + u + ' .fbp{grid-area:1/1;visibility:hidden;padding:10px 12px;border-radius:8px;border:1px solid var(--line);font-size:.82rem}' +
+'.' + u + ' .p-none{visibility:visible;color:var(--muted);background:#fafafa}' +
+'.' + u + ' .p-right{background:var(--ok-bg);border-color:#b7e4c7}' +
+'.' + u + ' .p-wrong{background:var(--no-bg);border-color:#f3c3c3}' +
+'.' + u + ' .opt:checked~.fb .p-none{visibility:hidden}' +
+'.' + u + ' .right:checked~.fb .p-right{visibility:visible}' +
+'.' + u + ' .opt:not(.right):checked~.fb .p-wrong{visibility:visible}' +
+'.' + u + ' .tag{font-weight:700;margin-right:5px}.' + u + ' .tag-r{color:var(--ok)}.' + u + ' .tag-w{color:var(--no)}' +
+'.' + u + ' .opt:checked{counter-increment:' + u + '-answered}' +
+'.' + u + ' .opt.right:checked{counter-increment:' + u + '-answered ' + u + '-score}' +
+'.' + u + ' .result{border-top:3px solid var(--brand);margin-top:14px;padding-top:12px}' +
+'.' + u + ' .score{font-size:1.15rem;font-weight:700;margin:0 0 8px;color:var(--brand-dark)}' +
+'.' + u + ' .score::after{content:"Score: " counter(' + u + '-score) " of 2"}' +
+'.' + u + ' .bands{display:grid}' +
+'.' + u + ' .band{grid-area:1/1;visibility:hidden;padding:11px 14px;border-radius:8px;' +
+'border:1px solid var(--line);background:var(--tint);font-size:.85rem}' +
+'.' + u + ' .band h4{margin:0 0 5px;font-size:.95rem;color:var(--brand-dark)}' +
+'.' + u + ' .band p{margin:0}' +
+'.' + u + ' .b-incomplete{visibility:visible}' +
+answered + ' .b-incomplete{visibility:hidden}' +
+answered + ' .b-low{visibility:visible}' +
+pairs.map(function (s) { return s + ' .b-low'; }).join(',') + '{visibility:hidden}' +
+pairs.map(function (s) { return s + ' .b-mid'; }).join(',') + '{visibility:visible}' +
+allRight + ' .b-mid{visibility:hidden}' +
+allRight + ' .b-high{visibility:visible}' +
+'</style>' +
+'<h3>Spot the scam</h3><p class="intro">Two job adverts. Genuine, or a scam?</p>' +
+qs.map(function (q, i) {
+    var n = i + 1;
+    return '<div class="q q' + n + '"><p class="qnum">Advert ' + n + ' of 2</p>' +
+    '<blockquote class="advert">' + q[0] + '</blockquote>' +
+    '<input type="radio" name="' + u + '-q' + n + '" id="' + u + '-q' + n + 'a" class="vh o1 opt' + (q[1] === 'a' ? ' right' : '') + '">' +
+    '<input type="radio" name="' + u + '-q' + n + '" id="' + u + '-q' + n + 'b" class="vh o2 opt' + (q[1] === 'b' ? ' right' : '') + '">' +
+    '<div class="opts"><label class="opt-btn l1" for="' + u + '-q' + n + 'a">Scam</label>' +
+    '<label class="opt-btn l2" for="' + u + '-q' + n + 'b">Genuine</label></div>' +
+    '<div class="fb"><div class="fbp p-none">Choose an answer to see whether you were right.</div>' +
+    '<div class="fbp p-right"><span class="tag tag-r">&#10003; Correct</span> ' + q[2] + '</div>' +
+    '<div class="fbp p-wrong"><span class="tag tag-w">&#10007; Not quite</span> ' + q[3] + '</div></div></div>';
+}).join('') +
+'<div class="result"><p class="score"></p><div class="bands">' +
+'<div class="band b-incomplete"><h4>Not finished yet</h4><p>Answer both to see how you did.</p></div>' +
+'<div class="band b-low"><h4>Worth a closer look</h4><p>The signs that matter most: being asked to ' +
+'pay anything, being asked to move money through your own account, or pay far too high for the hours.</p></div>' +
+'<div class="band b-mid"><h4>Good instincts</h4><p>You caught most of them. The ones that catch ' +
+'people out look ordinary until the first task arrives.</p></div>' +
+'<div class="band b-high"><h4>Full marks</h4><p>You spotted both, including the money muling advert, ' +
+'which is the one that does students the most damage.</p></div>' +
+'</div></div></div>';
+        var frame = document.getElementById('quiz-demo');
         if (frame) { frame.srcdoc = page; }
     })();
 </script>
