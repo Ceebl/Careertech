@@ -87,6 +87,12 @@ listed in the `origins` line of `infra/couchdb-livesync.ini`. Fix it there and
 push — editing the file on the server directly gets overwritten by the next
 deploy.
 
+**Deploy fails with "couchdb did not come up".** The container is probably
+fine — check with `sudo docker ps`. The health check asks `/_up`, which is only
+answerable without a password because `require_valid_user_except_for_up = true`
+is set in `infra/couchdb-livesync.ini`. Remove that line and every deploy fails
+here while the database runs perfectly.
+
 **"413" errors when adding an image.** `client_max_body_size` in
 `infra/careertech-couchdb.conf` is the limit; it is currently 256m.
 
