@@ -25,8 +25,12 @@ jobs:
           # database. Once an account exists these are read and ignored.
           TASKS_ADMIN_USER: ${{ secrets.TASKS_ADMIN_USER }}
           TASKS_ADMIN_PASSWORD: ${{ secrets.TASKS_ADMIN_PASSWORD }}
+          # Admin account for the Obsidian sync database. If either is missing
+          # the database step is skipped rather than failing the deploy.
+          COUCHDB_USER: ${{ secrets.COUCHDB_USER }}
+          COUCHDB_PASSWORD: ${{ secrets.COUCHDB_PASSWORD }}
         with:
-          envs: KB_READER_PASSWORD,KB_ADMIN_PASSWORD,TASKS_ADMIN_USER,TASKS_ADMIN_PASSWORD
+          envs: KB_READER_PASSWORD,KB_ADMIN_PASSWORD,TASKS_ADMIN_USER,TASKS_ADMIN_PASSWORD,COUCHDB_USER,COUCHDB_PASSWORD
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
@@ -43,7 +47,13 @@ jobs:
             MANIFEST=/var/www/.careertech-manifest
             DATA_DIR=/srv/careertech/data
             TASKS_DATA_DIR=/srv/careertech/tasks-data
+            COUCH_DATA_DIR=/srv/careertech/couchdb-data
+            COUCH_CONF_DIR=/srv/careertech/couchdb-config
             DOMAIN=emaitch.co.uk
+            # CouchDB gets a hostname to itself. See infra/careertech-couchdb.conf
+            # for why it cannot live under a path on the main domain.
+            COUCH_DOMAIN=couch.emaitch.co.uk
+            COUCH_DB=obsidian
             # Folders that are not published as static sites.
             # targetconnect-probe is internal research notes and must never be
             # served. Listing it here also makes step 2 delete the copy that
@@ -259,20 +269,108 @@ jobs:
             fi
 
             # ---------------------------------------------------------------
-            # 5. Point nginx at both containers (idempotent)
+            # 5. Start the Obsidian sync database
+            #
+            # The official CouchDB image, unmodified -- there is nothing of ours
+            # to build here, so this pulls rather than builds. The whole step is
+            # skipped until both secrets exist, so pushing before they are set
+            # cannot take the rest of the deploy down with it.
+            # ---------------------------------------------------------------
+            if [ -n "${COUCHDB_USER:-}" ] && [ -n "${COUCHDB_PASSWORD:-}" ]; then
+              echo "::: starting couchdb"
+              sudo mkdir -p "$COUCH_DATA_DIR" "$COUCH_CONF_DIR"
+              # The official image runs as uid 5984, not 1000 like our own
+              # images do. Get this wrong and CouchDB starts, finds it cannot
+              # write, and dies with logs that never mention permissions.
+              sudo chown -R 5984:5984 "$COUCH_DATA_DIR" "$COUCH_CONF_DIR"
+              sudo chmod 700 "$COUCH_DATA_DIR"
+
+              sudo cp "$TMP/infra/couchdb-livesync.ini" "$COUCH_CONF_DIR/10-livesync.ini"
+              sudo chown 5984:5984 "$COUCH_CONF_DIR/10-livesync.ini"
+
+              # Secrets go in a root-only file rather than on the docker command
+              # line, where `ps` would expose them to any user on the box.
+              COUCH_ENV_FILE=/srv/careertech/couchdb.env
+              sudo touch "$COUCH_ENV_FILE"
+              sudo chmod 600 "$COUCH_ENV_FILE"
+              printf '%s\n' \
+                "COUCHDB_USER=${COUCHDB_USER}" \
+                "COUCHDB_PASSWORD=${COUCHDB_PASSWORD}" \
+                | sudo tee "$COUCH_ENV_FILE" >/dev/null
+
+              sudo docker pull couchdb:3 >/dev/null
+              sudo docker rm -f careertech-couchdb >/dev/null 2>&1 || true
+              sudo docker run -d \
+                --name careertech-couchdb \
+                --restart unless-stopped \
+                -p 127.0.0.1:5984:5984 \
+                -v "$COUCH_DATA_DIR":/opt/couchdb/data \
+                -v "$COUCH_CONF_DIR":/opt/couchdb/etc/local.d \
+                --env-file "$COUCH_ENV_FILE" \
+                --memory 1g \
+                --cpus 1 \
+                couchdb:3
+
+              echo "::: waiting for couchdb to become healthy"
+              healthy=0
+              for _ in $(seq 1 30); do
+                if curl -fsS http://127.0.0.1:5984/_up >/dev/null 2>&1; then
+                  healthy=1; break
+                fi
+                sleep 2
+              done
+
+              if [ "$healthy" -ne 1 ]; then
+                echo "!! couchdb did not come up -- last 50 log lines:"
+                sudo docker logs --tail 50 careertech-couchdb || true
+                exit 1
+              fi
+
+              # A fresh volume has no housekeeping databases, and CouchDB will
+              # not create them itself. Without them it answers requests happily
+              # and then fails during sync, with errors pointing nowhere near the
+              # real cause. 412 means "already there" -- the normal answer on
+              # every deploy after the first.
+              #
+              # The password is fed to curl on stdin rather than as -u on the
+              # command line, so it never shows up in `ps` output.
+              for db in _users _replicator _global_changes "$COUCH_DB"; do
+                code=$(printf 'user = "%s:%s"\n' "$COUCHDB_USER" "$COUCHDB_PASSWORD" \
+                  | curl -sS -K - -o /dev/null -w '%{http_code}' \
+                      -X PUT "http://127.0.0.1:5984/$db")
+                case "$code" in
+                  201|202|412) echo "  database $db ok ($code)" ;;
+                  *) echo "!! could not create $db (HTTP $code)"; exit 1 ;;
+                esac
+              done
+              echo "  couchdb healthy"
+            else
+              echo "::: skipping couchdb -- COUCHDB_USER / COUCHDB_PASSWORD not set"
+            fi
+
+            # ---------------------------------------------------------------
+            # 6. Point nginx at the containers (idempotent)
             #
             # One include line per project, wired separately, so adding or
-            # removing one cannot disturb the other.
+            # removing one cannot disturb the others.
             # ---------------------------------------------------------------
             echo "::: wiring nginx"
             sudo mkdir -p /etc/nginx/snippets
             sudo cp "$TMP/infra/careertech-api.conf"   /etc/nginx/snippets/careertech-api.conf
             sudo cp "$TMP/infra/careertech-tasks.conf" /etc/nginx/snippets/careertech-tasks.conf
+            sudo cp "$TMP/infra/careertech-couchdb.conf" /etc/nginx/snippets/careertech-couchdb.conf
 
             WIRE_OUT=$(
               sudo python3 "$TMP/infra/wire_nginx.py" --domain "$DOMAIN"
               sudo python3 "$TMP/infra/wire_nginx.py" --domain "$DOMAIN" \
                 --include /etc/nginx/snippets/careertech-tasks.conf
+              # Only once infra/setup-couchdb.sh has created the subdomain and
+              # certbot has given it a certificate. Before that there is no
+              # HTTPS block to wire, and the script would stop the whole deploy.
+              if [ -f /etc/nginx/sites-available/careertech-couch ]; then
+                sudo python3 "$TMP/infra/wire_nginx.py" --domain "$COUCH_DOMAIN" \
+                  --include /etc/nginx/snippets/careertech-couchdb.conf
+              fi
             )
             echo "$WIRE_OUT"
 
@@ -280,12 +378,18 @@ jobs:
               sudo systemctl reload nginx
               echo "  nginx reloaded"
             else
-              # Restore the oldest backup taken in this run: it predates every
-              # change made above, so one copy undoes all of them.
-              BACKUP=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^backup: //p' | head -n 1)
-              WIRED=$(printf '%s\n' "$WIRE_OUT" | sed -n 's/^wired: //p' | head -n 1)
-              if [ -n "$BACKUP" ] && [ -n "$WIRED" ]; then
-                sudo cp "$BACKUP" "$WIRED"
+              # Undo every change made above. Each run of wire_nginx.py prints
+              # its own `wired:`/`backup:` pair, and now that a second hostname
+              # is wired those pairs can name two different files -- restoring
+              # only the first would leave the other one broken.
+              PAIRS=$(printf '%s\n' "$WIRE_OUT" \
+                | awk '/^wired: /{w=$2} /^backup: /{if(w!=""){print w" "$2; w=""}}')
+              if [ -n "$PAIRS" ]; then
+                printf '%s\n' "$PAIRS" | while read -r wired backup; do
+                  [ -n "$wired" ] && [ -n "$backup" ] || continue
+                  sudo cp "$backup" "$wired"
+                  echo "  rolled back $wired"
+                done
                 echo "!! nginx test failed -- config rolled back"
               else
                 echo "!! nginx test failed -- no change to roll back"

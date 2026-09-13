@@ -55,9 +55,14 @@ def is_https_block_for(lines, start, end, domain):
         "listen" in line and "443" in line
         for line in body.splitlines()
     )
+    # Compare whole names, not substrings. `emaitch.co.uk` is contained in
+    # `couch.emaitch.co.uk`, so a substring test makes the main domain match the
+    # CouchDB server block as well -- and which one wins would come down to the
+    # alphabetical order of the filenames.
     names_domain = any(
-        line.strip().startswith("server_name") and domain in line
+        domain in line.strip().rstrip(";").split()[1:]
         for line in body.splitlines()
+        if line.strip().startswith("server_name")
     )
     return listens_443 and names_domain
 
